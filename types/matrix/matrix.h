@@ -148,11 +148,11 @@ public:
 
         Matrix result(rows_, rhs.columns_);
 
-        for (size_t i = 0; i < rows_; ++i) {
-            for (size_t j = 0; j < rhs.columns_; ++j) {
+        for (SizeType i = 0; i < rows_; ++i) {
+            for (SizeType j = 0; j < rhs.columns_; ++j) {
                 T sum = 0;
 
-                for (size_t k = 0; k < columns_; ++k) {
+                for (SizeType k = 0; k < columns_; ++k) {
                     sum += (*this)(i, k) * rhs(k, j);
                 }
 
@@ -271,7 +271,7 @@ public:
 
     bool operator<=>(const Matrix &rhs) = delete;
 
-    T &operator()(size_t row, size_t column) {
+    T &operator()(SizeType row, SizeType column) {
         if (row >= rows_ || column >= columns_) {
             throw std::runtime_error("Wrong index for matrix");
         }
@@ -279,7 +279,7 @@ public:
         return buffer_[row][column];
     }
 
-    T operator()(size_t row, size_t column) const {
+    T operator()(SizeType row, SizeType column) const {
         if (row >= rows_ || column >= columns_) {
             throw std::runtime_error("Wrong index for matrix");
         }
@@ -292,6 +292,17 @@ public:
     [[nodiscard]] SizeType Columns() const { return columns_; }
 
     MatrixType GetVectorMatrix() const { return buffer_; }
+
+    VectorType GetDiag() const {
+        auto size = std::min(rows_, columns_);
+        VectorType res(size);
+
+        for (SizeType i = 0; i < size; ++i) {
+            res[i] = (*this)(i, i);
+        }
+
+        return res;
+    }
 
     void Transpose() {
         MatrixType new_buffer(columns_, VectorType(rows_));
@@ -342,10 +353,10 @@ template <typename T>
 std::ostream &operator<<(std::ostream &ostream, const Matrix<T> &matrix) {
     ostream << '[';
 
-    for (size_t i = 0; i < matrix.Rows(); ++i) {
+    for (std::size_t i = 0; i < matrix.Rows(); ++i) {
         ostream << '[';
 
-        for (size_t j = 0; j < matrix.Columns(); ++j) {
+        for (std::size_t j = 0; j < matrix.Columns(); ++j) {
             ostream << matrix(i, j);
 
             if (j + 1 < matrix.Columns()) {
