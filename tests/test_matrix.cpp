@@ -188,7 +188,7 @@ TEST(TEST_MATRIX, DiagonalMethods) {
 
 constexpr std::size_t seed = 110u;
 constexpr std::size_t matrix_size = 100u;
-constexpr std::size_t it_cnt = 100u;
+constexpr std::size_t it_cnt = 1000u;
 
 std::mt19937 rng(seed);
 std::uniform_int_distribution<int> op_dist(0, 4);
