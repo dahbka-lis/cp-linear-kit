@@ -1,10 +1,10 @@
 #include "types/matrix/matrix.h"
 #include <iostream>
 
-using namespace linalg_lib;
+using namespace matrix_lib;
 
 int main() {
-    auto matrix = Matrix<>::Diag({1, 2, 3, 4, 5});
-    std::cout << matrix << std::endl;
+    auto matrix = Matrix<>::Diagonal({1, 2, 3, 4, 5});
+    std::cout << matrix / 3 << std::endl;
     return 0;
 }

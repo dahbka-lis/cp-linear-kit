@@ -1,12 +1,17 @@
 #pragma once
 
+#include "../../utils/is_complex.h"
+
 #include <cassert>
+#include <complex>
 #include <ostream>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
-namespace linalg_lib {
-template <typename T = double> class Matrix {
+namespace matrix_lib {
+template <utils::FloatOrComplex T = long double>
+class Matrix {
     using SizeType = std::size_t;
     using VectorType = std::vector<T>;
     using MatrixType = std::vector<std::vector<T>>;
@@ -63,7 +68,10 @@ public:
 
         for (SizeType i = 0; i < rows_; ++i) {
             assert(list[i].size() == columns_);
-            buffer_[i] = list[i];
+
+            for (SizeType j = 0; j < columns_; ++j) {
+                buffer_[i][j] = list[i][j];
+            }
         }
     }
 
@@ -291,7 +299,7 @@ public:
 
     [[nodiscard]] SizeType Columns() const { return columns_; }
 
-    MatrixType GetVectorMatrix() const { return buffer_; }
+    MatrixType GetMatrixBuffer() const { return buffer_; }
 
     VectorType GetDiag() const {
         auto size = std::min(rows_, columns_);
@@ -323,6 +331,29 @@ public:
         return res;
     }
 
+    void Conjugate() {
+        if constexpr (utils::IsFloatComplexValue<T>()) {
+            MatrixType new_buffer(columns_, VectorType(rows_));
+
+            for (SizeType i = 0; i < rows_; ++i) {
+                for (SizeType j = 0; j < columns_; ++j) {
+                    new_buffer[j][i] = std::conj(buffer_[i][j]);
+                }
+            }
+
+            std::swap(rows_, columns_);
+            buffer_ = std::move(new_buffer);
+        } else {
+            Transpose();
+        }
+    }
+
+    Matrix Conjugated() const {
+        Matrix res = *this;
+        res.Conjugate();
+        return res;
+    }
+
     static Matrix Eye(SizeType size, T default_value = T{1}) {
         Matrix res(size);
 
@@ -333,7 +364,7 @@ public:
         return res;
     }
 
-    static Matrix Diag(const std::vector<T> &list) {
+    static Matrix Diagonal(const std::vector<T> &list) {
         Matrix res(list.size());
 
         for (SizeType i = 0; i < list.size(); ++i) {
@@ -373,4 +404,4 @@ std::ostream &operator<<(std::ostream &ostream, const Matrix<T> &matrix) {
     ostream << ']';
     return ostream;
 }
-} // namespace linalg_lib
+} // namespace matrix_lib
