@@ -5,7 +5,6 @@
 #include <cassert>
 #include <complex>
 #include <ostream>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
