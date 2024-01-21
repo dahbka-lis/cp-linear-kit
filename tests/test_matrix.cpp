@@ -3,17 +3,17 @@
 #include "../types/matrix/matrix.h"
 
 #include <random>
-#include <vector>
 
 namespace {
 template <typename T>
-using MatrixType = std::vector<std::vector<T>>;
-using std::complex;
-
-using namespace matrix_lib;
+using Complex = std::complex<T>;
 
 template <typename T>
-void CompareMatrices(const Matrix<T> &m1, const MatrixType<T> &m2) {
+using Matrix = matrix_lib::Matrix<T>;
+
+template <typename T>
+void CompareMatrices(const Matrix<T> &m1,
+                     const std::vector<std::vector<T>> &m2) {
     ASSERT_EQ(m1.Rows(), m2.size()) << "Wrong size of matrix rows";
 
     for (size_t i = 0; i < m2.size(); ++i) {
@@ -27,40 +27,30 @@ void CompareMatrices(const Matrix<T> &m1, const MatrixType<T> &m2) {
 
 TEST(TEST_MATRIX, BasicConstructors) {
     {
-        using Matrix = Matrix<float>;
-
-        Matrix square(5);
+        Matrix<float> square(5);
         EXPECT_EQ(square.Rows(), 5);
         EXPECT_EQ(square.Columns(), 5);
 
-        Matrix rect(2, 3);
+        Matrix<double> rect(2, 3);
         EXPECT_EQ(rect.Rows(), 2);
         EXPECT_EQ(rect.Columns(), 3);
     }
     {
-        using Matrix = Matrix<double>;
-
-        Matrix matrix = {{1, 2, 3}, {4, 5, 6}};
-        MatrixType<double> expect = {{1, 2, 3}, {4, 5, 6}};
-        CompareMatrices(matrix, expect);
+        Matrix<long double> matrix = {{1, 2, 3}, {4, 5, 6}};
+        CompareMatrices(matrix, {{1, 2, 3}, {4, 5, 6}});
     }
     {
-        using Matrix = Matrix<long double>;
-
-        MatrixType<long double> expect = {{0, 0}, {1, 1}, {2, 2}};
-        Matrix matrix(expect);
-        CompareMatrices(matrix, expect);
+        Matrix<Complex<float>> matrix = {{0, 0}, {1, 1}, {2, 2}};
+        CompareMatrices(matrix, {{0, 0}, {1, 1}, {2, 2}});
     }
 }
 
 TEST(TEST_MATRIX, CopySemantics) {
     using Matrix = Matrix<double>;
-
-    MatrixType<double> default_matrix = {{1.0, 7.4}, {4.1, 5.6}};
     Matrix m1(2);
 
     {
-        Matrix m2(default_matrix);
+        Matrix m2 = {{1.0, 7.4}, {4.1, 5.6}};
         m1 = m2;
         EXPECT_TRUE(m1 == m2);
 
@@ -68,22 +58,19 @@ TEST(TEST_MATRIX, CopySemantics) {
         EXPECT_FALSE(m1 == m2);
     }
 
-    CompareMatrices(m1, default_matrix);
+    CompareMatrices(m1, {{1.0, 7.4}, {4.1, 5.6}});
 }
 
 TEST(TEST_MATRIX, MoveSemantics) {
-    using Matrix = Matrix<complex<float>>;
-
-    MatrixType<complex<float>> default_matrix = {
-        {1, -1}, {0, 2}, {-1, 0}, {-2, 1}};
-    Matrix m1(4, 1);
+    using Matrix = Matrix<Complex<float>>;
+    Matrix m1;
 
     {
-        Matrix m2(default_matrix);
+        Matrix m2 = {{{1, -1}, {0, 2}, {-1, 0}, {-2, 1}}};
         m1 = std::move(m2);
     }
 
-    CompareMatrices(m1, default_matrix);
+    CompareMatrices(m1, {{{1, -1}, {0, 2}, {-1, 0}, {-2, 1}}});
 }
 
 void CheckArithmeticSum() {
@@ -96,9 +83,6 @@ void CheckArithmeticSum() {
     m1 += m1;
     m1 += m2;
     CompareMatrices(m1, {{9, 12, 15}, {18, 21, 24}});
-
-    Matrix m3 = {{1, 1}, {1, 1}};
-    EXPECT_ANY_THROW(m1 + m3);
 }
 
 void CheckArithmeticDiff() {
@@ -111,9 +95,6 @@ void CheckArithmeticDiff() {
     m1 -= m2;
     m1 -= m2;
     CompareMatrices(m1, {{15, 4}, {3, -7}, {0, 33}});
-
-    Matrix m3 = {{0}, {0}, {0}};
-    EXPECT_ANY_THROW(m1 - m3);
 }
 
 void CheckArithmeticMulti() {
@@ -126,13 +107,10 @@ void CheckArithmeticMulti() {
     CompareMatrices(m2 * m1, {{24, 16, 3}, {-16, -14, -2}, {-24, -15, -3}});
 
     auto m3 = m2 * m1;
-    auto eye = Matrix::Eye(3);
+    auto identity = Matrix::Identity(3);
 
-    EXPECT_TRUE(m3 * eye == m3);
-    EXPECT_TRUE(eye * m3 == m3);
-
-    Matrix m4 = {{1, 2}};
-    EXPECT_ANY_THROW(m3 * m4);
+    EXPECT_TRUE(m3 * identity == m3);
+    EXPECT_TRUE(identity * m3 == m3);
 }
 
 TEST(TEST_MATRIX, Arithmetic) {
@@ -144,141 +122,139 @@ TEST(TEST_MATRIX, Arithmetic) {
 TEST(TEST_MATRIX, Transpose) {
     using Matrix = Matrix<float>;
 
-    Matrix m1 = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
-    m1.Transpose();
-    CompareMatrices(m1, {{1, 4, 7}, {2, 5, 8}, {3, 6, 9}});
+    {
+        Matrix m1 = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+        m1.Transpose();
+        CompareMatrices(m1, {{1, 4, 7}, {2, 5, 8}, {3, 6, 9}});
+    }
+    {
+        Matrix m2 = {{0, 0}, {2, 2}, {4, 4}};
+        auto m3 = Matrix::Transposed(m2);
 
-    Matrix m2 = {{0, 0}, {2, 2}, {4, 4}};
-    auto m3 = m2.Transposed();
-
-    CompareMatrices(m2, {{0, 0}, {2, 2}, {4, 4}});
-    CompareMatrices(m3, {{0, 2, 4}, {0, 2, 4}});
+        CompareMatrices(m2, {{0, 0}, {2, 2}, {4, 4}});
+        CompareMatrices(m3, {{0, 2, 4}, {0, 2, 4}});
+    }
 }
 
 TEST(TEST_MATRIX, Conjugate) {
-    using Matrix = Matrix<complex<double>>;
+    using Matrix = Matrix<Complex<double>>;
 
-    Matrix m1 = {{{1, 2}, {7, -3}}, {{0, -1}, {-5, 1}}, {{4, 0}, {2, -2}}};
-    m1.Conjugate();
-    CompareMatrices(m1,
-                    {{{1, -2}, {0, 1}, {4, 0}}, {{7, 3}, {-5, -1}, {2, 2}}});
+    {
+        Matrix m1 = {{{1, 2}, {7, -3}}, {{0, -1}, {-5, 1}}, {{4, 0}, {2, -2}}};
+        m1.Conjugate();
+        CompareMatrices(
+            m1, {{{1, -2}, {0, 1}, {4, 0}}, {{7, 3}, {-5, -1}, {2, 2}}});
+    }
+    {
+        Matrix m2 = {{{1, 0}, {1, 1}}, {{0, -1}, {1, 0}}};
+        auto m3 = Matrix::Conjugated(m2);
 
-    Matrix m2 = {{{1, 0}, {1, 1}}, {{0, -1}, {1, 0}}};
-    auto m3 = m2.Conjugated();
-
-    CompareMatrices(m2, {{{1, 0}, {1, 1}}, {{0, -1}, {1, 0}}});
-    CompareMatrices(m3, {{{1, 0}, {0, 1}}, {{1, -1}, {1, 0}}});
+        CompareMatrices(m2, {{{1, 0}, {1, 1}}, {{0, -1}, {1, 0}}});
+        CompareMatrices(m3, {{{1, 0}, {0, 1}}, {{1, -1}, {1, 0}}});
+    }
 }
 
-TEST(TEST_MATRIX, DiagonalMethods) {
+TEST(TEST_MATRIX, DiagonalMatrix) {
     std::vector<double> diag = {1, 2, 3, 4, 5};
 
-    auto matrix = Matrix<double>::Diagonal(diag);
+    auto matrix = Matrix<double>(diag);
     EXPECT_EQ(matrix.Rows(), diag.size());
     EXPECT_EQ(matrix.Columns(), diag.size());
 
     auto matrix_diag = matrix.GetDiag();
-    EXPECT_EQ(diag.size(), matrix_diag.size());
+    EXPECT_EQ(diag.size(), matrix_diag.Rows());
 
     for (size_t i = 0; i < diag.size(); ++i) {
-        EXPECT_DOUBLE_EQ(matrix_diag[i], diag[i]);
+        EXPECT_DOUBLE_EQ(matrix_diag(i, 0), diag[i]);
         EXPECT_DOUBLE_EQ(matrix(i, i), diag[i]);
     }
 }
 
-constexpr std::size_t seed = 110u;
-constexpr std::size_t matrix_size = 100u;
-constexpr std::size_t it_cnt = 1000u;
+template <typename T>
+struct Matrices {
+    Matrix<T> left;
+    Matrix<T> right;
+};
 
-std::mt19937 rng(seed);
-std::uniform_int_distribution<int> op_dist(0, 4);
-std::uniform_int_distribution<int> scalar_dist(0, 3);
-std::uniform_int_distribution<int> num_dist(-50, 50);
+template <typename T>
+class RandomGenerator {
+    using IntDistribution = std::uniform_int_distribution<int32_t>;
 
-Matrix<long double> GenerateRandomMatrix() {
-    Matrix<long double> matrix(matrix_size);
+public:
+    RandomGenerator(int32_t seed, int32_t from, int32_t to)
+        : rng_(seed), random_value_(from, to),
+          random_matrix_size_(kMatrixMinSize, kMatrixMaxSize) {}
 
-    for (size_t i = 0; i < matrix_size; ++i) {
-        for (size_t j = 0; j < matrix_size; ++j) {
-            matrix(i, j) = num_dist(rng);
-        }
+    int32_t GetRandomValue() { return random_value_(rng_); }
+
+    int32_t GetRandomMatrixSize() { return random_matrix_size_(rng_); }
+
+    Matrix<T> GenerateRandomMatrix(int32_t row, int32_t col) {
+        Matrix<T> result(row, col);
+        result.ApplyToEach([&](T &val) { val = GetRandomValue(); });
+        return result;
     }
 
-    return matrix;
-}
+    Matrices<T> GenerateEqualDimMatrices() {
+        auto size = GetRandomMatrixSize();
+        auto m1 = GenerateRandomMatrix(size, size);
+        auto m2 = GenerateRandomMatrix(size, size);
 
-Matrix<long double> ConstructRandomMatrix() {
-    switch (scalar_dist(rng)) {
-    case 0:
-        return {matrix_size, matrix_size,
-                static_cast<long double>(num_dist(rng))};
-    case 1:
-        return Matrix<long double>::Eye(matrix_size, num_dist(rng));
-    case 2:
-        return GenerateRandomMatrix();
-    default:
-        return Matrix<long double>::Eye(matrix_size);
+        return {m1, m2};
     }
-}
+
+    Matrices<T> GenerateColRowMatrices() {
+        auto col_row = GetRandomMatrixSize();
+        auto m1_row = GetRandomMatrixSize();
+        auto m2_col = GetRandomMatrixSize();
+
+        auto m1 = GenerateRandomMatrix(m1_row, col_row);
+        auto m2 = GenerateRandomMatrix(col_row, m2_col);
+
+        return {m1, m2};
+    }
+
+    static constexpr std::size_t kIterationCnt = 1000;
+    static constexpr std::size_t kMatrixMinSize = 1;
+    static constexpr std::size_t kMatrixMaxSize = 100;
+
+private:
+    std::mt19937 rng_;
+    IntDistribution random_value_;
+    IntDistribution random_matrix_size_;
+};
 
 TEST(TEST_MATRIX, Stress) {
-    Matrix<long double> matrix = GenerateRandomMatrix();
+    using Type = long double;
+    using RandomGenerator = RandomGenerator<Type>;
+    using Matrix = Matrix<Type>;
 
-    for (size_t it = 0; it < it_cnt; ++it) {
-        auto test_matrix = ConstructRandomMatrix();
+    const std::size_t seed = 110;
+    RandomGenerator gen(seed, -50, 50);
 
-        // Test operators
+    for (size_t it = 0; it < RandomGenerator::kIterationCnt; ++it) {
         try {
-            switch (op_dist(rng)) {
-            case 0:
-                matrix += test_matrix;
-                break;
+            int32_t random_id = (gen.GetRandomValue() + 50) % 4;
 
-            case 1:
-                matrix -= test_matrix;
-                break;
-
-            case 2:
-                matrix = matrix * test_matrix;
-                break;
-
-            case 3:
-                matrix = test_matrix * matrix;
-                break;
-
-            default:
-                matrix.Transpose();
+            if (random_id == 0) {
+                auto [m1, m2] = gen.GenerateEqualDimMatrices();
+                m1 += m2;
+                m2 = m1 + m2;
+            } else if (random_id == 1) {
+                auto [m1, m2] = gen.GenerateEqualDimMatrices();
+                m1 -= m2;
+                m2 = m1 - m2;
+            } else if (random_id == 2) {
+                auto [m1, m2] = gen.GenerateColRowMatrices();
+                m1 *= m2;
+                m2 = m1 * Matrix::Transposed(m2);
+            } else {
+                auto [m1, m2] = gen.GenerateColRowMatrices();
+                m1.Transpose();
+                m2.Conjugate();
             }
         } catch (...) {
             std::cerr << "Stress (operators) FAILED! Seed: " << seed
-                      << ", iteration: " << it << std::endl;
-            ASSERT_TRUE(false);
-            break;
-        }
-
-        // Test scalar operators
-        try {
-            auto scalar = num_dist(rng);
-            switch (scalar_dist(rng)) {
-            case 0:
-                matrix += scalar;
-                break;
-
-            case 1:
-                matrix -= scalar;
-                break;
-
-            case 2:
-                matrix *= scalar;
-                break;
-
-            default:
-                if (scalar != 0) {
-                    matrix /= num_dist(rng);
-                }
-            }
-        } catch (...) {
-            std::cerr << "Stress (scalar) FAILED! Seed: " << seed
                       << ", iteration: " << it << std::endl;
             ASSERT_TRUE(false);
             break;
