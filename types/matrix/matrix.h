@@ -3,7 +3,7 @@
 #include "../../utils/is_float_complex.h"
 
 #include <cassert>
-#include <complex>
+#include <functional>
 #include <ostream>
 #include <utility>
 #include <vector>
@@ -11,156 +11,130 @@
 namespace matrix_lib {
 template <utils::FloatOrComplex T = long double>
 class Matrix {
-    using SizeType = std::size_t;
-    using VectorType = std::vector<T>;
-    using MatrixType = std::vector<std::vector<T>>;
+    using IndexType = std::size_t;
+    using Data = std::vector<T>;
+    using Function = std::function<void(T &)>;
+    using FunctionIndexes = std::function<void(T &, IndexType, IndexType)>;
 
 public:
-    Matrix() = delete;
+    Matrix() = default;
 
-    explicit Matrix(SizeType sq_size) : rows_(sq_size), columns_(sq_size) {
-        assert(sq_size > 0);
-        buffer_ = MatrixType(rows_, VectorType(columns_, T{0}));
+    explicit Matrix(IndexType sq_size)
+        : rows_(sq_size), buffer_(rows_ * rows_, T{0}) {
+        assert(Rows() > 0 &&
+               "Size of a square matrix must be greater than zero.");
     }
 
-    Matrix(SizeType row_cnt, SizeType col_cnt)
-        : rows_(row_cnt), columns_(col_cnt) {
-        assert(row_cnt > 0);
-        assert(col_cnt > 0);
-
-        buffer_ = MatrixType(rows_, VectorType(columns_, T{0}));
+    Matrix(IndexType row_cnt, IndexType col_cnt, T value = T{0})
+        : rows_(row_cnt), buffer_(rows_ * col_cnt, value) {
+        assert(Rows() > 0 &&
+               "Number of matrix rows must be greater than zero.");
+        assert(Columns() > 0 &&
+               "Number of matrix columns must be greater than zero.");
     }
 
-    Matrix(SizeType row_cnt, SizeType col_cnt, T value)
-        : rows_(row_cnt), columns_(col_cnt) {
-        assert(row_cnt > 0);
-        assert(col_cnt > 0);
+    explicit Matrix(const Data &diag)
+        : rows_(diag.size()), buffer_(rows_ * rows_, T{0}) {
+        assert(Rows() > 0 &&
+               "List to create a diagonal matrix must not be empty.");
 
-        buffer_ = MatrixType(rows_, VectorType(columns_, value));
+        IndexType idx = 0;
+        for (auto value : diag) {
+            (*this)(idx, idx) = value;
+            ++idx;
+        }
     }
 
     Matrix(std::initializer_list<std::initializer_list<T>> list)
-        : rows_(list.size()), columns_(list.begin()->size()) {
-        assert(rows_ > 0);
-        assert(columns_ > 0);
+        : rows_(list.size()) {
+        assert(Rows() > 0 &&
+               "Number of matrix rows must be greater than zero.");
+        assert(list.begin()->size() > 0 &&
+               "Number of matrix columns must be greater than zero.");
 
-        buffer_ = MatrixType(rows_, VectorType(columns_));
-        auto buf_it = buffer_.begin();
+        auto columns = list.begin()->size();
+        buffer_.reserve(Rows() * columns);
 
-        for (auto &sublist : list) {
-            assert(sublist.size() == columns_);
+        for (auto sublist : list) {
+            assert(
+                sublist.size() == columns &&
+                "Size of matrix rows must be equal to the number of columns.");
 
-            for (SizeType i = 0; i < columns_; ++i) {
-                (*buf_it)[i] = *(sublist.begin() + i);
-            }
-
-            ++buf_it;
-        }
-    }
-
-    explicit Matrix(const std::vector<std::vector<T>> &list)
-        : rows_(list.size()), columns_(list[0].size()) {
-        assert(rows_ > 0);
-        assert(columns_ > 0);
-
-        buffer_ = MatrixType(rows_, VectorType(columns_));
-
-        for (SizeType i = 0; i < rows_; ++i) {
-            assert(list[i].size() == columns_);
-
-            for (SizeType j = 0; j < columns_; ++j) {
-                buffer_[i][j] = list[i][j];
+            for (auto value : sublist) {
+                buffer_.push_back(value);
             }
         }
     }
 
-    Matrix(const Matrix &rhs) : rows_(rhs.rows_), columns_(rhs.columns_) {
-        buffer_ = rhs.buffer_;
-    }
+    Matrix(const Matrix &rhs) = default;
 
-    Matrix(Matrix &&rhs) noexcept {
-        std::swap(rows_, rhs.rows_);
-        std::swap(columns_, rhs.columns_);
-        buffer_ = std::move(rhs.buffer_);
-    }
+    Matrix(Matrix &&rhs) noexcept
+        : rows_(std::exchange(rhs.rows_, 0)), buffer_(std::move(rhs.buffer_)) {}
 
-    Matrix &operator=(const Matrix &rhs) {
-        rows_ = rhs.rows_;
-        columns_ = rhs.columns_;
-        buffer_ = rhs.buffer_;
-        return *this;
-    }
+    Matrix &operator=(const Matrix &rhs) = default;
 
     Matrix &operator=(Matrix &&rhs) noexcept {
-        std::swap(rows_, rhs.rows_);
-        std::swap(columns_, rhs.columns_);
+        rows_ = std::exchange(rhs.rows_, 0);
         buffer_ = std::move(rhs.buffer_);
         return *this;
     }
 
-    ~Matrix() = default;
+    friend Matrix operator+(const Matrix &lhs, const Matrix &rhs) {
+        assert(lhs.Rows() == rhs.Rows() &&
+               "Number of matrix rows must be equal for addition.");
+        assert(rhs.Columns() == rhs.Columns() &&
+               "Number of matrix columns must be equal for addition.");
 
-    Matrix operator+(const Matrix &rhs) {
-        if (rows_ != rhs.rows_ || columns_ != rhs.columns_) {
-            throw std::runtime_error("Matrix dimension mismatch");
-        }
-
-        Matrix res = *this;
-        res += rhs;
-        return res;
+        Matrix res = lhs;
+        return res += rhs;
     }
 
     Matrix &operator+=(const Matrix &rhs) {
-        if (rows_ != rhs.rows_ || columns_ != rhs.columns_) {
-            throw std::runtime_error("Matrix dimension mismatch");
-        }
+        assert(Rows() == rhs.Rows() &&
+               "Number of matrix rows must be equal for addition.");
+        assert(Columns() == rhs.Columns() &&
+               "Number of matrix columns must be equal for addition.");
 
-        for (SizeType i = 0; i < rows_; ++i) {
-            for (SizeType j = 0; j < columns_; ++j) {
-                buffer_[i][j] += rhs.buffer_[i][j];
-            }
+        for (IndexType i = 0; i < buffer_.size(); ++i) {
+            buffer_[i] += rhs.buffer_[i];
         }
 
         return *this;
     }
 
-    Matrix operator-(const Matrix &rhs) {
-        if (rows_ != rhs.rows_ || columns_ != rhs.columns_) {
-            throw std::runtime_error("Matrices size mismatch.");
-        }
+    friend Matrix operator-(const Matrix &lhs, const Matrix &rhs) {
+        assert(lhs.Rows() == rhs.Rows() &&
+               "Number of matrix rows must be equal for subtraction.");
+        assert(lhs.Columns() == rhs.Columns() &&
+               "Number of matrix columns must be equal for subtraction.");
 
-        Matrix res = *this;
-        res -= rhs;
-        return res;
+        Matrix res = lhs;
+        return res -= rhs;
     }
 
     Matrix &operator-=(const Matrix &rhs) {
-        if (rows_ != rhs.rows_ || columns_ != rhs.columns_) {
-            throw std::runtime_error("Matrices size mismatch.");
-        }
+        assert(Rows() == rhs.Rows() &&
+               "Number of matrix rows must be equal for subtraction.");
+        assert(Columns() == rhs.Columns() &&
+               "Number of matrix columns must be equal for subtraction.");
 
-        for (SizeType i = 0; i < rows_; ++i) {
-            for (SizeType j = 0; j < columns_; ++j) {
-                buffer_[i][j] -= rhs.buffer_[i][j];
-            }
+        for (IndexType i = 0; i < buffer_.size(); ++i) {
+            buffer_[i] -= rhs.buffer_[i];
         }
 
         return *this;
     }
 
-    Matrix operator*(const Matrix &rhs) {
-        if (columns_ != rhs.rows_) {
-            throw std::runtime_error("Matrix dimension mismatch");
-        }
+    friend Matrix operator*(const Matrix &lhs, const Matrix &rhs) {
+        assert(lhs.Columns() == rhs.Rows() &&
+               "Matrix dimension mismatch for multiplication.");
+        Matrix result(lhs.Rows(), rhs.Columns());
 
-        Matrix result(rows_, rhs.columns_);
-
-        for (SizeType i = 0; i < rows_; ++i) {
-            for (SizeType j = 0; j < rhs.columns_; ++j) {
+        for (IndexType i = 0; i < lhs.Rows(); ++i) {
+            for (IndexType j = 0; j < rhs.Columns(); ++j) {
                 T sum = 0;
-
-                for (SizeType k = 0; k < columns_; ++k) {
-                    sum += (*this)(i, k) * rhs(k, j);
+                for (IndexType k = 0; k < lhs.Columns(); ++k) {
+                    sum += lhs(i, k) * rhs(k, j);
                 }
 
                 result(i, j) = sum;
@@ -170,237 +144,142 @@ public:
         return result;
     }
 
-    Matrix &operator*=(const Matrix &rhs) {
-        Matrix prod = (*this) * rhs;
+    Matrix &operator*=(const Matrix &rhs) { return *this = *this * rhs; }
 
-        std::swap(rows_, prod.rows_);
-        std::swap(columns_, prod.columns_);
-        buffer_ = std::move(prod.buffer_);
+    friend Matrix operator*(const Matrix &lhs, T scalar) {
+        Matrix res = lhs;
+        return res *= scalar;
+    }
 
+    Matrix &operator*=(T scalar) {
+        ApplyToEach([scalar](T &value) { value *= scalar; });
         return *this;
     }
 
-    Matrix operator+(T value) {
-        Matrix res = *this;
-        res += value;
-        return res;
+    friend bool operator==(const Matrix &lhs, const Matrix &rhs) {
+        return lhs.buffer_ == rhs.buffer_;
     }
 
-    Matrix &operator+=(T value) {
-        for (SizeType i = 0; i < rows_; ++i) {
-            for (SizeType j = 0; j < columns_; ++j) {
-                buffer_[i][j] += value;
-            }
+    friend bool operator!=(const Matrix &lhs, const Matrix &rhs) {
+        return !(lhs == rhs);
+    }
+
+    friend bool operator<=>(const Matrix &lhs, const Matrix &rhs) = delete;
+
+    T &operator()(IndexType row_idx, IndexType col_idx) {
+        assert(Columns() * row_idx + col_idx < buffer_.size() &&
+               "Requested indexes are outside the matrix boundaries.");
+        return buffer_[Columns() * row_idx + col_idx];
+    }
+
+    T operator()(IndexType row_idx, IndexType col_idx) const {
+        assert(Columns() * row_idx + col_idx < buffer_.size() &&
+               "Requested indexes are outside the matrix boundaries.");
+        return buffer_[Columns() * row_idx + col_idx];
+    }
+
+    [[nodiscard]] IndexType Rows() const { return rows_; }
+
+    [[nodiscard]] IndexType Columns() const {
+        return (rows_ == 0) ? 0 : buffer_.size() / rows_;
+    }
+
+    void ApplyToEach(Function func) {
+        for (IndexType i = 0; i < buffer_.size(); ++i) {
+            func(buffer_[i]);
+        }
+    }
+
+    void ApplyToEach(FunctionIndexes func) {
+        for (IndexType i = 0; i < buffer_.size(); ++i) {
+            func(buffer_[i], i / Rows(), i % Rows());
+        }
+    }
+
+    Matrix GetDiag(bool transpose = false) const {
+        auto size = std::min(Rows(), Columns());
+
+        Matrix res(size, 1);
+        for (IndexType i = 0; i < size; ++i) {
+            res(i, 0) = (*this)(i, i);
         }
 
-        return *this;
-    }
-
-    Matrix operator-(T value) {
-        Matrix res = *this;
-        res -= value;
-        return res;
-    }
-
-    Matrix &operator-=(T value) {
-        for (SizeType i = 0; i < rows_; ++i) {
-            for (SizeType j = 0; j < columns_; ++j) {
-                buffer_[i][j] -= value;
-            }
-        }
-
-        return *this;
-    }
-
-    Matrix operator*(T value) {
-        Matrix res = *this;
-        res *= value;
-        return res;
-    }
-
-    Matrix &operator*=(T value) {
-        for (SizeType i = 0; i < rows_; ++i) {
-            for (SizeType j = 0; j < columns_; ++j) {
-                buffer_[i][j] *= value;
-            }
-        }
-
-        return *this;
-    }
-
-    Matrix operator/(T value) {
-        Matrix res = *this;
-        res /= value;
-        return res;
-    }
-
-    Matrix &operator/=(T value) {
-        for (SizeType i = 0; i < rows_; ++i) {
-            for (SizeType j = 0; j < columns_; ++j) {
-                buffer_[i][j] /= value;
-            }
-        }
-
-        return *this;
-    }
-
-    bool operator==(const Matrix &rhs) const {
-        if (rows_ != rhs.rows_ || columns_ != rhs.columns_) {
-            return false;
-        }
-
-        for (SizeType i = 0; i < rows_; ++i) {
-            for (SizeType j = 0; j < columns_; ++j) {
-                if (buffer_[i][j] != rhs.buffer_[i][j]) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    bool operator!=(const Matrix &rhs) const {
-        if (rows_ != rhs.rows_ || columns_ != rhs.columns_) {
-            return true;
-        }
-
-        for (SizeType i = 0; i < rows_; ++i) {
-            for (SizeType j = 0; j < columns_; ++j) {
-                if (buffer_[i][j] != rhs.buffer_[i][j]) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    bool operator<=>(const Matrix &rhs) = delete;
-
-    T &operator()(SizeType row, SizeType column) {
-        if (row >= rows_ || column >= columns_) {
-            throw std::runtime_error("Wrong index for matrix");
-        }
-
-        return buffer_[row][column];
-    }
-
-    T operator()(SizeType row, SizeType column) const {
-        if (row >= rows_ || column >= columns_) {
-            throw std::runtime_error("Wrong index for matrix");
-        }
-
-        return buffer_[row][column];
-    }
-
-    [[nodiscard]] SizeType Rows() const { return rows_; }
-
-    [[nodiscard]] SizeType Columns() const { return columns_; }
-
-    MatrixType GetMatrixBuffer() const { return buffer_; }
-
-    VectorType GetDiag() const {
-        auto size = std::min(rows_, columns_);
-        VectorType res(size);
-
-        for (SizeType i = 0; i < size; ++i) {
-            res[i] = (*this)(i, i);
+        if (transpose) {
+            res.Transpose();
         }
 
         return res;
     }
 
     void Transpose() {
-        MatrixType new_buffer(columns_, VectorType(rows_));
+        std::vector<bool> visited(buffer_.size(), false);
+        IndexType last_idx = buffer_.size() - 1;
 
-        for (SizeType i = 0; i < rows_; ++i) {
-            for (SizeType j = 0; j < columns_; ++j) {
-                new_buffer[j][i] = buffer_[i][j];
+        for (IndexType i = 1; i < buffer_.size(); ++i) {
+            if (visited[i]) {
+                continue;
             }
+
+            auto swap_idx = i;
+            do {
+                swap_idx = (swap_idx == last_idx)
+                               ? last_idx
+                               : (Rows() * swap_idx) % last_idx;
+                std::swap(buffer_[swap_idx], buffer_[i]);
+                visited[swap_idx] = true;
+            } while (swap_idx != i);
         }
 
-        std::swap(rows_, columns_);
-        buffer_ = std::move(new_buffer);
+        rows_ = Columns();
     }
 
-    Matrix Transposed() const {
-        Matrix res = *this;
+    void Conjugate() {
+        Transpose();
+
+        if constexpr (utils::IsFloatComplexValue<T>()) {
+            ApplyToEach([](T &val) { val = std::conj(val); });
+        }
+    }
+
+    static Matrix Identity(IndexType size, T default_value = T{1}) {
+        return Matrix(Data(size, default_value));
+    }
+
+    static Matrix Transposed(const Matrix &rhs) {
+        Matrix res = rhs;
         res.Transpose();
         return res;
     }
 
-    void Conjugate() {
-        if constexpr (utils::IsFloatComplexValue<T>()) {
-            MatrixType new_buffer(columns_, VectorType(rows_));
-
-            for (SizeType i = 0; i < rows_; ++i) {
-                for (SizeType j = 0; j < columns_; ++j) {
-                    new_buffer[j][i] = std::conj(buffer_[i][j]);
-                }
-            }
-
-            std::swap(rows_, columns_);
-            buffer_ = std::move(new_buffer);
-        } else {
-            Transpose();
-        }
-    }
-
-    Matrix Conjugated() const {
-        Matrix res = *this;
+    static Matrix Conjugated(const Matrix &rhs) {
+        Matrix res = rhs;
         res.Conjugate();
         return res;
     }
 
-    static Matrix Eye(SizeType size, T default_value = T{1}) {
-        Matrix res(size);
+    friend std::ostream &operator<<(std::ostream &ostream,
+                                    const Matrix &matrix) {
+        ostream << '[';
+        for (std::size_t i = 0; i < matrix.Rows(); ++i) {
+            ostream << '[';
+            for (std::size_t j = 0; j < matrix.Columns(); ++j) {
+                ostream << matrix(i, j);
+                if (j + 1 < matrix.Columns()) {
+                    ostream << ' ';
+                }
+            }
 
-        for (SizeType i = 0; i < size; ++i) {
-            res.buffer_[i][i] = default_value;
+            ostream << ']';
+            if (i + 1 < matrix.Rows()) {
+                ostream << '\n';
+            }
         }
-
-        return res;
-    }
-
-    static Matrix Diagonal(const std::vector<T> &list) {
-        Matrix res(list.size());
-
-        for (SizeType i = 0; i < list.size(); ++i) {
-            res.buffer_[i][i] = list[i];
-        }
-
-        return res;
+        ostream << ']';
+        return ostream;
     }
 
 private:
-    SizeType rows_ = 0;
-    SizeType columns_ = 0;
-    MatrixType buffer_;
+    IndexType rows_ = 0;
+    Data buffer_;
 };
-
-template <typename T>
-std::ostream &operator<<(std::ostream &ostream, const Matrix<T> &matrix) {
-    ostream << '[';
-
-    for (std::size_t i = 0; i < matrix.Rows(); ++i) {
-        ostream << '[';
-
-        for (std::size_t j = 0; j < matrix.Columns(); ++j) {
-            ostream << matrix(i, j);
-
-            if (j + 1 < matrix.Columns()) {
-                ostream << ' ';
-            }
-        }
-
-        ostream << ']';
-        if (i + 1 < matrix.Rows()) {
-            ostream << '\n';
-        }
-    }
-
-    ostream << ']';
-    return ostream;
-}
 } // namespace matrix_lib
