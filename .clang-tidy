@@ -25,4 +25,3 @@ CheckOptions:
   llvm-else-after-return.WarnOnUnfixable: 'false'
   google-readability-function-size.StatementThreshold: '800'
 ...
-
