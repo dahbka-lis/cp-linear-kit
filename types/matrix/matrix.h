@@ -211,6 +211,28 @@ public:
         return res;
     }
 
+    Matrix GetRow(IndexType index) const {
+        assert(index < Rows() && "Index must be less than the number of matrix rows.");
+
+        Matrix res(1, Columns());
+        for (IndexType i = 0; i < Columns(); ++i) {
+            res(0, i) = (*this)(index, i);
+        }
+
+        return res;
+    }
+
+    Matrix GetColumn(IndexType index) const {
+        assert(index < Columns() && "Index must be less than the number of matrix columns.");
+
+        Matrix res(Rows(), 1);
+        for (IndexType i = 0; i < Rows(); ++i) {
+            res(i, 0) = (*this)(i, index);
+        }
+
+        return res;
+    }
+
     void Transpose() {
         std::vector<bool> visited(buffer_.size(), false);
         IndexType last_idx = buffer_.size() - 1;
