@@ -192,7 +192,7 @@ public:
 
     void ApplyToEach(FunctionIndexes func) {
         for (IndexType i = 0; i < buffer_.size(); ++i) {
-            func(buffer_[i], i / Rows(), i % Rows());
+            func(buffer_[i], i / Columns(), i % Columns());
         }
     }
 
