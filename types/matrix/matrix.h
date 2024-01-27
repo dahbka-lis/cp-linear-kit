@@ -14,7 +14,10 @@ class Matrix {
     using IndexType = std::size_t;
     using Data = std::vector<T>;
     using Function = std::function<void(T &)>;
+    using ConstFunction = std::function<void(const T &)>;
     using FunctionIndexes = std::function<void(T &, IndexType, IndexType)>;
+    using ConstFunctionIndexes =
+        std::function<void(const T &, IndexType, IndexType)>;
 
 public:
     Matrix() = default;
@@ -208,10 +211,31 @@ public:
         }
     }
 
+    void ApplyToEach(ConstFunction func) const {
+        for (IndexType i = 0; i < buffer_.size(); ++i) {
+            func(buffer_[i]);
+        }
+    }
+
     void ApplyToEach(FunctionIndexes func) {
         for (IndexType i = 0; i < buffer_.size(); ++i) {
             func(buffer_[i], i / Columns(), i % Columns());
         }
+    }
+
+    void ApplyToEach(ConstFunctionIndexes func) const {
+        for (IndexType i = 0; i < buffer_.size(); ++i) {
+            func(buffer_[i], i / Columns(), i % Columns());
+        }
+    }
+
+    T GetEuclideanNorm() const {
+        assert(Rows() == 1 ||
+               Columns() == 1 && "Euclidean norm only for vectors.");
+
+        T sq_sum = T{0};
+        ApplyToEach([&](const T &value) { sq_sum += (value * value); });
+        return std::sqrt(sq_sum);
     }
 
     Matrix GetDiag(bool transpose = false) const {
@@ -230,7 +254,8 @@ public:
     }
 
     Matrix GetRow(IndexType index) const {
-        assert(index < Rows() && "Index must be less than the number of matrix rows.");
+        assert(index < Rows() &&
+               "Index must be less than the number of matrix rows.");
 
         Matrix res(1, Columns());
         for (IndexType i = 0; i < Columns(); ++i) {
@@ -241,7 +266,8 @@ public:
     }
 
     Matrix GetColumn(IndexType index) const {
-        assert(index < Columns() && "Index must be less than the number of matrix columns.");
+        assert(index < Columns() &&
+               "Index must be less than the number of matrix columns.");
 
         Matrix res(Rows(), 1);
         for (IndexType i = 0; i < Rows(); ++i) {
@@ -281,6 +307,15 @@ public:
         }
     }
 
+    void Normalize() {
+        assert(Rows() == 1 || Columns() == 1 && "Normalize only for vectors.");
+
+        auto norm = GetEuclideanNorm();
+        if (norm != T{0}) {
+            (*this) /= norm;
+        }
+    }
+
     static Matrix Identity(IndexType size, T default_value = T{1}) {
         return Matrix(Data(size, default_value));
     }
@@ -295,6 +330,18 @@ public:
         Matrix res = rhs;
         res.Conjugate();
         return res;
+    }
+
+    static Matrix Normalized(const Matrix &rhs) {
+        assert(rhs.Rows() == 1 ||
+               rhs.Columns() == 1 && "Normalize only for vectors.");
+
+        auto norm = rhs.GetEuclideanNorm();
+        if (norm != T{0}) {
+            return rhs / norm;
+        }
+
+        return rhs;
     }
 
     friend std::ostream &operator<<(std::ostream &ostream,
