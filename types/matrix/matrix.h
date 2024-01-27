@@ -151,8 +151,26 @@ public:
         return res *= scalar;
     }
 
+    friend Matrix operator*(T scalar, const Matrix &rhs) {
+        return rhs * scalar;
+    }
+
     Matrix &operator*=(T scalar) {
         ApplyToEach([scalar](T &value) { value *= scalar; });
+        return *this;
+    }
+
+    friend Matrix operator/(const Matrix &lhs, T scalar) {
+        Matrix res = lhs;
+        return res /= scalar;
+    }
+
+    friend Matrix operator/(T scalar, const Matrix &rhs) {
+        return rhs / scalar;
+    }
+
+    Matrix &operator/=(T scalar) {
+        ApplyToEach([scalar](T &value) { value /= scalar; });
         return *this;
     }
 
