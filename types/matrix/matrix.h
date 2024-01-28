@@ -229,12 +229,20 @@ public:
     }
 
     void ApplyToEach(FunctionIndexes func) {
+        if (Columns() == 0 || Rows() == 0) {
+            return;
+        }
+
         for (IndexType i = 0; i < buffer_.size(); ++i) {
             func(buffer_[i], i / Columns(), i % Columns());
         }
     }
 
     void ApplyToEach(ConstFunctionIndexes func) const {
+        if (Columns() == 0 || Rows() == 0) {
+            return;
+        }
+
         for (IndexType i = 0; i < buffer_.size(); ++i) {
             func(buffer_[i], i / Columns(), i % Columns());
         }
