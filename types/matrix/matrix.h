@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../utils/is_equal_floating.h"
 #include "../../utils/is_float_complex.h"
 
 #include <cassert>
@@ -178,7 +179,17 @@ public:
     }
 
     friend bool operator==(const Matrix &lhs, const Matrix &rhs) {
-        return lhs.buffer_ == rhs.buffer_;
+        if (lhs.Rows() != rhs.Rows() || lhs.Columns() != rhs.Columns()) {
+            return false;
+        }
+
+        bool is_equal = true;
+        lhs.ApplyToEach(
+            [&rhs, &is_equal](const T &val, IndexType i, IndexType j) {
+                is_equal = is_equal && utils::IsEqualFloating(val, rhs(i, j));
+            });
+
+        return is_equal;
     }
 
     friend bool operator!=(const Matrix &lhs, const Matrix &rhs) {
@@ -311,7 +322,7 @@ public:
         assert(Rows() == 1 || Columns() == 1 && "Normalize only for vectors.");
 
         auto norm = GetEuclideanNorm();
-        if (norm != T{0}) {
+        if (!utils::IsZeroFloating(norm)) {
             (*this) /= norm;
         }
     }
@@ -333,15 +344,9 @@ public:
     }
 
     static Matrix Normalized(const Matrix &rhs) {
-        assert(rhs.Rows() == 1 ||
-               rhs.Columns() == 1 && "Normalize only for vectors.");
-
-        auto norm = rhs.GetEuclideanNorm();
-        if (norm != T{0}) {
-            return rhs / norm;
-        }
-
-        return rhs;
+        Matrix res = rhs;
+        res.Normalize();
+        return res;
     }
 
     friend std::ostream &operator<<(std::ostream &ostream,
