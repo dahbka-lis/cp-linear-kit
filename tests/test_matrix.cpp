@@ -20,7 +20,7 @@ void CompareMatrices(const Matrix<T> &m1,
         ASSERT_EQ(m1.Columns(), m2[i].size()) << "Wrong size of matrix columns";
 
         for (size_t j = 0; j < m2[i].size(); ++j) {
-            ASSERT_EQ(m1(i, j), m2[i][j]) << "Matrices are not equal";
+            ASSERT_TRUE(matrix_lib::utils::IsEqualFloating(m1(i, j), m2[i][j])) << "Matrices are not equal";
         }
     }
 }
