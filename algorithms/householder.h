@@ -2,7 +2,7 @@
 
 #include "../types/matrix/matrix.h"
 
-namespace matrix_lib::algorithm {
+namespace matrix_lib::algorithms {
 template <utils::FloatOrComplex T>
 void HouseholderReduction(Matrix<T> &vector) {
     vector(0, 0) -= vector.GetEuclideanNorm();
@@ -22,4 +22,4 @@ void HouseholderRightReflection(Matrix<T> &matrix) {
     HouseholderReduction(r_vector);
     matrix -= T{2} * matrix * (r_vector * Matrix<T>::Transposed(r_vector));
 }
-} // namespace matrix_lib::algorithm
+} // namespace matrix_lib::algorithms
