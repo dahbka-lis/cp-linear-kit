@@ -295,6 +295,30 @@ public:
         return res;
     }
 
+    Matrix GetSubmatrix(IndexType r_from, IndexType r_to, IndexType c_from,
+                        IndexType c_to) const {
+        assert(
+            r_from >= 0 && r_to <= Rows() &&
+            "The row indices do not match the number of rows in the matrix.");
+        assert(r_from < r_to && "The row index for the start of the submatrix "
+                                "must be less than the end index.");
+        assert(c_from >= 0 && c_to <= Columns() &&
+               "The column indices do not match the number of columns in the "
+               "matrix.");
+        assert(c_from < c_to && "The column index for the start of the "
+                                "submatrix must be less than the end index.");
+
+        Matrix sub(r_to - r_from, c_to - c_from);
+
+        for (IndexType i = r_from; i < r_to; ++i) {
+            for (IndexType j = c_from; j < c_to; ++j) {
+                sub(i - r_from, j - c_from) = (*this)(i, j);
+            }
+        }
+
+        return sub;
+    }
+
     void Transpose() {
         std::vector<bool> visited(buffer_.size(), false);
         IndexType last_idx = buffer_.size() - 1;
