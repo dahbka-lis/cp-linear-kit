@@ -14,13 +14,15 @@ using Matrix = matrix_lib::Matrix<T>;
 template <typename T>
 void CompareMatrices(const Matrix<T> &m1,
                      const std::vector<std::vector<T>> &m2) {
-    ASSERT_EQ(m1.Rows(), m2.size()) << "Wrong size of matrix rows";
+    ASSERT_EQ(m1.Rows(), m2.size()) << "Matrix row size mismatch for compare.";
 
     for (size_t i = 0; i < m2.size(); ++i) {
-        ASSERT_EQ(m1.Columns(), m2[i].size()) << "Wrong size of matrix columns";
+        ASSERT_EQ(m1.Columns(), m2[i].size())
+            << "Matrix column size mismatch for compare.";
 
         for (size_t j = 0; j < m2[i].size(); ++j) {
-            ASSERT_TRUE(matrix_lib::utils::IsEqualFloating(m1(i, j), m2[i][j])) << "Matrices are not equal";
+            ASSERT_TRUE(matrix_lib::utils::IsEqualFloating(m1(i, j), m2[i][j]))
+                << "Matrices are not equal.";
         }
     }
 }
@@ -229,35 +231,36 @@ TEST(TEST_MATRIX, Stress) {
     using RandomGenerator = RandomGenerator<Type>;
     using Matrix = Matrix<Type>;
 
-    const std::size_t seed = 110;
-    RandomGenerator gen(seed, -50, 50);
+    for (int32_t seed = 1; seed < 10; ++seed) {
+        RandomGenerator gen(seed, -50, 50);
 
-    for (size_t it = 0; it < RandomGenerator::kIterationCnt; ++it) {
-        try {
-            int32_t random_id = (gen.GetRandomValue() + 50) % 4;
+        for (size_t it = 0; it < RandomGenerator::kIterationCnt; ++it) {
+            try {
+                int32_t random_id = (gen.GetRandomValue() + 50) % 4;
 
-            if (random_id == 0) {
-                auto [m1, m2] = gen.GenerateEqualDimMatrices();
-                m1 += m2;
-                m2 = m1 + m2;
-            } else if (random_id == 1) {
-                auto [m1, m2] = gen.GenerateEqualDimMatrices();
-                m1 -= m2;
-                m2 = m1 - m2;
-            } else if (random_id == 2) {
-                auto [m1, m2] = gen.GenerateColRowMatrices();
-                m1 *= m2;
-                m2 = m1 * Matrix::Transposed(m2);
-            } else {
-                auto [m1, m2] = gen.GenerateColRowMatrices();
-                m1.Transpose();
-                m2.Conjugate();
+                if (random_id == 0) {
+                    auto [m1, m2] = gen.GenerateEqualDimMatrices();
+                    m1 += m2;
+                    m2 = m1 + m2;
+                } else if (random_id == 1) {
+                    auto [m1, m2] = gen.GenerateEqualDimMatrices();
+                    m1 -= m2;
+                    m2 = m1 - m2;
+                } else if (random_id == 2) {
+                    auto [m1, m2] = gen.GenerateColRowMatrices();
+                    m1 *= m2;
+                    m2 = m1 * Matrix::Transposed(m2);
+                } else {
+                    auto [m1, m2] = gen.GenerateColRowMatrices();
+                    m1.Transpose();
+                    m2.Conjugate();
+                }
+            } catch (...) {
+                std::cerr << "Stress (operators) FAILED! Seed: " << seed
+                          << ", iteration: " << it << std::endl;
+                ASSERT_TRUE(false);
+                break;
             }
-        } catch (...) {
-            std::cerr << "Stress (operators) FAILED! Seed: " << seed
-                      << ", iteration: " << it << std::endl;
-            ASSERT_TRUE(false);
-            break;
         }
     }
 }
