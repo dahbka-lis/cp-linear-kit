@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../types/matrix/matrix.h"
+#include "../types/matrix.h"
 
 #include <random>
 

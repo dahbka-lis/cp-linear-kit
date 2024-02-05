@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../utils/is_equal_floating.h"
-#include "../../utils/is_float_complex.h"
+#include "../utils/is_equal_floating.h"
+#include "../utils/is_float_complex.h"
 
 #include <cassert>
 #include <functional>

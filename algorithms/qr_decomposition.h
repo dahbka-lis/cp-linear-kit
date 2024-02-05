@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../types/matrix/matrix.h"
+#include "../types/matrix.h"
 #include "householder.h"
 
 namespace matrix_lib::algorithms {
