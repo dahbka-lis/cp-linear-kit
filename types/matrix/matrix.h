@@ -319,6 +319,21 @@ public:
         return sub;
     }
 
+    void AssignSubmatrix(const Matrix &sub, IndexType row, IndexType column) {
+        assert(
+            row >= 0 && row + sub.Rows() <= Rows() &&
+            "The row indices do not match the number of rows in the matrix.");
+        assert(column >= 0 && column + sub.Columns() <= Columns() &&
+               "The column indices do not match the number of columns in the "
+               "matrix.");
+
+        for (IndexType i = row; i < row + sub.Rows(); ++i) {
+            for (IndexType j = column; j < column + sub.Columns(); ++j) {
+                (*this)(i, j) = sub(i - row, j - column);
+            }
+        }
+    }
+
     void Transpose() {
         std::vector<bool> visited(buffer_.size(), false);
         IndexType last_idx = buffer_.size() - 1;
