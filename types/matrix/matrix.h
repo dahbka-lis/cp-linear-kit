@@ -140,7 +140,6 @@ public:
                 for (IndexType k = 0; k < lhs.Columns(); ++k) {
                     sum += lhs(i, k) * rhs(k, j);
                 }
-
                 result(i, j) = sum;
             }
         }
@@ -257,7 +256,7 @@ public:
         return std::sqrt(sq_sum);
     }
 
-    Matrix GetDiag(bool transpose = false) const {
+    Matrix GetDiag(bool to_row = false) const {
         auto size = std::min(Rows(), Columns());
 
         Matrix res(size, 1);
@@ -265,7 +264,7 @@ public:
             res(i, 0) = (*this)(i, i);
         }
 
-        if (transpose) {
+        if (to_row) {
             res.Transpose();
         }
 
