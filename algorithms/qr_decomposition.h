@@ -13,9 +13,9 @@ struct PairQR {
 };
 
 template <utils::FloatOrComplex T>
-PairQR<T> DecomposeQR(const Matrix<T> &matrix) {
+PairQR<T> HouseholderQR(const Matrix<T> &matrix) {
     assert(matrix.Rows() == matrix.Columns() &&
-           "QR Decomposition for square matrices.");
+           "Householder QR Decomposition for square matrices.");
 
     PairQR<T> pair = {Matrix<T>::Identity(matrix.Rows()), matrix};
 
@@ -28,7 +28,7 @@ PairQR<T> DecomposeQR(const Matrix<T> &matrix) {
         HouseholderLeftReflection(pair.Q, vec, col);
     }
 
-    pair.Q.Transpose();
+    pair.Q.Conjugate();
     return pair;
 }
 } // namespace matrix_lib::algorithms
