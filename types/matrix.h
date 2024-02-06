@@ -252,7 +252,13 @@ public:
                Columns() == 1 && "Euclidean norm only for vectors.");
 
         T sq_sum = T{0};
-        ApplyToEach([&](const T &value) { sq_sum += (value * value); });
+
+        if constexpr (utils::IsFloatComplexValue<T>()) {
+            ApplyToEach([&](const T &value) { sq_sum += std::norm(value); });
+        } else {
+            ApplyToEach([&](const T &value) { sq_sum += (value * value); });
+        }
+
         return std::sqrt(sq_sum);
     }
 
