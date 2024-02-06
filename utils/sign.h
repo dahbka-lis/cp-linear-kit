@@ -1,8 +1,18 @@
-//
-// Created by flexinz on 2/6/24.
-//
+#pragma once
 
-#ifndef CP_LINALG_LIB_SIGN_H
-#define CP_LINALG_LIB_SIGN_H
+#include "is_equal_floating.h"
+#include "is_float_complex.h"
 
-#endif //CP_LINALG_LIB_SIGN_H
+namespace matrix_lib::utils {
+template <utils::FloatOrComplex T>
+T Sign(T value) {
+    if constexpr (utils::IsFloatComplexValue<T>()) {
+        if (utils::IsZeroFloating(value)) {
+            return T{0};
+        }
+        return value / std::sqrt(std::norm(value));
+    } else {
+        return (value >= 0) ? T{1} : T{-1};
+    }
+}
+} // namespace matrix_lib::utils
