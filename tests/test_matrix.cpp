@@ -1,31 +1,15 @@
-#include <gtest/gtest.h>
-
-#include "../types/matrix.h"
-
-#include <random>
+#include "helpers.h"
 
 namespace {
-template <typename T>
+template <typename T = long double>
 using Complex = std::complex<T>;
 
-template <typename T>
+template <typename T = long double>
 using Matrix = matrix_lib::Matrix<T>;
 
-template <typename T>
-void CompareMatrices(const Matrix<T> &m1,
-                     const std::vector<std::vector<T>> &m2) {
-    ASSERT_EQ(m1.Rows(), m2.size()) << "Matrix row size mismatch for compare.";
-
-    for (size_t i = 0; i < m2.size(); ++i) {
-        ASSERT_EQ(m1.Columns(), m2[i].size())
-            << "Matrix column size mismatch for compare.";
-
-        for (size_t j = 0; j < m2[i].size(); ++j) {
-            ASSERT_TRUE(matrix_lib::utils::IsEqualFloating(m1(i, j), m2[i][j]))
-                << "Matrices are not equal.";
-        }
-    }
-}
+using matrix_lib::tests::CompareMatrices;
+using matrix_lib::tests::RandomMatrixGenerator;
+using matrix_lib::utils::IsEqualFloating;
 
 TEST(TEST_MATRIX, BasicConstructors) {
     {
@@ -36,6 +20,8 @@ TEST(TEST_MATRIX, BasicConstructors) {
         Matrix<double> rect(2, 3);
         EXPECT_EQ(rect.Rows(), 2);
         EXPECT_EQ(rect.Columns(), 3);
+
+        CompareMatrices(rect, {{0, 0, 0}, {0, 0, 0}});
     }
     {
         Matrix<long double> matrix = {{1, 2, 3}, {4, 5, 6}};
@@ -156,6 +142,40 @@ TEST(TEST_MATRIX, Conjugate) {
     }
 }
 
+TEST(TEST_MATRIX, ApplyToEach) {
+    Matrix<> matrix = Matrix<>::Identity(3);
+    matrix.ApplyToEach([](long double &elem) { elem += 10; });
+
+    CompareMatrices(matrix, {{11, 10, 10}, {10, 11, 10}, {10, 10, 11}});
+    matrix.ApplyToEach([&](const long double &elem, size_t i, size_t j) {
+        if (i != j) {
+            EXPECT_DOUBLE_EQ(elem, 10.0l);
+        }
+    });
+
+    matrix.ApplyToEach(
+        [](long double &elem, size_t i, size_t j) { elem = (i == j); });
+
+    ASSERT_TRUE(matrix == Matrix<>::Identity(3));
+}
+
+TEST(TEST_MATRIX, Normalize) {
+    Matrix<double> vector = {{3}, {4}};
+    ASSERT_TRUE(IsEqualFloating(vector.GetEuclideanNorm(), 5.0));
+
+    vector.Normalize();
+
+    auto scalar_prod = Matrix<double>::Transposed(vector) * vector;
+    ASSERT_TRUE(IsEqualFloating(scalar_prod(0, 0), 1.0));
+
+    Matrix<float> other = {{1}, {2}, {3}};
+    auto norm_other = Matrix<float>::Normalized(other);
+
+    ASSERT_FALSE(IsEqualFloating(other.GetEuclideanNorm(),
+                                 norm_other.GetEuclideanNorm()));
+    ASSERT_TRUE(IsEqualFloating(norm_other.GetEuclideanNorm(), 1.0f));
+}
+
 TEST(TEST_MATRIX, DiagonalMatrix) {
     std::vector<double> diag = {1, 2, 3, 4, 5};
 
@@ -172,91 +192,39 @@ TEST(TEST_MATRIX, DiagonalMatrix) {
     }
 }
 
-template <typename T>
-struct Matrices {
-    Matrix<T> left;
-    Matrix<T> right;
-};
-
-template <typename T>
-class RandomGenerator {
-    using IntDistribution = std::uniform_int_distribution<int32_t>;
-
-public:
-    RandomGenerator(int32_t seed, int32_t from, int32_t to)
-        : rng_(seed), random_value_(from, to),
-          random_matrix_size_(kMatrixMinSize, kMatrixMaxSize) {}
-
-    int32_t GetRandomValue() { return random_value_(rng_); }
-
-    int32_t GetRandomMatrixSize() { return random_matrix_size_(rng_); }
-
-    Matrix<T> GenerateRandomMatrix(int32_t row, int32_t col) {
-        Matrix<T> result(row, col);
-        result.ApplyToEach([&](T &val) { val = GetRandomValue(); });
-        return result;
-    }
-
-    Matrices<T> GenerateEqualDimMatrices() {
-        auto size = GetRandomMatrixSize();
-        auto m1 = GenerateRandomMatrix(size, size);
-        auto m2 = GenerateRandomMatrix(size, size);
-
-        return {m1, m2};
-    }
-
-    Matrices<T> GenerateColRowMatrices() {
-        auto col_row = GetRandomMatrixSize();
-        auto m1_row = GetRandomMatrixSize();
-        auto m2_col = GetRandomMatrixSize();
-
-        auto m1 = GenerateRandomMatrix(m1_row, col_row);
-        auto m2 = GenerateRandomMatrix(col_row, m2_col);
-
-        return {m1, m2};
-    }
-
-    static constexpr std::size_t kIterationCnt = 1000;
-    static constexpr std::size_t kMatrixMinSize = 1;
-    static constexpr std::size_t kMatrixMaxSize = 100;
-
-private:
-    std::mt19937 rng_;
-    IntDistribution random_value_;
-    IntDistribution random_matrix_size_;
-};
-
 TEST(TEST_MATRIX, Stress) {
     using Type = long double;
-    using RandomGenerator = RandomGenerator<Type>;
+    using MatrixGenerator = RandomMatrixGenerator<Type>;
     using Matrix = Matrix<Type>;
 
-    for (int32_t seed = 1; seed < 10; ++seed) {
-        RandomGenerator gen(seed, -50, 50);
+    const size_t it_count = 1000u;
 
-        for (size_t it = 0; it < RandomGenerator::kIterationCnt; ++it) {
+    for (int32_t seed = 1; seed < 10; ++seed) {
+        MatrixGenerator gen(seed);
+
+        for (size_t it = 0; it < it_count; ++it) {
             try {
                 int32_t random_id = (gen.GetRandomValue() + 50) % 4;
 
                 if (random_id == 0) {
-                    auto [m1, m2] = gen.GenerateEqualDimMatrices();
+                    auto [m1, m2] = gen.GetSquareMatrices();
                     m1 += m2;
                     m2 = m1 + m2;
                 } else if (random_id == 1) {
-                    auto [m1, m2] = gen.GenerateEqualDimMatrices();
+                    auto [m1, m2] = gen.GetSquareMatrices();
                     m1 -= m2;
                     m2 = m1 - m2;
                 } else if (random_id == 2) {
-                    auto [m1, m2] = gen.GenerateColRowMatrices();
+                    auto [m1, m2] = gen.GetRectangleMatrices();
                     m1 *= m2;
                     m2 = m1 * Matrix::Transposed(m2);
                 } else {
-                    auto [m1, m2] = gen.GenerateColRowMatrices();
+                    auto [m1, m2] = gen.GetRectangleMatrices();
                     m1.Transpose();
                     m2.Conjugate();
                 }
             } catch (...) {
-                std::cerr << "Stress (operators) FAILED! Seed: " << seed
+                std::cerr << "Stress test FAILED! Seed: " << seed
                           << ", iteration: " << it << std::endl;
                 ASSERT_TRUE(false);
                 break;
