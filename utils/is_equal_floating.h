@@ -7,7 +7,7 @@
 namespace matrix_lib::utils {
 template <FloatOrComplex T>
 struct TypeEpsilon {
-    static constexpr T kValue = 1e-7;
+    static constexpr T kValue = 1e-6;
 };
 
 template <>
