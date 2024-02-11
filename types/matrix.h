@@ -1,7 +1,9 @@
 #pragma once
 
 #include "../utils/is_equal_floating.h"
+#include "../utils/is_matrix_type.h"
 #include "../utils/is_float_complex.h"
+#include "matrix_view.h"
 
 #include <cassert>
 #include <functional>
@@ -83,53 +85,42 @@ public:
         return *this;
     }
 
-    friend Matrix operator+(const Matrix &lhs, const Matrix &rhs) {
-        assert(lhs.Rows() == rhs.Rows() &&
-               "Number of matrix rows must be equal for addition.");
-        assert(rhs.Columns() == rhs.Columns() &&
-               "Number of matrix columns must be equal for addition.");
-
+    template <utils::MatrixType M>
+    friend Matrix operator+(const Matrix &lhs, const M &rhs) {
         Matrix res = lhs;
         return res += rhs;
     }
 
-    Matrix &operator+=(const Matrix &rhs) {
+    template <utils::MatrixType M>
+    Matrix &operator+=(const M &rhs) {
         assert(Rows() == rhs.Rows() &&
                "Number of matrix rows must be equal for addition.");
         assert(Columns() == rhs.Columns() &&
                "Number of matrix columns must be equal for addition.");
 
-        for (IndexType i = 0; i < buffer_.size(); ++i) {
-            buffer_[i] += rhs.buffer_[i];
-        }
-
+        ApplyToEach([&](T &val, IndexType i, IndexType j) { val += rhs(i, j); });
         return *this;
     }
 
-    friend Matrix operator-(const Matrix &lhs, const Matrix &rhs) {
-        assert(lhs.Rows() == rhs.Rows() &&
-               "Number of matrix rows must be equal for subtraction.");
-        assert(lhs.Columns() == rhs.Columns() &&
-               "Number of matrix columns must be equal for subtraction.");
-
+    template <utils::MatrixType M>
+    friend Matrix operator-(const Matrix &lhs, const M &rhs) {
         Matrix res = lhs;
         return res -= rhs;
     }
 
-    Matrix &operator-=(const Matrix &rhs) {
+    template <utils::MatrixType M>
+    Matrix &operator-=(const M &rhs) {
         assert(Rows() == rhs.Rows() &&
                "Number of matrix rows must be equal for subtraction.");
         assert(Columns() == rhs.Columns() &&
                "Number of matrix columns must be equal for subtraction.");
 
-        for (IndexType i = 0; i < buffer_.size(); ++i) {
-            buffer_[i] -= rhs.buffer_[i];
-        }
-
+        ApplyToEach([&](T &val, IndexType i, IndexType j) { val -= rhs(i, j); });
         return *this;
     }
 
-    friend Matrix operator*(const Matrix &lhs, const Matrix &rhs) {
+    template <utils::MatrixType F, utils::MatrixType S>
+    friend Matrix operator*(const F &lhs, const S &rhs) {
         assert(lhs.Columns() == rhs.Rows() &&
                "Matrix dimension mismatch for multiplication.");
         Matrix result(lhs.Rows(), rhs.Columns());
@@ -147,7 +138,8 @@ public:
         return result;
     }
 
-    Matrix &operator*=(const Matrix &rhs) { return *this = *this * rhs; }
+    template <utils::MatrixType M>
+    Matrix &operator*=(const M &rhs) { return *this = *this * rhs; }
 
     friend Matrix operator*(const Matrix &lhs, T scalar) {
         Matrix res = lhs;
@@ -177,7 +169,8 @@ public:
         return *this;
     }
 
-    friend bool operator==(const Matrix &lhs, const Matrix &rhs) {
+    template <utils::MatrixType M>
+    friend bool operator==(const Matrix &lhs, const M &rhs) {
         if (lhs.Rows() != rhs.Rows() || lhs.Columns() != rhs.Columns()) {
             return false;
         }
@@ -191,11 +184,13 @@ public:
         return is_equal;
     }
 
-    friend bool operator!=(const Matrix &lhs, const Matrix &rhs) {
+    template <utils::MatrixType M>
+    friend bool operator!=(const Matrix &lhs, const M &rhs) {
         return !(lhs == rhs);
     }
 
-    friend bool operator<=>(const Matrix &lhs, const Matrix &rhs) = delete;
+    template <utils::MatrixType M>
+    friend bool operator<=>(const Matrix &lhs, const M &rhs) = delete;
 
     T &operator()(IndexType row_idx, IndexType col_idx) {
         assert(Columns() * row_idx + col_idx < buffer_.size() &&
@@ -248,60 +243,30 @@ public:
     }
 
     T GetEuclideanNorm() const {
-        assert(Rows() == 1 ||
-               Columns() == 1 && "Euclidean norm only for vectors.");
-
-        T sq_sum = T{0};
-
-        if constexpr (utils::IsFloatComplexValue<T>()) {
-            ApplyToEach([&](const T &value) { sq_sum += std::norm(value); });
-        } else {
-            ApplyToEach([&](const T &value) { sq_sum += (value * value); });
-        }
-
-        return std::sqrt(sq_sum);
+        auto view = MatrixView(*this);
+        return view.GetEuclideanNorm();
     }
 
     Matrix GetDiag(bool to_row = false) const {
-        auto size = std::min(Rows(), Columns());
-
-        Matrix res(size, 1);
-        for (IndexType i = 0; i < size; ++i) {
-            res(i, 0) = (*this)(i, i);
-        }
-
-        if (to_row) {
-            res.Transpose();
-        }
-
-        return res;
+        auto view = MatrixView(*this);
+        return view.GetDiag();
     }
 
-    Matrix GetRow(IndexType index) const {
+    MatrixView<T> GetRow(IndexType index) const {
         assert(index < Rows() &&
                "Index must be less than the number of matrix rows.");
 
-        Matrix res(1, Columns());
-        for (IndexType i = 0; i < Columns(); ++i) {
-            res(0, i) = (*this)(index, i);
-        }
-
-        return res;
+        return MatrixView<T>(*this, index, index + 1);
     }
 
-    Matrix GetColumn(IndexType index) const {
+    MatrixView<T> GetColumn(IndexType index) const {
         assert(index < Columns() &&
                "Index must be less than the number of matrix columns.");
 
-        Matrix res(Rows(), 1);
-        for (IndexType i = 0; i < Rows(); ++i) {
-            res(i, 0) = (*this)(i, index);
-        }
-
-        return res;
+        return MatrixView<T>(*this, 0, Rows(), index, index + 1);
     }
 
-    Matrix GetSubmatrix(IndexType r_from, IndexType r_to, IndexType c_from,
+    MatrixView<T> GetSubmatrix(IndexType r_from, IndexType r_to, IndexType c_from,
                         IndexType c_to) const {
         assert(
             r_from >= 0 && r_to <= Rows() &&
@@ -314,18 +279,11 @@ public:
         assert(c_from < c_to && "The column index for the start of the "
                                 "submatrix must be less than the end index.");
 
-        Matrix sub(r_to - r_from, c_to - c_from);
-
-        for (IndexType i = r_from; i < r_to; ++i) {
-            for (IndexType j = c_from; j < c_to; ++j) {
-                sub(i - r_from, j - c_from) = (*this)(i, j);
-            }
-        }
-
-        return sub;
+        return MatrixView<T>(*this, r_from, r_to, c_from, c_to);
     }
 
-    void AssignSubmatrix(const Matrix &sub, IndexType row, IndexType column) {
+    template <utils::MatrixType M>
+    void AssignSubmatrix(const M &sub, IndexType row, IndexType column) {
         assert(
             row >= 0 && row + sub.Rows() <= Rows() &&
             "The row indices do not match the number of rows in the matrix.");
