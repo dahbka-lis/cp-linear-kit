@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../utils/is_equal_floating.h"
-#include "../utils/is_matrix_type.h"
 #include "../utils/is_float_complex.h"
+#include "../utils/is_matrix_type.h"
 #include "matrix_view.h"
 
 #include <cassert>
@@ -98,7 +98,8 @@ public:
         assert(Columns() == rhs.Columns() &&
                "Number of matrix columns must be equal for addition.");
 
-        ApplyToEach([&](T &val, IndexType i, IndexType j) { val += rhs(i, j); });
+        ApplyToEach(
+            [&](T &val, IndexType i, IndexType j) { val += rhs(i, j); });
         return *this;
     }
 
@@ -115,7 +116,8 @@ public:
         assert(Columns() == rhs.Columns() &&
                "Number of matrix columns must be equal for subtraction.");
 
-        ApplyToEach([&](T &val, IndexType i, IndexType j) { val -= rhs(i, j); });
+        ApplyToEach(
+            [&](T &val, IndexType i, IndexType j) { val -= rhs(i, j); });
         return *this;
     }
 
@@ -139,7 +141,9 @@ public:
     }
 
     template <utils::MatrixType M>
-    Matrix &operator*=(const M &rhs) { return *this = *this * rhs; }
+    Matrix &operator*=(const M &rhs) {
+        return *this = *this * rhs;
+    }
 
     friend Matrix operator*(const Matrix &lhs, T scalar) {
         Matrix res = lhs;
@@ -266,8 +270,8 @@ public:
         return MatrixView<T>(*this, 0, Rows(), index, index + 1);
     }
 
-    MatrixView<T> GetSubmatrix(IndexType r_from, IndexType r_to, IndexType c_from,
-                        IndexType c_to) const {
+    MatrixView<T> GetSubmatrix(IndexType r_from, IndexType r_to,
+                               IndexType c_from, IndexType c_to) const {
         assert(
             r_from >= 0 && r_to <= Rows() &&
             "The row indices do not match the number of rows in the matrix.");

@@ -17,7 +17,8 @@ PairQR<T> HouseholderQR(const Matrix<T> &matrix) {
 
     for (IndexType col = 0; col < std::min(matrix.Rows(), matrix.Columns());
          ++col) {
-        Matrix<T> vec = pair.R.GetSubmatrix(col, pair.R.Rows(), col, col + 1).Copy();
+        Matrix<T> vec =
+            pair.R.GetSubmatrix(col, pair.R.Rows(), col, col + 1).Copy();
         HouseholderReduction(vec);
 
         HouseholderLeftReflection(pair.R, vec, col, col);

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "../utils/is_float_complex.h"
 #include "../utils/is_equal_floating.h"
+#include "../utils/is_float_complex.h"
 
+#include <cassert>
 #include <functional>
 #include <utility>
 #include <vector>
-#include <cassert>
 
 namespace matrix_lib {
 template <utils::FloatOrComplex T>
@@ -26,7 +26,8 @@ class MatrixView {
 
 public:
     explicit MatrixView(const Matrix<T> &matrix, IndexType r_from = 0,
-               IndexType r_to = 0, IndexType c_from = 0, IndexType c_to = 0)
+                        IndexType r_to = 0, IndexType c_from = 0,
+                        IndexType c_to = 0)
         : matrix_(matrix), row_(r_from, r_to), column_(c_from, c_to) {
 
         if (r_from > r_to || r_from > matrix_.Rows()) {
@@ -51,7 +52,7 @@ public:
     MatrixView(MatrixView &&rhs) noexcept
         : matrix_(std::move(rhs.matrix_)),
           row_(std::exchange(rhs.row_, {0, 0})),
-          column_(std::exchange(rhs.column_, {0, 0})) {};
+          column_(std::exchange(rhs.column_, {0, 0})){};
 
     MatrixView &operator=(const MatrixView &lhs) = default;
 
@@ -122,19 +123,22 @@ public:
         assert(index < Rows() &&
                "Index must be less than the number of matrix rows.");
 
-        return MatrixView(matrix_, row_.from + index, row_.from + index + 1, column_.from, column_.to);
+        return MatrixView(matrix_, row_.from + index, row_.from + index + 1,
+                          column_.from, column_.to);
     }
 
     MatrixView GetColumn(IndexType index) const {
         assert(index < Columns() &&
                "Index must be less than the number of matrix columns.");
 
-        return MatrixView(matrix_, row_.from, row_.from + row_.to, column_.from + index, column_.from + index + 1);
+        return MatrixView(matrix_, row_.from, row_.from + row_.to,
+                          column_.from + index, column_.from + index + 1);
     }
 
     Matrix<T> Copy() const {
         Matrix<T> res(Rows(), Columns());
-        res.ApplyToEach([&](T &val, IndexType i, IndexType j) { val = (*this)(i, j); });
+        res.ApplyToEach(
+            [&](T &val, IndexType i, IndexType j) { val = (*this)(i, j); });
         return res;
     }
 

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "is_float_complex.h"
 #include "../types/matrix.h"
 #include "../types/matrix_view.h"
+#include "is_float_complex.h"
 
 namespace matrix_lib::utils {
 template <typename T>

@@ -21,7 +21,8 @@ void HouseholderLeftReflection(Matrix<T> &matrix, const Matrix<T> &vec,
         c_to = matrix.Columns();
     }
 
-    MatrixView<T> sub = matrix.GetSubmatrix(row, row + vec.Rows(), c_from, c_to);
+    MatrixView<T> sub =
+        matrix.GetSubmatrix(row, row + vec.Rows(), c_from, c_to);
     auto hh_diff = (T{2} * vec) * (Matrix<T>::Conjugated(vec) * sub);
     matrix.AssignSubmatrix(sub.Copy() - hh_diff, row, c_from);
 }
