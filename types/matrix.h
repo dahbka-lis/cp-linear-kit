@@ -253,7 +253,7 @@ public:
 
     Matrix GetDiag(bool to_row = false) const {
         auto view = MatrixView(*this);
-        return view.GetDiag();
+        return view.GetDiag(to_row);
     }
 
     MatrixView<T> GetRow(IndexType index) const {
