@@ -341,10 +341,6 @@ public:
         }
     }
 
-    static Matrix Identity(IndexType size, T default_value = T{1}) {
-        return Matrix(Data(size, default_value));
-    }
-
     static Matrix Transposed(const Matrix &rhs) {
         Matrix res = rhs;
         res.Transpose();
@@ -361,6 +357,14 @@ public:
         Matrix res = rhs;
         res.Normalize();
         return res;
+    }
+
+    static Matrix Identity(IndexType size, T default_value = T{1}) {
+        return Matrix(Data(size, default_value));
+    }
+
+    static Matrix Diagonal(const Data &diag) {
+        return Matrix(diag);
     }
 
     friend std::ostream &operator<<(std::ostream &ostream,
