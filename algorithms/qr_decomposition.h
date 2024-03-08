@@ -1,5 +1,6 @@
 #pragma once
 
+#include "givens.h"
 #include "householder.h"
 
 namespace matrix_lib::algorithms {
@@ -13,19 +14,39 @@ struct PairQR {
 
 template <utils::FloatOrComplex T>
 PairQR<T> HouseholderQR(const Matrix<T> &matrix) {
-    PairQR<T> pair = {Matrix<T>::Identity(matrix.Rows()), matrix};
+    auto [Q, R] = PairQR<T>{Matrix<T>::Identity(matrix.Rows()), matrix};
 
     for (IndexType col = 0; col < std::min(matrix.Rows(), matrix.Columns());
          ++col) {
-        Matrix<T> vec =
-            pair.R.GetSubmatrix(col, pair.R.Rows(), col, col + 1).Copy();
+        auto vec = R.GetSubmatrix(col, R.Rows(), col, col + 1).Copy();
         HouseholderReduction(vec);
 
-        HouseholderLeftReflection(pair.R, vec, col, col);
-        HouseholderLeftReflection(pair.Q, vec, col);
+        HouseholderLeftReflection(R, vec, col, col);
+        HouseholderLeftReflection(Q, vec, col);
     }
 
-    pair.Q.Conjugate();
-    return pair;
+    Q.Conjugate();
+    return {Q, R};
+}
+
+template <utils::FloatOrComplex T>
+PairQR<T> GivensQR(const Matrix<T> &matrix) {
+    auto [Q, R] = PairQR<T>{Matrix<T>::Identity(matrix.Rows()), matrix};
+
+    for (IndexType col = 0; col < std::min(matrix.Rows(), matrix.Columns());
+         ++col) {
+        for (IndexType row = matrix.Rows() - 2; row + 1 > col; --row) {
+            auto sub_R = R.GetSubmatrix(row, row + 2, 0, R.Columns());
+            auto sub_Q = Q.GetSubmatrix(row, row + 2, 0, Q.Columns());
+            auto givens =
+                GetGivensMatrix(2, 0, 1, sub_R(0, col), sub_R(1, col));
+
+            R.AssignSubmatrix(givens * sub_R, row, 0);
+            Q.AssignSubmatrix(givens * sub_Q, row, 0);
+        }
+    }
+
+    Q.Conjugate();
+    return {Q, R};
 }
 } // namespace matrix_lib::algorithms
