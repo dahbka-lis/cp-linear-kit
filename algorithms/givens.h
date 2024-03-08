@@ -17,6 +17,10 @@ GivensPair<T> GetGivensCoefficients(T first_elem, T second_elem) {
     auto abs_second = std::abs(second_elem);
     auto sqrt_abs = std::sqrt(abs_first * abs_first + abs_second * abs_second);
 
+    if (utils::IsZeroFloating(sqrt_abs)) {
+        return {T{1}, T{0}};
+    }
+
     return {first_elem / sqrt_abs, -second_elem / sqrt_abs};
 }
 
