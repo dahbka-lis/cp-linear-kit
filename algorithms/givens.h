@@ -43,4 +43,32 @@ Matrix<T> GetGivensMatrix(IndexType size, IndexType from, IndexType to,
 
     return res;
 }
+
+template <utils::FloatOrComplex T>
+void GivensLeftRotation(Matrix<T> &matrix, IndexType from, IndexType to,
+                        T first, T second) {
+    auto [cos, sin] = GetGivensCoefficients(first, second);
+
+    for (IndexType i = 0; i < matrix.Columns(); ++i) {
+        auto cp_from = matrix(from, i);
+        auto cp_to = matrix(to, i);
+
+        matrix(from, i) = cos * cp_from - sin * cp_to;
+        matrix(to, i) = cos * cp_to + sin * cp_from;
+    }
+}
+
+template <utils::FloatOrComplex T>
+void GivensRightRotation(Matrix<T> &matrix, IndexType from, IndexType to,
+                         T first, T second) {
+    auto [cos, sin] = GetGivensCoefficients(first, second);
+
+    for (IndexType i = 0; i < matrix.Rows(); ++i) {
+        auto cp_from = matrix(i, from);
+        auto cp_to = matrix(i, to);
+
+        matrix(i, from) = cos * cp_from - sin * cp_to;
+        matrix(i, to) = cos * cp_to + sin * cp_from;
+    }
+}
 } // namespace matrix_lib::algorithms

@@ -341,6 +341,11 @@ public:
         }
     }
 
+    void RoundZeroes() {
+        ApplyToEach(
+            [](T &el) { el = (utils::IsZeroFloating(el)) ? T{0} : el; });
+    }
+
     static Matrix Transposed(const Matrix &rhs) {
         Matrix res = rhs;
         res.Transpose();
@@ -363,9 +368,7 @@ public:
         return Matrix(Data(size, default_value));
     }
 
-    static Matrix Diagonal(const Data &diag) {
-        return Matrix(diag);
-    }
+    static Matrix Diagonal(const Data &diag) { return Matrix(diag); }
 
     friend std::ostream &operator<<(std::ostream &ostream,
                                     const Matrix &matrix) {
