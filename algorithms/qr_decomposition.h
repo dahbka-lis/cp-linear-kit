@@ -44,13 +44,11 @@ PairQR<T> GivensQR(const MatrixView<T> &matrix) {
     for (IndexType col = 0; col < std::min(matrix.Rows(), matrix.Columns());
          ++col) {
         for (IndexType row = matrix.Rows() - 2; row + 1 > col; --row) {
-            auto sub_R = R.GetSubmatrix(row, row + 2, 0, R.Columns());
-            auto sub_Q = Q.GetSubmatrix(row, row + 2, 0, Q.Columns());
-            auto givens =
-                GetGivensMatrix(2, 0, 1, sub_R(0, col), sub_R(1, col));
+            auto first = R(row, col);
+            auto second = R(row + 1, col);
 
-            R.AssignSubmatrix(givens * sub_R, row, 0);
-            Q.AssignSubmatrix(givens * sub_Q, row, 0);
+            GivensLeftRotation(R, row, row + 1, first, second);
+            GivensLeftRotation(Q, row, row + 1, first, second);
         }
     }
 
