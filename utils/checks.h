@@ -65,4 +65,17 @@ bool IsBidiagonal(const M &matrix) {
 
     return true;
 }
+
+template <utils::MatrixType M>
+bool IsHessenberg(const M &matrix) {
+    for (IndexType i = 2; i < matrix.Rows(); ++i) {
+        for (IndexType j = 0; j < i - 1; ++j) {
+            if (!utils::IsZeroFloating(matrix(i, j))) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
 } // namespace matrix_lib::utils
