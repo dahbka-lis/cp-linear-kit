@@ -142,6 +142,22 @@ public:
         return res;
     }
 
+    static Matrix<T> Transposed(const MatrixView<T> &rhs) {
+        return Matrix<T>::Transposed(rhs.Copy());
+    }
+
+    static Matrix<T> Conjugated(const MatrixView<T> &rhs) {
+        return Matrix<T>::Conjugated(rhs.Copy());
+    }
+
+    static Matrix<T> Normalized(const MatrixView<T> &rhs) {
+        return Matrix<T>::Normalized(rhs.Copy());
+    }
+
+    static Matrix<T> Identity(IndexType size, T default_value = T{1}) {
+        return Matrix<T>::Identity(size, default_value);
+    }
+
     friend std::ostream &operator<<(std::ostream &ostream,
                                     const MatrixView &matrix) {
         ostream << '{';

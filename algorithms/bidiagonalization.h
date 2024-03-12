@@ -13,8 +13,8 @@ struct BidiagonalBasis {
 };
 
 template <utils::FloatOrComplex T>
-BidiagonalBasis<T> Bidiagonalize(const Matrix<T> &matrix) {
-    Matrix<T> B = matrix;
+BidiagonalBasis<T> Bidiagonalize(const MatrixView<T> &matrix) {
+    Matrix<T> B = matrix.Copy();
     Matrix<T> U = Matrix<T>::Identity(B.Rows());
     Matrix<T> V = Matrix<T>::Identity(B.Columns());
 
@@ -37,6 +37,12 @@ BidiagonalBasis<T> Bidiagonalize(const Matrix<T> &matrix) {
 
     U.Conjugate();
     V.Conjugate();
+    B.RoundZeroes();
     return {U, B, V};
+}
+
+template <utils::FloatOrComplex T>
+BidiagonalBasis<T> Bidiagonalize(const Matrix<T> &matrix) {
+    return Bidiagonalize(matrix.View());
 }
 } // namespace matrix_lib::algorithms

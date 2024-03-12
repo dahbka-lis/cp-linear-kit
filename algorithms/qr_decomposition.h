@@ -13,8 +13,9 @@ struct PairQR {
 };
 
 template <utils::FloatOrComplex T>
-PairQR<T> HouseholderQR(const Matrix<T> &matrix) {
-    auto [Q, R] = PairQR<T>{Matrix<T>::Identity(matrix.Rows()), matrix};
+PairQR<T> HouseholderQR(const MatrixView<T> &matrix) {
+    auto Q = Matrix<T>::Identity(matrix.Rows());
+    auto R = matrix.Copy();
 
     for (IndexType col = 0; col < std::min(matrix.Rows(), matrix.Columns());
          ++col) {
@@ -26,12 +27,19 @@ PairQR<T> HouseholderQR(const Matrix<T> &matrix) {
     }
 
     Q.Conjugate();
+    R.RoundZeroes();
     return {Q, R};
 }
 
 template <utils::FloatOrComplex T>
-PairQR<T> GivensQR(const Matrix<T> &matrix) {
-    auto [Q, R] = PairQR<T>{Matrix<T>::Identity(matrix.Rows()), matrix};
+PairQR<T> HouseholderQR(const Matrix<T> &matrix) {
+    return HouseholderQR(matrix.View());
+}
+
+template <utils::FloatOrComplex T>
+PairQR<T> GivensQR(const MatrixView<T> &matrix) {
+    auto Q = Matrix<T>::Identity(matrix.Rows());
+    auto R = matrix.Copy();
 
     for (IndexType col = 0; col < std::min(matrix.Rows(), matrix.Columns());
          ++col) {
@@ -47,6 +55,12 @@ PairQR<T> GivensQR(const Matrix<T> &matrix) {
     }
 
     Q.Conjugate();
+    R.RoundZeroes();
     return {Q, R};
+}
+
+template <utils::FloatOrComplex T>
+PairQR<T> GivensQR(const Matrix<T> &matrix) {
+    return GivensQR(matrix.View());
 }
 } // namespace matrix_lib::algorithms

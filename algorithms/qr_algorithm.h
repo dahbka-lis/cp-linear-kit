@@ -1,29 +1,12 @@
 #pragma once
 
+#include "../utils/checks.h"
 #include "givens.h"
 #include "qr_decomposition.h"
 
 namespace matrix_lib::algorithms {
 template <utils::FloatOrComplex T>
-Matrix<T> GetSchurDecomposition(const Matrix<T> &matrix, T shift = T{0},
-                                std::size_t it_cnt = 50) {
-    assert(matrix.Rows() == matrix.Columns() &&
-           "Schur decomposition for square matrix.");
-
-    auto copy = matrix;
-    auto shift_I = Matrix<T>::Identity(copy.Rows(), shift);
-
-    for (std::size_t i = 0; i < it_cnt; ++i) {
-        auto [Q, R] = HouseholderQR(copy - shift_I);
-        copy = R * Q + shift_I;
-        copy.RoundZeroes();
-    }
-
-    return copy;
-}
-
-template <utils::FloatOrComplex T>
-T GetWilkinsonShift(const Matrix<T> &matrix) {
+T GetWilkinsonShift(const MatrixView<T> &matrix) {
     assert(matrix.Rows() == 2 && "Wilkinson shift for 2x2 matrix.");
     assert(matrix.Columns() == 2 && "Wilkinson shift for 2x2 matrix.");
     assert(matrix(0, 1) == matrix(1, 0) &&
@@ -38,6 +21,38 @@ T GetWilkinsonShift(const Matrix<T> &matrix) {
 }
 
 template <utils::FloatOrComplex T>
+T GetWilkinsonShift(const Matrix<T> &matrix) {
+    return GetWilkinsonShift(matrix.View());
+}
+
+template <utils::FloatOrComplex T = long double>
+Matrix<T> GetSchurDecomposition(const MatrixView<T> &matrix,
+                                std::size_t it_cnt = 50) {
+    assert(utils::IsHermitian(matrix) &&
+           "Schur decomposition for hermitian matrix.");
+
+    auto copy = matrix.Copy();
+    auto last_minor = copy.GetSubmatrix(copy.Rows() - 2, copy.Rows(),
+                                        copy.Columns() - 2, copy.Columns());
+    auto shift = 0; // todo
+    auto shift_I = Matrix<T>::Identity(copy.Rows(), shift);
+
+    for (std::size_t i = 0; i < it_cnt; ++i) {
+        auto [Q, R] = HouseholderQR(copy - shift_I);
+        copy = R * Q + shift_I;
+        copy.RoundZeroes();
+    }
+
+    return copy;
+}
+
+template <utils::FloatOrComplex T = long double>
+Matrix<T> GetSchurDecomposition(const Matrix<T> &matrix,
+                                std::size_t it_cnt = 50) {
+    return GetSchurDecomposition(matrix.View(), it_cnt);
+}
+
+template <utils::FloatOrComplex T>
 struct DiagBasisQR {
     Matrix<T> U;
     Matrix<T> diag;
@@ -45,12 +60,14 @@ struct DiagBasisQR {
 };
 
 template <utils::FloatOrComplex T>
-DiagBasisQR<T> BidiagonalAlgorithmQR(const Matrix<T> &B,
+DiagBasisQR<T> BidiagonalAlgorithmQR(const MatrixView<T> &B,
                                      IndexType it_cnt = 30) {
-    // assert - bidiagonal matrix
-    // assert - min size 2x2
+    assert(B.Rows() == 2 && B.Columns() == 2 &&
+           "Bigiagonal QR algorithm for 2x2 matrix.");
+    assert(utils::IsBidiagonal(B) &&
+           "Bigiagonal QR algorithm for bidiagonal matrix.");
 
-    auto S = B;
+    auto S = B.Copy();
     IndexType r = S.Rows();
     IndexType c = S.Columns();
     IndexType size = std::min(r, c);
@@ -89,5 +106,11 @@ DiagBasisQR<T> BidiagonalAlgorithmQR(const Matrix<T> &B,
     }
 
     return {U, S, VT};
+}
+
+template <utils::FloatOrComplex T>
+DiagBasisQR<T> BidiagonalAlgorithmQR(const Matrix<T> &B,
+                                     IndexType it_cnt = 30) {
+    return BidiagonalAlgorithmQR(B.View(), it_cnt);
 }
 } // namespace matrix_lib::algorithms

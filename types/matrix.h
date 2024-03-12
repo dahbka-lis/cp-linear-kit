@@ -214,6 +214,14 @@ public:
         return (rows_ == 0) ? 0 : buffer_.size() / rows_;
     }
 
+    Matrix<T> Copy() const {
+        return *this;
+    }
+
+    MatrixView<T> View() const {
+        return MatrixView<T>(*this);
+    }
+
     void ApplyToEach(Function func) {
         for (IndexType i = 0; i < buffer_.size(); ++i) {
             func(buffer_[i]);
