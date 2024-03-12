@@ -5,14 +5,14 @@
 namespace matrix_lib::algorithms {
 using IndexType = std::size_t;
 
-template <utils::FloatOrComplex T>
+template <utils::FloatOrComplex T = long double>
 struct BidiagonalBasis {
     Matrix<T> U;
     Matrix<T> B;
     Matrix<T> VT;
 };
 
-template <utils::FloatOrComplex T>
+template <utils::FloatOrComplex T = long double>
 BidiagonalBasis<T> Bidiagonalize(const MatrixView<T> &matrix) {
     Matrix<T> B = matrix.Copy();
     Matrix<T> U = Matrix<T>::Identity(B.Rows());
@@ -41,7 +41,7 @@ BidiagonalBasis<T> Bidiagonalize(const MatrixView<T> &matrix) {
     return {U, B, V};
 }
 
-template <utils::FloatOrComplex T>
+template <utils::FloatOrComplex T = long double>
 BidiagonalBasis<T> Bidiagonalize(const Matrix<T> &matrix) {
     return Bidiagonalize(matrix.View());
 }

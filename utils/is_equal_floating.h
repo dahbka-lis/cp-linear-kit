@@ -28,7 +28,7 @@ struct TypeEpsilon<std::complex<T>> {
 template <FloatOrComplex T>
 static constexpr auto Eps = TypeEpsilon<T>::kValue;
 
-template <FloatOrComplex T>
+template <FloatOrComplex T = long double>
 bool IsEqualFloating(T lhs, T rhs) {
     if constexpr (IsFloatComplexValue<T>()) {
         auto is_equal_real = std::abs(lhs.real() - rhs.real()) < Eps<T>;
@@ -39,7 +39,7 @@ bool IsEqualFloating(T lhs, T rhs) {
     }
 }
 
-template <FloatOrComplex T>
+template <FloatOrComplex T = long double>
 bool IsZeroFloating(T lhs) {
     return IsEqualFloating<T>(lhs, T{0});
 }

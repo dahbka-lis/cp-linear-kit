@@ -4,7 +4,7 @@
 #include "is_float_complex.h"
 
 namespace matrix_lib::utils {
-template <utils::FloatOrComplex T>
+template <utils::FloatOrComplex T = long double>
 T Sign(T value) {
     if constexpr (utils::IsFloatComplexValue<T>()) {
         if (utils::IsZeroFloating(value)) {

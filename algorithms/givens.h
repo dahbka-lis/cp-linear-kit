@@ -5,13 +5,13 @@
 namespace matrix_lib::algorithms {
 using IndexType = std::size_t;
 
-template <utils::FloatOrComplex T>
+template <utils::FloatOrComplex T = long double>
 struct GivensPair {
     T cos = T{0};
     T sin = T{0};
 };
 
-template <utils::FloatOrComplex T>
+template <utils::FloatOrComplex T = long double>
 GivensPair<T> GetGivensCoefficients(T first_elem, T second_elem) {
     auto abs_first = std::abs(first_elem);
     auto abs_second = std::abs(second_elem);
@@ -24,7 +24,7 @@ GivensPair<T> GetGivensCoefficients(T first_elem, T second_elem) {
     return {first_elem / sqrt_abs, -second_elem / sqrt_abs};
 }
 
-template <utils::FloatOrComplex T>
+template <utils::FloatOrComplex T = long double>
 Matrix<T> GetGivensMatrix(IndexType size, IndexType from, IndexType to,
                           T first_elem, T second_elem) {
     auto res = Matrix<T>::Identity(size);
@@ -44,7 +44,7 @@ Matrix<T> GetGivensMatrix(IndexType size, IndexType from, IndexType to,
     return res;
 }
 
-template <utils::FloatOrComplex T>
+template <utils::FloatOrComplex T = long double>
 void GivensLeftRotation(Matrix<T> &matrix, IndexType from, IndexType to,
                         T first, T second) {
     auto [cos, sin] = GetGivensCoefficients(first, second);
@@ -58,7 +58,7 @@ void GivensLeftRotation(Matrix<T> &matrix, IndexType from, IndexType to,
     }
 }
 
-template <utils::FloatOrComplex T>
+template <utils::FloatOrComplex T = long double>
 void GivensRightRotation(Matrix<T> &matrix, IndexType from, IndexType to,
                          T first, T second) {
     auto [cos, sin] = GetGivensCoefficients(first, second);

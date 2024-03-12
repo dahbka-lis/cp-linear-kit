@@ -5,7 +5,7 @@
 #include "qr_decomposition.h"
 
 namespace matrix_lib::algorithms {
-template <utils::FloatOrComplex T>
+template <utils::FloatOrComplex T = long double>
 T GetWilkinsonShift(const MatrixView<T> &matrix) {
     assert(matrix.Rows() == 2 && "Wilkinson shift for 2x2 matrix.");
     assert(matrix.Columns() == 2 && "Wilkinson shift for 2x2 matrix.");
@@ -20,7 +20,7 @@ T GetWilkinsonShift(const MatrixView<T> &matrix) {
            (utils::Sign(d) * matrix(0, 1) * matrix(0, 1)) / coefficient;
 }
 
-template <utils::FloatOrComplex T>
+template <utils::FloatOrComplex T = long double>
 T GetWilkinsonShift(const Matrix<T> &matrix) {
     return GetWilkinsonShift(matrix.View());
 }
@@ -67,7 +67,7 @@ struct DiagBasisQR {
     Matrix<T> VT;
 };
 
-template <utils::FloatOrComplex T>
+template <utils::FloatOrComplex T = long double>
 DiagBasisQR<T> BidiagonalAlgorithmQR(const MatrixView<T> &B,
                                      IndexType it_cnt = 30) {
     assert(B.Rows() == 2 && B.Columns() == 2 &&
@@ -116,7 +116,7 @@ DiagBasisQR<T> BidiagonalAlgorithmQR(const MatrixView<T> &B,
     return {U, S, VT};
 }
 
-template <utils::FloatOrComplex T>
+template <utils::FloatOrComplex T = long double>
 DiagBasisQR<T> BidiagonalAlgorithmQR(const Matrix<T> &B,
                                      IndexType it_cnt = 30) {
     return BidiagonalAlgorithmQR(B.View(), it_cnt);

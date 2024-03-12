@@ -7,13 +7,13 @@
 namespace matrix_lib::algorithms {
 using IndexType = std::size_t;
 
-template <utils::FloatOrComplex T>
+template <utils::FloatOrComplex T = long double>
 void HouseholderReduction(Matrix<T> &vector) {
     vector(0, 0) += utils::Sign(vector(0, 0)) * vector.GetEuclideanNorm();
     vector.Normalize();
 }
 
-template <utils::FloatOrComplex T>
+template <utils::FloatOrComplex T = long double>
 void HouseholderLeftReflection(Matrix<T> &matrix, const Matrix<T> &vec,
                                IndexType row = 0, IndexType c_from = 0,
                                IndexType c_to = -1) {
@@ -27,7 +27,7 @@ void HouseholderLeftReflection(Matrix<T> &matrix, const Matrix<T> &vec,
     matrix.AssignSubmatrix(sub.Copy() - hh_diff, row, c_from);
 }
 
-template <utils::FloatOrComplex T>
+template <utils::FloatOrComplex T = long double>
 void HouseholderRightReflection(Matrix<T> &matrix, const Matrix<T> &vec,
                                 IndexType col = 0, IndexType r_from = 0,
                                 IndexType r_to = -1) {

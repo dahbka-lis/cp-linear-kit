@@ -6,13 +6,13 @@
 namespace matrix_lib::algorithms {
 using IndexType = std::size_t;
 
-template <utils::FloatOrComplex T>
+template <utils::FloatOrComplex T = long double>
 struct PairQR {
     Matrix<T> Q;
     Matrix<T> R;
 };
 
-template <utils::FloatOrComplex T>
+template <utils::FloatOrComplex T = long double>
 PairQR<T> HouseholderQR(const MatrixView<T> &matrix) {
     auto Q = Matrix<T>::Identity(matrix.Rows());
     auto R = matrix.Copy();
@@ -31,12 +31,12 @@ PairQR<T> HouseholderQR(const MatrixView<T> &matrix) {
     return {Q, R};
 }
 
-template <utils::FloatOrComplex T>
+template <utils::FloatOrComplex T = long double>
 PairQR<T> HouseholderQR(const Matrix<T> &matrix) {
     return HouseholderQR(matrix.View());
 }
 
-template <utils::FloatOrComplex T>
+template <utils::FloatOrComplex T = long double>
 PairQR<T> GivensQR(const MatrixView<T> &matrix) {
     auto Q = Matrix<T>::Identity(matrix.Rows());
     auto R = matrix.Copy();
@@ -59,7 +59,7 @@ PairQR<T> GivensQR(const MatrixView<T> &matrix) {
     return {Q, R};
 }
 
-template <utils::FloatOrComplex T>
+template <utils::FloatOrComplex T = long double>
 PairQR<T> GivensQR(const Matrix<T> &matrix) {
     return GivensQR(matrix.View());
 }
