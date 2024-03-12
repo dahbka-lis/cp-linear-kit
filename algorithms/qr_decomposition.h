@@ -12,8 +12,15 @@ struct PairQR {
     Matrix<T> R;
 };
 
+template <utils::FloatOrComplex T>
+PairQR<T> HessenbergQR(const MatrixView<T> &matrix);
+
 template <utils::FloatOrComplex T = long double>
 PairQR<T> HouseholderQR(const MatrixView<T> &matrix) {
+    if (utils::IsHessenberg(matrix)) {
+        return HessenbergQR(matrix);
+    }
+
     auto Q = Matrix<T>::Identity(matrix.Rows());
     auto R = matrix.Copy();
 
@@ -38,6 +45,10 @@ PairQR<T> HouseholderQR(const Matrix<T> &matrix) {
 
 template <utils::FloatOrComplex T = long double>
 PairQR<T> GivensQR(const MatrixView<T> &matrix) {
+    if (utils::IsHessenberg(matrix)) {
+        return HessenbergQR(matrix);
+    }
+
     auto Q = Matrix<T>::Identity(matrix.Rows());
     auto R = matrix.Copy();
 
@@ -60,5 +71,30 @@ PairQR<T> GivensQR(const MatrixView<T> &matrix) {
 template <utils::FloatOrComplex T = long double>
 PairQR<T> GivensQR(const Matrix<T> &matrix) {
     return GivensQR(matrix.View());
+}
+
+template <utils::FloatOrComplex T = long double>
+PairQR<T> HessenbergQR(const MatrixView<T> &matrix) {
+    assert(utils::IsHessenberg(matrix) &&
+           "Hessenberg QR for hessenberg form of matrix.");
+
+    auto Q = Matrix<T>::Identity(matrix.Rows());
+    auto R = matrix.Copy();
+
+    for (IndexType i = 0; i < std::min(R.Rows() - 1, R.Columns()); ++i) {
+        auto first = R(i, i);
+        auto second = R(i + 1, i);
+
+        GivensLeftRotation(R, i, i + 1, first, second);
+        GivensRightRotation(Q, i, i + 1, first, second);
+    }
+
+    R.RoundZeroes();
+    return {Q, R};
+}
+
+template <utils::FloatOrComplex T = long double>
+PairQR<T> HessenbergQR(const Matrix<T> &matrix) {
+    return HessenbergQR(matrix.View());
 }
 } // namespace matrix_lib::algorithms

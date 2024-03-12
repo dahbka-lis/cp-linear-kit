@@ -6,6 +6,11 @@ namespace matrix_lib::utils {
 using IndexType = std::size_t;
 
 template <utils::MatrixType M>
+bool IsSquare(const M &matrix) {
+    return matrix.Rows() == matrix.Columns();
+}
+
+template <utils::MatrixType M>
 bool IsUnitary(const M &matrix) {
     if (matrix.Rows() != matrix.Columns()) {
         return false;
@@ -76,6 +81,6 @@ bool IsHessenberg(const M &matrix) {
         }
     }
 
-    return true;
+    return IsSquare(matrix);
 }
 } // namespace matrix_lib::utils
