@@ -32,9 +32,9 @@ struct SpectralPair {
 };
 
 template <utils::FloatOrComplex T = long double>
-SpectralPair<T> GetSpectralDecomposition(const MatrixView<T> &matrix,
+SpectralPair<T> GetRealSpectralDecomposition(const MatrixView<T> &matrix,
                                          T shift = T{0},
-                                         std::size_t it_cnt = 50) {
+                                         std::size_t it_cnt = 100) {
     assert(utils::IsHermitian(matrix) &&
            "Spectral decomposition for hermitian matrix.");
 
@@ -54,10 +54,10 @@ SpectralPair<T> GetSpectralDecomposition(const MatrixView<T> &matrix,
 }
 
 template <utils::FloatOrComplex T = long double>
-SpectralPair<T> GetSpectralDecomposition(const Matrix<T> &matrix,
+SpectralPair<T> GetRealSpectralDecomposition(const Matrix<T> &matrix,
                                          T shift = T{0},
                                          std::size_t it_cnt = 50) {
-    return GetSpectralDecomposition(matrix.View(), shift, it_cnt);
+    return GetRealSpectralDecomposition(matrix.View(), shift, it_cnt);
 }
 
 template <utils::FloatOrComplex T>
