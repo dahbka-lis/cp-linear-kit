@@ -1,26 +1,14 @@
 #pragma once
 
-#include <gtest/gtest.h>
-#include <random>
-
 #include "../types/matrix.h"
 
+#include <random>
+
 namespace matrix_lib::tests {
-template <typename T>
-void CompareMatrices(const Matrix<T> &m1,
-                     const std::vector<std::vector<T>> &m2) {
-    ASSERT_EQ(m1.Rows(), m2.size())
-        << "Matrix height size mismatch for compare.";
-
-    for (size_t i = 0; i < m2.size(); ++i) {
-        ASSERT_EQ(m1.Columns(), m2[i].size())
-            << "Matrix width size mismatch for compare.";
-
-        for (size_t j = 0; j < m2[i].size(); ++j) {
-            ASSERT_TRUE(matrix_lib::utils::IsEqualFloating(m1(i, j), m2[i][j]))
-                << "Matrices are not equal.";
-        }
-    }
+template <utils::MatrixType M>
+bool IsEqualMatrices(const M &m1,
+                         const M &m2) {
+    return m1 == m2;
 }
 
 template <typename T>

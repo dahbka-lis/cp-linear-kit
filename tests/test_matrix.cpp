@@ -1,3 +1,5 @@
+#include <gtest/gtest.h>
+
 #include "helpers.h"
 
 namespace {
@@ -7,7 +9,7 @@ using Complex = std::complex<T>;
 template <typename T = long double>
 using Matrix = matrix_lib::Matrix<T>;
 
-using matrix_lib::tests::CompareMatrices;
+using matrix_lib::tests::IsEqualMatrices;
 using matrix_lib::tests::RandomMatrixGenerator;
 using matrix_lib::utils::IsEqualFloating;
 
@@ -21,15 +23,15 @@ TEST(TEST_MATRIX, BasicConstructors) {
         EXPECT_EQ(rect.Rows(), 2);
         EXPECT_EQ(rect.Columns(), 3);
 
-        CompareMatrices(rect, {{0, 0, 0}, {0, 0, 0}});
+        ASSERT_TRUE(IsEqualMatrices(rect, {{0, 0, 0}, {0, 0, 0}}));
     }
     {
         Matrix<long double> matrix = {{1, 2, 3}, {4, 5, 6}};
-        CompareMatrices(matrix, {{1, 2, 3}, {4, 5, 6}});
+        ASSERT_TRUE(IsEqualMatrices(matrix, {{1, 2, 3}, {4, 5, 6}}));
     }
     {
         Matrix<Complex<float>> matrix = {{0, 0}, {1, 1}, {2, 2}};
-        CompareMatrices(matrix, {{0, 0}, {1, 1}, {2, 2}});
+        ASSERT_TRUE(IsEqualMatrices(matrix, {{0, 0}, {1, 1}, {2, 2}}));
     }
 }
 
@@ -46,7 +48,7 @@ TEST(TEST_MATRIX, CopySemantics) {
         EXPECT_FALSE(m1 == m2);
     }
 
-    CompareMatrices(m1, {{1.0, 7.4}, {4.1, 5.6}});
+    ASSERT_TRUE(IsEqualMatrices(m1, {{1.0, 7.4}, {4.1, 5.6}}));
 }
 
 TEST(TEST_MATRIX, MoveSemantics) {
@@ -58,7 +60,7 @@ TEST(TEST_MATRIX, MoveSemantics) {
         m1 = std::move(m2);
     }
 
-    CompareMatrices(m1, {{{1, -1}, {0, 2}, {-1, 0}, {-2, 1}}});
+    ASSERT_TRUE(IsEqualMatrices(m1, {{{1, -1}, {0, 2}, {-1, 0}, {-2, 1}}}));
 }
 
 void CheckArithmeticSum() {
@@ -66,11 +68,11 @@ void CheckArithmeticSum() {
 
     Matrix m1 = {{1, 2, 3}, {4, 5, 6}};
     Matrix m2 = {{7, 8, 9}, {10, 11, 12}};
-    CompareMatrices(m1 + m2, {{8, 10, 12}, {14, 16, 18}});
+    ASSERT_TRUE(IsEqualMatrices(m1 + m2, {{8, 10, 12}, {14, 16, 18}}));
 
     m1 += m1;
     m1 += m2;
-    CompareMatrices(m1, {{9, 12, 15}, {18, 21, 24}});
+    ASSERT_TRUE(IsEqualMatrices(m1, {{9, 12, 15}, {18, 21, 24}}));
 }
 
 void CheckArithmeticDiff() {
@@ -78,11 +80,11 @@ void CheckArithmeticDiff() {
 
     Matrix m1 = {{9, 4}, {5, 1}, {12, 9}};
     Matrix m2 = {{-3, 0}, {1, 4}, {6, -12}};
-    CompareMatrices(m1 - m2, {{12, 4}, {4, -3}, {6, 21}});
+    ASSERT_TRUE(IsEqualMatrices(m1 - m2, {{12, 4}, {4, -3}, {6, 21}}));
 
     m1 -= m2;
     m1 -= m2;
-    CompareMatrices(m1, {{15, 4}, {3, -7}, {0, 33}});
+    ASSERT_TRUE(IsEqualMatrices(m1, {{15, 4}, {3, -7}, {0, 33}}));
 }
 
 void CheckArithmeticMulti() {
@@ -91,8 +93,9 @@ void CheckArithmeticMulti() {
     Matrix m1 = {{8, 6, 1}, {8, 5, 1}};
     Matrix m2 = {{1, 2}, {-4, 2}, {0, -3}};
 
-    CompareMatrices(m1 * m2, {{-16, 25}, {-12, 23}});
-    CompareMatrices(m2 * m1, {{24, 16, 3}, {-16, -14, -2}, {-24, -15, -3}});
+    ASSERT_TRUE(IsEqualMatrices(m1 * m2, {{-16, 25}, {-12, 23}}));
+    ASSERT_TRUE(IsEqualMatrices(m2 * m1,
+                                {{24, 16, 3}, {-16, -14, -2}, {-24, -15, -3}}));
 
     auto m3 = m2 * m1;
     auto identity = Matrix::Identity(3);
@@ -113,14 +116,14 @@ TEST(TEST_MATRIX, Transpose) {
     {
         Matrix m1 = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
         m1.Transpose();
-        CompareMatrices(m1, {{1, 4, 7}, {2, 5, 8}, {3, 6, 9}});
+        ASSERT_TRUE(IsEqualMatrices(m1, {{1, 4, 7}, {2, 5, 8}, {3, 6, 9}}));
     }
     {
         Matrix m2 = {{0, 0}, {2, 2}, {4, 4}};
         auto m3 = Matrix::Transposed(m2);
 
-        CompareMatrices(m2, {{0, 0}, {2, 2}, {4, 4}});
-        CompareMatrices(m3, {{0, 2, 4}, {0, 2, 4}});
+        ASSERT_TRUE(IsEqualMatrices(m2, {{0, 0}, {2, 2}, {4, 4}}));
+        ASSERT_TRUE(IsEqualMatrices(m3, {{0, 2, 4}, {0, 2, 4}}));
     }
 }
 
@@ -130,15 +133,15 @@ TEST(TEST_MATRIX, Conjugate) {
     {
         Matrix m1 = {{{1, 2}, {7, -3}}, {{0, -1}, {-5, 1}}, {{4, 0}, {2, -2}}};
         m1.Conjugate();
-        CompareMatrices(
-            m1, {{{1, -2}, {0, 1}, {4, 0}}, {{7, 3}, {-5, -1}, {2, 2}}});
+        ASSERT_TRUE(IsEqualMatrices(
+            m1, {{{1, -2}, {0, 1}, {4, 0}}, {{7, 3}, {-5, -1}, {2, 2}}}));
     }
     {
         Matrix m2 = {{{1, 0}, {1, 1}}, {{0, -1}, {1, 0}}};
         auto m3 = Matrix::Conjugated(m2);
 
-        CompareMatrices(m2, {{{1, 0}, {1, 1}}, {{0, -1}, {1, 0}}});
-        CompareMatrices(m3, {{{1, 0}, {0, 1}}, {{1, -1}, {1, 0}}});
+        ASSERT_TRUE(IsEqualMatrices(m2, {{{1, 0}, {1, 1}}, {{0, -1}, {1, 0}}}));
+        ASSERT_TRUE(IsEqualMatrices(m3, {{{1, 0}, {0, 1}}, {{1, -1}, {1, 0}}}));
     }
 }
 
@@ -146,7 +149,8 @@ TEST(TEST_MATRIX, ApplyToEach) {
     Matrix<> matrix = Matrix<>::Identity(3);
     matrix.ApplyToEach([](long double &elem) { elem += 10; });
 
-    CompareMatrices(matrix, {{11, 10, 10}, {10, 11, 10}, {10, 10, 11}});
+    ASSERT_TRUE(
+        IsEqualMatrices(matrix, {{11, 10, 10}, {10, 11, 10}, {10, 10, 11}}));
     matrix.ApplyToEach([&](const long double &elem, size_t i, size_t j) {
         if (i != j) {
             EXPECT_DOUBLE_EQ(elem, 10.0l);
