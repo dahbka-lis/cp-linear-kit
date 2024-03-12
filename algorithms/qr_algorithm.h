@@ -26,36 +26,44 @@ T GetWilkinsonShift(const Matrix<T> &matrix) {
 }
 
 template <utils::FloatOrComplex T = long double>
-Matrix<T> GetSchurDecomposition(const MatrixView<T> &matrix,
-                                std::size_t it_cnt = 50) {
-    assert(utils::IsHermitian(matrix) &&
-           "Schur decomposition for hermitian matrix.");
+struct SpectralPair {
+    Matrix<T> D;
+    Matrix<T> Q;
+};
 
-    auto copy = matrix.Copy();
-    auto last_minor = copy.GetSubmatrix(copy.Rows() - 2, copy.Rows(),
-                                        copy.Columns() - 2, copy.Columns());
-    auto shift = 0; // todo
-    auto shift_I = Matrix<T>::Identity(copy.Rows(), shift);
+template <utils::FloatOrComplex T = long double>
+SpectralPair<T> GetSpectralDecomposition(const MatrixView<T> &matrix,
+                                         T shift = T{0},
+                                         std::size_t it_cnt = 50) {
+    assert(utils::IsHermitian(matrix) &&
+           "Spectral decomposition for hermitian matrix.");
+
+    auto D = matrix.Copy();
+    auto shift_I = Matrix<T>::Identity(D.Rows(), shift);
+    auto transform = Matrix<T>::Identity(D.Rows());
 
     for (std::size_t i = 0; i < it_cnt; ++i) {
-        auto [Q, R] = HouseholderQR(copy - shift_I);
-        copy = R * Q + shift_I;
-        copy.RoundZeroes();
+        auto [Q, R] = HouseholderQR(D - shift_I);
+        D = R * Q + shift_I;
+        transform *= Q;
+
+        D.RoundZeroes();
     }
 
-    return copy;
+    return {D, transform};
 }
 
 template <utils::FloatOrComplex T = long double>
-Matrix<T> GetSchurDecomposition(const Matrix<T> &matrix,
-                                std::size_t it_cnt = 50) {
-    return GetSchurDecomposition(matrix.View(), it_cnt);
+SpectralPair<T> GetSpectralDecomposition(const Matrix<T> &matrix,
+                                         T shift = T{0},
+                                         std::size_t it_cnt = 50) {
+    return GetSpectralDecomposition(matrix.View(), shift, it_cnt);
 }
 
 template <utils::FloatOrComplex T>
 struct DiagBasisQR {
     Matrix<T> U;
-    Matrix<T> diag;
+    Matrix<T> D;
     Matrix<T> VT;
 };
 
