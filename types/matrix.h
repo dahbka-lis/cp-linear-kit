@@ -335,7 +335,7 @@ public:
     void Conjugate() {
         Transpose();
 
-        if constexpr (utils::IsFloatComplexValue<T>()) {
+        if constexpr (utils::details::IsFloatComplexT<T>::value) {
             ApplyToEach([](T &val) { val = std::conj(val); });
         }
     }

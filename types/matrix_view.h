@@ -95,7 +95,7 @@ public:
 
         T sq_sum = T{0};
 
-        if constexpr (utils::IsFloatComplexValue<T>()) {
+        if constexpr (utils::details::IsFloatComplexT<T>::value) {
             ApplyToEach([&](const T &value) { sq_sum += std::norm(value); });
         } else {
             ApplyToEach([&](const T &value) { sq_sum += (value * value); });

@@ -5,26 +5,17 @@
 #include "is_float_complex.h"
 
 namespace matrix_lib::utils {
+namespace details {
 template <typename T>
-struct IsMatrixT {
-    static constexpr bool value = false;
-};
+struct IsMatrixT : std::false_type {};
 
 template <FloatOrComplex T>
-struct IsMatrixT<Matrix<T>> {
-    static constexpr bool value = true;
-};
+struct IsMatrixT<Matrix<T>> : std::true_type {};
 
 template <FloatOrComplex T>
-struct IsMatrixT<MatrixView<T>> {
-    static constexpr bool value = true;
-};
+struct IsMatrixT<MatrixView<T>> : std::true_type {};
+} // namespace details
 
 template <typename T>
-constexpr bool IsMatrixValue() {
-    return IsMatrixT<T>::value;
-}
-
-template <typename T>
-concept MatrixType = IsMatrixValue<T>();
+concept MatrixType = details::IsMatrixT<std::remove_cv_t<T>>::value;
 } // namespace matrix_lib::utils
