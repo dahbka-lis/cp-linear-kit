@@ -12,7 +12,7 @@ bool IsSquare(const M &matrix) {
 
 template <utils::MatrixType M>
 bool IsUnitary(const M &matrix) {
-    if (matrix.Rows() != matrix.Columns()) {
+    if (!IsSquare(matrix)) {
         return false;
     }
 
@@ -22,7 +22,37 @@ bool IsUnitary(const M &matrix) {
 
 template <utils::MatrixType M>
 bool IsHermitian(const M &matrix) {
-    return matrix == M::Conjugated(matrix);
+    if (!IsSquare(matrix)) {
+        return false;
+    }
+
+    for (IndexType i = 1; i < matrix.Rows(); ++i) {
+        for (IndexType j = 0; j < i; ++j) {
+            if (!utils::IsEqualFloating(matrix(i, j),
+                                        std::conj(matrix(j, i)))) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+template <utils::MatrixType M>
+bool IsSymmetric(const M &matrix) {
+    if (!IsSquare(matrix)) {
+        return false;
+    }
+
+    for (IndexType i = 1; i < matrix.Rows(); ++i) {
+        for (IndexType j = 0; j < i; ++j) {
+            if (!utils::IsEqualFloating(matrix(i, j), matrix(j, i))) {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 template <utils::MatrixType M>
