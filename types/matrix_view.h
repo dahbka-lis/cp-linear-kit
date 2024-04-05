@@ -2,6 +2,8 @@
 
 #include "../utils/is_equal_floating.h"
 #include "../utils/is_float_complex.h"
+#include "const_matrix_view.h"
+#include "fwd.h"
 
 #include <cassert>
 #include <functional>
@@ -9,153 +11,224 @@
 #include <vector>
 
 namespace matrix_lib {
-template <utils::FloatOrComplex T>
-class Matrix;
-
 template <utils::FloatOrComplex T = long double>
 class MatrixView {
-    using IndexType = std::size_t;
-    using ConstFunction = std::function<void(const T &)>;
-    using ConstFunctionIndexes =
-        std::function<void(const T &, IndexType, IndexType)>;
-
-    struct IndexPair {
-        IndexType from = 0;
-        IndexType to = 0;
-    };
+    using IndexType = std::ptrdiff_t;
+    using Segment = ConstMatrixView<T>::Segment;
+    using Function = std::function<void(T &)>;
+    using FunctionIndexes = std::function<void(T &, IndexType, IndexType)>;
+    using ConstFunction = ConstMatrixView<T>::ConstFunction;
+    using ConstFunctionIndexes = ConstMatrixView<T>::ConstFunctionIndexes;
 
 public:
-    explicit MatrixView(const Matrix<T> &matrix, IndexType r_from = 0,
-                        IndexType r_to = 0, IndexType c_from = 0,
-                        IndexType c_to = 0)
-        : matrix_(matrix), row_(r_from, r_to), column_(c_from, c_to) {
-
-        if (r_from > r_to || r_from > matrix_.Rows()) {
-            row_.from = 0;
-        }
-
-        if (r_to == 0 || r_to > matrix_.Rows()) {
-            row_.to = matrix.Rows();
-        }
-
-        if (c_from > c_to || c_from > matrix_.Columns()) {
-            column_.from = 0;
-        }
-
-        if (c_to == 0 || c_to > matrix_.Columns()) {
-            column_.to = matrix.Columns();
-        }
-    }
+    explicit MatrixView(Matrix<T> &matrix, Segment row = {-1, -1},
+                        Segment col = {-1, -1})
+        : ptr_(&matrix),
+          row_(ConstMatrixView<T>::MakeSegment(row, matrix.Rows())),
+          column_(ConstMatrixView<T>::MakeSegment(col, matrix.Columns())) {}
 
     MatrixView(const MatrixView &rhs) = default;
 
     MatrixView(MatrixView &&rhs) noexcept
-        : matrix_(std::move(rhs.matrix_)),
-          row_(std::exchange(rhs.row_, {0, 0})),
-          column_(std::exchange(rhs.column_, {0, 0})){};
+        : ptr_(std::exchange(rhs.ptr_, nullptr)),
+          row_(std::exchange(rhs.row_, {0, 1})),
+          column_(std::exchange(rhs.column_, {0, 1})){};
 
     MatrixView &operator=(const MatrixView &lhs) = default;
 
     MatrixView &operator=(MatrixView &&rhs) noexcept {
-        matrix_ = std::move(rhs.matrix_);
-        row_ = std::exchange(rhs.row_, {0, 0});
-        column_ = std::exchange(rhs.column_, {0, 0});
+        ptr_ = std::exchange(rhs.ptr_, nullptr);
+        row_ = std::exchange(rhs.row_, {0, 1});
+        column_ = std::exchange(rhs.column_, {0, 1});
         return *this;
     }
 
-    T operator()(IndexType row_idx, IndexType col_idx) const {
-        return matrix_(row_.from + row_idx, column_.from + col_idx);
+    // operators+
+    MatrixView &operator+=(const ConstMatrixView<T> &rhs) {
+        assert(Rows() == rhs.Rows() && Columns() == rhs.Columns() &&
+               "Matrices must be of the same size for addition.");
+
+        ApplyToEach(
+            [&](T &value, IndexType i, IndexType j) { value += rhs(i, j); });
+        return *this;
+    }
+    MatrixView &operator+=(const MatrixView &rhs) {
+        return *this += rhs.ConstView();
+    }
+    MatrixView &operator+=(const Matrix<T> &rhs) { return *this += rhs.View(); }
+    friend Matrix<T> operator+(const MatrixView<T> &lhs,
+                               const MatrixView<T> &rhs) {
+        return lhs.ConstView() + rhs.ConstView();
+    }
+    friend Matrix<T> operator+(const MatrixView<T> &lhs,
+                               const ConstMatrixView<T> &rhs) {
+        return rhs + lhs;
+    }
+    friend Matrix<T> operator+(const MatrixView<T> &lhs, const Matrix<T> &rhs) {
+        return lhs.ConstView() + rhs.View();
+    }
+    // - - - - -
+
+    // operators-
+    MatrixView &operator-=(const ConstMatrixView<T> &rhs) {
+        assert(Rows() == rhs.Rows() && Columns() == rhs.Columns() &&
+               "Matrices must be of the same size for addition.");
+
+        ApplyToEach(
+            [&](T &value, IndexType i, IndexType j) { value -= rhs(i, j); });
+        return *this;
+    }
+    MatrixView &operator-=(const MatrixView &rhs) {
+        return *this -= rhs.ConstView();
+    }
+    MatrixView &operator-=(const Matrix<T> &rhs) { return *this -= rhs.View(); }
+    friend Matrix<T> operator-(const MatrixView<T> &lhs,
+                               const MatrixView<T> &rhs) {
+        return lhs.ConstView() - rhs.ConstView();
+    }
+    friend Matrix<T> operator-(const MatrixView<T> &lhs,
+                               const ConstMatrixView<T> &rhs) {
+        return lhs.ConstView() - rhs;
+    }
+    friend Matrix<T> operator-(const MatrixView<T> &lhs, const Matrix<T> &rhs) {
+        return lhs.ConstView() - rhs.View();
+    }
+    // - - - - -
+
+    // operators*
+    MatrixView &operator*=(const ConstMatrixView<T> &rhs) {
+        assert(rhs.Columns() == rhs.Rows() &&
+               "Matrix must be square for multiplication.");
+        auto res = *this * rhs;
+        ApplyToEach([&](T &val, IndexType i, IndexType j) { val = res(i, j); });
+        return *this;
+    }
+    MatrixView &operator*=(const MatrixView &rhs) {
+        return *this *= rhs.ConstView();
+    }
+    MatrixView &operator*=(const Matrix<T> &rhs) { return *this *= rhs.View(); }
+    friend Matrix<T> operator*(const MatrixView &lhs, const MatrixView &rhs) {
+        return lhs * rhs.ConstView();
+    }
+    friend Matrix<T> operator*(const MatrixView &lhs,
+                               const ConstMatrixView<T> &rhs) {
+        return lhs.ConstView() * rhs;
+    }
+    friend Matrix<T> operator*(const MatrixView &lhs, const Matrix<T> &rhs) {
+        return lhs * rhs.View();
+    }
+    // - - - - -
+
+    T &operator()(IndexType row_idx, IndexType col_idx) {
+        assert(row_idx >= 0 && row_idx < Rows() && "Invalid row index.");
+        assert(col_idx >= 0 && col_idx < Columns() && "Invalid column index.");
+        return (*ptr_)(row_.begin + row_idx, column_.begin + col_idx);
     }
 
-    [[nodiscard]] IndexType Rows() const { return row_.to - row_.from; }
+    T operator()(IndexType row_idx, IndexType col_idx) const {
+        assert(row_idx >= 0 && row_idx < Rows() && "Invalid row index.");
+        assert(col_idx >= 0 && col_idx < Columns() && "Invalid column index.");
+        return (*ptr_)(row_.begin + row_idx, column_.begin + col_idx);
+    }
+
+    [[nodiscard]] IndexType Rows() const { return row_.end - row_.begin; }
 
     [[nodiscard]] IndexType Columns() const {
-        return column_.to - column_.from;
+        return column_.end - column_.begin;
     }
 
-    void ApplyToEach(ConstFunction func) const {
-        for (IndexType i = row_.from; i < row_.to; ++i) {
-            for (IndexType j = column_.from; j < column_.to; ++j) {
-                func(matrix_(i, j));
+    MatrixView &ApplyToEach(Function func) {
+        for (IndexType i = row_.begin; i < row_.end; ++i) {
+            for (IndexType j = column_.begin; j < column_.end; ++j) {
+                func((*ptr_)(i, j));
             }
         }
+
+        return *this;
     }
 
-    void ApplyToEach(ConstFunctionIndexes func) const {
-        for (IndexType i = row_.from; i < row_.to; ++i) {
-            for (IndexType j = column_.from; j < column_.to; ++j) {
-                func(matrix_(i, j), i - row_.from, j - column_.from);
+    MatrixView &ApplyToEach(FunctionIndexes func) {
+        for (IndexType i = row_.begin; i < row_.end; ++i) {
+            for (IndexType j = column_.begin; j < column_.end; ++j) {
+                func((*ptr_)(i, j), i - row_.begin, j - column_.begin);
             }
         }
+
+        return *this;
+    }
+
+    MatrixView &ApplyToEach(ConstFunction func) const {
+        ConstView().ApplyToEach(func);
+        return *this;
+    }
+
+    MatrixView &ApplyToEach(ConstFunctionIndexes func) const {
+        ConstView().ApplyToEach(func);
+        return *this;
     }
 
     T GetEuclideanNorm() const {
-        assert(Rows() == 1 ||
-               Columns() == 1 && "Euclidean norm only for vectors.");
-
-        T sq_sum = T{0};
-
-        if constexpr (utils::details::IsFloatComplexT<T>::value) {
-            ApplyToEach([&](const T &value) { sq_sum += std::norm(value); });
-        } else {
-            ApplyToEach([&](const T &value) { sq_sum += (value * value); });
-        }
-
-        return std::sqrt(sq_sum);
+        return ConstView().GetEuclideanNorm();
     }
 
-    Matrix<T> GetDiag(bool to_row = false) const {
-        auto size = std::min(Rows(), Columns());
-
-        Matrix<T> res(size, 1);
-        for (IndexType i = 0; i < size; ++i) {
-            res(i, 0) = (*this)(i, i);
-        }
-
-        if (to_row) {
-            res.Transpose();
-        }
-
-        return res;
+    Matrix<T> GetDiag() const {
+        return ConstView().GetDiag();
     }
 
-    MatrixView GetRow(IndexType index) const {
+    MatrixView GetRow(IndexType index) {
         assert(index < Rows() &&
                "Index must be less than the number of matrix rows.");
 
-        return MatrixView(matrix_, row_.from + index, row_.from + index + 1,
-                          column_.from, column_.to);
+        return MatrixView(*ptr_, {row_.begin + index, row_.begin + index + 1},
+                          {column_.begin, column_.end});
     }
 
-    MatrixView GetColumn(IndexType index) const {
+    MatrixView GetColumn(IndexType index) {
         assert(index < Columns() &&
                "Index must be less than the number of matrix columns.");
 
-        return MatrixView(matrix_, row_.from, row_.from + row_.to,
-                          column_.from + index, column_.from + index + 1);
+        return MatrixView(*ptr_, {row_.begin, row_.end},
+                          {column_.begin + index, column_.begin + index + 1});
     }
 
-    Matrix<T> Copy() const {
-        Matrix<T> res(Rows(), Columns());
-        res.ApplyToEach(
-            [&](T &val, IndexType i, IndexType j) { val = (*this)(i, j); });
-        return res;
+    MatrixView<T> GetSubmatrix(Segment row, Segment col) {
+        auto [r_from, r_to] = row;
+        auto [c_from, c_to] = col;
+
+        assert(
+            r_from >= 0 && r_to <= Rows() &&
+            "The row indices do not match the number of rows in the matrix.");
+        assert(r_from < r_to && "The row index for the start of the submatrix "
+                                "must be less than the end index.");
+        assert(c_from >= 0 && c_to <= Columns() &&
+               "The column indices do not match the number of columns in the "
+               "matrix.");
+        assert(c_from < c_to && "The column index for the start of the "
+                                "submatrix must be less than the end index.");
+
+        return MatrixView<T>(*ptr_, {row_.begin + r_from, row_.begin + r_to},
+                             {column_.begin + c_from, column_.begin + c_to});
     }
 
-    static Matrix<T> Transposed(const MatrixView<T> &rhs) {
+    ConstMatrixView<T> ConstView() const {
+        return ConstMatrixView<T>(*ptr_, {row_.begin, row_.end},
+                                  {column_.begin, column_.end});
+    }
+
+    static Matrix<T> Transposed(const MatrixView &rhs) {
         return Matrix<T>::Transposed(rhs.Copy());
     }
 
-    static Matrix<T> Conjugated(const MatrixView<T> &rhs) {
+    static Matrix<T> Conjugated(const MatrixView &rhs) {
         return Matrix<T>::Conjugated(rhs.Copy());
     }
 
-    static Matrix<T> Normalized(const MatrixView<T> &rhs) {
+    static Matrix<T> Normalized(const MatrixView &rhs) {
         return Matrix<T>::Normalized(rhs.Copy());
     }
 
-    static Matrix<T> Identity(IndexType size, T default_value = T{1}) {
-        return Matrix<T>::Identity(size, default_value);
+    static Matrix<T> Identity(IndexType size) {
+        return Matrix<T>::Identity(size);
     }
 
     friend std::ostream &operator<<(std::ostream &ostream,
@@ -180,8 +253,8 @@ public:
     }
 
 private:
-    const Matrix<T> &matrix_;
-    IndexPair row_;
-    IndexPair column_;
+    Matrix<T> *ptr_;
+    Segment row_;
+    Segment column_;
 };
 } // namespace matrix_lib

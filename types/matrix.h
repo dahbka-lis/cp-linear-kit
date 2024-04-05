@@ -3,6 +3,7 @@
 #include "../utils/is_equal_floating.h"
 #include "../utils/is_float_complex.h"
 #include "../utils/is_matrix_type.h"
+#include "fwd.h"
 #include "matrix_view.h"
 
 #include <cassert>
@@ -14,11 +15,12 @@
 namespace matrix_lib {
 template <utils::FloatOrComplex T = long double>
 class Matrix {
-    using IndexType = std::size_t;
+    using IndexType = std::ptrdiff_t;
+    using Segment = ConstMatrixView<T>::Segment;
     using Data = std::vector<T>;
     using Function = std::function<void(T &)>;
-    using ConstFunction = std::function<void(const T &)>;
     using FunctionIndexes = std::function<void(T &, IndexType, IndexType)>;
+    using ConstFunction = std::function<void(const T &)>;
     using ConstFunctionIndexes =
         std::function<void(const T &, IndexType, IndexType)>;
 
@@ -26,10 +28,7 @@ public:
     Matrix() = default;
 
     explicit Matrix(IndexType sq_size)
-        : rows_(sq_size), buffer_(rows_ * rows_, T{0}) {
-        assert(Rows() > 0 &&
-               "Size of a square matrix must be greater than zero.");
-    }
+        : rows_(sq_size), buffer_(rows_ * rows_, T{0}) {}
 
     Matrix(IndexType row_cnt, IndexType col_cnt, T value = T{0})
         : rows_(row_cnt), buffer_(rows_ * col_cnt, value) {
@@ -39,13 +38,9 @@ public:
                "Number of matrix columns must be greater than zero.");
     }
 
-    explicit Matrix(const Data &diag)
-        : rows_(diag.size()), buffer_(rows_ * rows_, T{0}) {
-        assert(Rows() > 0 &&
-               "List to create a diagonal matrix must not be empty.");
-
+    Matrix(std::initializer_list<T> diagonal) : Matrix(diagonal.size()) {
         IndexType idx = 0;
-        for (auto value : diag) {
+        for (auto value : diagonal) {
             (*this)(idx, idx) = value;
             ++idx;
         }
@@ -72,6 +67,14 @@ public:
         }
     }
 
+    Matrix(const ConstMatrixView<T> &rhs) : Matrix(rhs.Rows(), rhs.Columns()) {
+        rhs.ApplyToEach([&](const T &val, IndexType i, IndexType j) {
+            (*this)(i, j) = val;
+        });
+    }
+
+    Matrix(const MatrixView<T> &rhs) : Matrix(rhs.ConstView()) {}
+
     Matrix(const Matrix &rhs) = default;
 
     Matrix(Matrix &&rhs) noexcept
@@ -85,116 +88,78 @@ public:
         return *this;
     }
 
-    template <utils::MatrixType M>
-    friend Matrix operator+(const Matrix &lhs, const M &rhs) {
-        Matrix res = lhs;
-        return res += rhs;
-    }
-
-    template <utils::MatrixType M>
-    Matrix &operator+=(const M &rhs) {
-        assert(Rows() == rhs.Rows() &&
-               "Number of matrix rows must be equal for addition.");
-        assert(Columns() == rhs.Columns() &&
-               "Number of matrix columns must be equal for addition.");
-
-        ApplyToEach(
-            [&](T &val, IndexType i, IndexType j) { val += rhs(i, j); });
+    // operators+
+    Matrix &operator+=(const ConstMatrixView<T> &rhs) {
+        View() += rhs;
         return *this;
     }
-
-    template <utils::MatrixType M>
-    friend Matrix operator-(const Matrix &lhs, const M &rhs) {
-        Matrix res = lhs;
-        return res -= rhs;
+    Matrix &operator+=(const MatrixView<T> &rhs) {
+        return *this += rhs.ConstView();
     }
+    Matrix &operator+=(const Matrix &rhs) { return *this += rhs.View(); }
+    friend Matrix<T> operator+(const Matrix<T> &lhs, const Matrix<T> &rhs) {
+        return lhs.View() + rhs.View();
+    }
+    friend Matrix<T> operator+(const Matrix<T> &lhs,
+                               const ConstMatrixView<T> &rhs) {
+        return rhs + lhs;
+    }
+    friend Matrix<T> operator+(const Matrix<T> &lhs, const MatrixView<T> &rhs) {
+        return rhs + lhs;
+    }
+    // - - - - -
 
-    template <utils::MatrixType M>
-    Matrix &operator-=(const M &rhs) {
-        assert(Rows() == rhs.Rows() &&
-               "Number of matrix rows must be equal for subtraction.");
-        assert(Columns() == rhs.Columns() &&
-               "Number of matrix columns must be equal for subtraction.");
-
-        ApplyToEach(
-            [&](T &val, IndexType i, IndexType j) { val -= rhs(i, j); });
+    // operators-
+    Matrix &operator-=(const ConstMatrixView<T> &rhs) {
+        View() -= rhs;
         return *this;
     }
-
-    template <utils::MatrixType F, utils::MatrixType S>
-    friend Matrix operator*(const F &lhs, const S &rhs) {
-        assert(lhs.Columns() == rhs.Rows() &&
-               "Matrix dimension mismatch for multiplication.");
-        Matrix result(lhs.Rows(), rhs.Columns());
-
-        for (IndexType i = 0; i < lhs.Rows(); ++i) {
-            for (IndexType j = 0; j < rhs.Columns(); ++j) {
-                T sum = 0;
-                for (IndexType k = 0; k < lhs.Columns(); ++k) {
-                    sum += lhs(i, k) * rhs(k, j);
-                }
-                result(i, j) = sum;
-            }
-        }
-
-        return result;
+    Matrix &operator-=(const MatrixView<T> &rhs) {
+        return *this -= rhs.ConstView();
     }
-
-    template <utils::MatrixType M>
-    Matrix &operator*=(const M &rhs) {
-        return *this = *this * rhs;
+    Matrix &operator-=(const Matrix &rhs) { return *this -= rhs.View(); }
+    friend Matrix<T> operator-(const Matrix<T> &lhs, const Matrix<T> &rhs) {
+        return lhs.View() - rhs.View();
     }
-
-    friend Matrix operator*(const Matrix &lhs, T scalar) {
-        Matrix res = lhs;
-        return res *= scalar;
+    friend Matrix<T> operator-(const Matrix<T> &lhs,
+                               const ConstMatrixView<T> &rhs) {
+        return lhs.View() - rhs;
     }
-
-    friend Matrix operator*(T scalar, const Matrix &rhs) {
-        return rhs * scalar;
+    friend Matrix<T> operator-(const Matrix<T> &lhs, const MatrixView<T> &rhs) {
+        return lhs.View() - rhs.ConstView();
     }
+    // - - - - -
 
-    Matrix &operator*=(T scalar) {
-        ApplyToEach([scalar](T &value) { value *= scalar; });
+    // operators*
+    Matrix &operator*=(const ConstMatrixView<T> &rhs) {
+        View() *= rhs;
         return *this;
     }
-
-    friend Matrix operator/(const Matrix &lhs, T scalar) {
-        Matrix res = lhs;
-        return res /= scalar;
+    Matrix &operator*=(const MatrixView<T> &rhs) {
+        return *this *= rhs.ConstView();
     }
-
-    friend Matrix operator/(T scalar, const Matrix &rhs) {
-        return rhs / scalar;
+    Matrix &operator*=(const Matrix<T> &rhs) { return *this *= rhs.View(); }
+    friend Matrix<T> operator*(const Matrix &lhs, const Matrix &rhs) {
+        return lhs.View() * rhs.View();
     }
-
-    Matrix &operator/=(T scalar) {
-        ApplyToEach([scalar](T &value) { value /= scalar; });
-        return *this;
+    friend Matrix<T> operator*(const Matrix &lhs, const MatrixView<T> &rhs) {
+        return lhs.View() * rhs.ConstView();
     }
+    friend Matrix<T> operator*(const Matrix &lhs,
+                               const ConstMatrixView<T> &rhs) {
+        return lhs.View() * rhs;
+    }
+    // - - - - -
 
     template <utils::MatrixType M>
     friend bool operator==(const Matrix &lhs, const M &rhs) {
-        if (lhs.Rows() != rhs.Rows() || lhs.Columns() != rhs.Columns()) {
-            return false;
-        }
-
-        bool is_equal = true;
-        lhs.ApplyToEach(
-            [&rhs, &is_equal](const T &val, IndexType i, IndexType j) {
-                is_equal = is_equal && utils::IsEqualFloating(val, rhs(i, j));
-            });
-
-        return is_equal;
+        return lhs.buffer_ == rhs.buffer_;
     }
 
     template <utils::MatrixType M>
     friend bool operator!=(const Matrix &lhs, const M &rhs) {
         return !(lhs == rhs);
     }
-
-    template <utils::MatrixType M>
-    friend bool operator<=>(const Matrix &lhs, const M &rhs) = delete;
 
     T &operator()(IndexType row_idx, IndexType col_idx) {
         assert(Columns() * row_idx + col_idx < buffer_.size() &&
@@ -214,103 +179,59 @@ public:
         return (rows_ == 0) ? 0 : buffer_.size() / rows_;
     }
 
-    Matrix<T> Copy() const {
+    MatrixView<T> View() { return MatrixView<T>(*this); }
+
+    ConstMatrixView<T> View() const { return ConstMatrixView<T>(*this); }
+
+    Matrix &ApplyToEach(Function func) {
+        View().ApplyToEach(func);
         return *this;
     }
 
-    MatrixView<T> View() const {
-        return MatrixView<T>(*this);
+    Matrix &ApplyToEach(FunctionIndexes func) {
+        View().ApplyToEach(func);
+        return *this;
     }
 
-    void ApplyToEach(Function func) {
-        for (IndexType i = 0; i < buffer_.size(); ++i) {
-            func(buffer_[i]);
-        }
+    Matrix &ApplyToEach(ConstFunction func) const {
+        View().ApplyToEach(func);
+        return *this;
     }
 
-    void ApplyToEach(ConstFunction func) const {
-        for (IndexType i = 0; i < buffer_.size(); ++i) {
-            func(buffer_[i]);
-        }
-    }
-
-    void ApplyToEach(FunctionIndexes func) {
-        if (Columns() == 0 || Rows() == 0) {
-            return;
-        }
-
-        for (IndexType i = 0; i < buffer_.size(); ++i) {
-            func(buffer_[i], i / Columns(), i % Columns());
-        }
-    }
-
-    void ApplyToEach(ConstFunctionIndexes func) const {
-        if (Columns() == 0 || Rows() == 0) {
-            return;
-        }
-
-        for (IndexType i = 0; i < buffer_.size(); ++i) {
-            func(buffer_[i], i / Columns(), i % Columns());
-        }
+    Matrix &ApplyToEach(ConstFunctionIndexes func) const {
+        View().ApplyToEach(func);
+        return *this;
     }
 
     T GetEuclideanNorm() const {
-        auto view = MatrixView(*this);
-        return view.GetEuclideanNorm();
+        return View().GetEuclideanNorm();
     }
 
-    Matrix GetDiag(bool to_row = false) const {
-        auto view = MatrixView(*this);
-        return view.GetDiag(to_row);
+    Matrix GetDiag() const {
+        return View().GetDiag();
     }
 
-    MatrixView<T> GetRow(IndexType index) const {
-        assert(index < Rows() &&
-               "Index must be less than the number of matrix rows.");
+    MatrixView<T> GetRow(IndexType index) { return View().GetRow(index); }
 
-        return MatrixView<T>(*this, index, index + 1);
+    MatrixView<T> GetColumn(IndexType index) { return View().GetColumn(index); }
+
+    MatrixView<T> GetSubmatrix(Segment row, Segment col) {
+        return View().GetSubmatrix(row, col);
     }
 
-    MatrixView<T> GetColumn(IndexType index) const {
-        assert(index < Columns() &&
-               "Index must be less than the number of matrix columns.");
-
-        return MatrixView<T>(*this, 0, Rows(), index, index + 1);
+    ConstMatrixView<T> GetRow(IndexType index) const {
+        return View().GetRow(index);
     }
 
-    MatrixView<T> GetSubmatrix(IndexType r_from, IndexType r_to,
-                               IndexType c_from, IndexType c_to) const {
-        assert(
-            r_from >= 0 && r_to <= Rows() &&
-            "The row indices do not match the number of rows in the matrix.");
-        assert(r_from < r_to && "The row index for the start of the submatrix "
-                                "must be less than the end index.");
-        assert(c_from >= 0 && c_to <= Columns() &&
-               "The column indices do not match the number of columns in the "
-               "matrix.");
-        assert(c_from < c_to && "The column index for the start of the "
-                                "submatrix must be less than the end index.");
-
-        return MatrixView<T>(*this, r_from, r_to, c_from, c_to);
+    ConstMatrixView<T> GetColumn(IndexType index) const {
+        return View().GetColumn(index);
     }
 
-    template <utils::MatrixType M>
-    void AssignSubmatrix(const M &sub, IndexType row, IndexType column) {
-        assert(
-            row >= 0 && row + sub.Rows() <= Rows() &&
-            "The row indices do not match the number of rows in the matrix.");
-        assert(column >= 0 && column + sub.Columns() <= Columns() &&
-               "The column indices do not match the number of columns in the "
-               "matrix.");
-
-        for (IndexType i = row; i < row + sub.Rows(); ++i) {
-            for (IndexType j = column; j < column + sub.Columns(); ++j) {
-                (*this)(i, j) = sub(i - row, j - column);
-            }
-        }
+    ConstMatrixView<T> GetSubmatrix(Segment row, Segment col) const {
+        return View().GetSubmatrix(row, col);
     }
 
-    void Transpose() {
+    Matrix &Transpose() {
         std::vector<bool> visited(buffer_.size(), false);
         IndexType last_idx = buffer_.size() - 1;
 
@@ -330,28 +251,35 @@ public:
         }
 
         rows_ = Columns();
+        return *this;
     }
 
-    void Conjugate() {
+    Matrix &Conjugate() {
         Transpose();
 
         if constexpr (utils::details::IsFloatComplexT<T>::value) {
             ApplyToEach([](T &val) { val = std::conj(val); });
         }
+
+        return *this;
     }
 
-    void Normalize() {
+    Matrix &Normalize() {
         assert(Rows() == 1 || Columns() == 1 && "Normalize only for vectors.");
 
         auto norm = GetEuclideanNorm();
         if (!utils::IsZeroFloating(norm)) {
             (*this) /= norm;
         }
+
+        return *this;
     }
 
-    void RoundZeroes() {
+    Matrix &RoundZeroes() {
         ApplyToEach(
             [](T &el) { el = (utils::IsZeroFloating(el)) ? T{0} : el; });
+
+        return *this;
     }
 
     static Matrix Transposed(const Matrix &rhs) {
@@ -372,9 +300,7 @@ public:
         return res;
     }
 
-    static Matrix Identity(IndexType size, T default_value = T{1}) {
-        return Matrix(Data(size, default_value));
-    }
+    static Matrix Identity(IndexType size) { return Matrix(Data(size, T{1})); }
 
     static Matrix Diagonal(const Data &diag) { return Matrix(diag); }
 
