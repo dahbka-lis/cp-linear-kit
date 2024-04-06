@@ -1,7 +1,7 @@
 #pragma once
 
-#include "types_details.h"
 #include "matrix_view.h"
+#include "types_details.h"
 
 namespace matrix_lib {
 template <utils::FloatOrComplex T = long double>
@@ -121,7 +121,8 @@ public:
         return lhs / scalar;
     }
 
-    friend bool operator==(const ConstMatrixView &lhs, const ConstMatrixView &rhs) {
+    friend bool operator==(const ConstMatrixView &lhs,
+                           const ConstMatrixView &rhs) {
         if (lhs.Rows() != rhs.Rows() || lhs.Columns() != rhs.Columns()) {
             return false;
         }
@@ -137,7 +138,8 @@ public:
         return is_equal;
     }
 
-    friend bool operator==(const ConstMatrixView &lhs, const MatrixView<T> &rhs) {
+    friend bool operator==(const ConstMatrixView &lhs,
+                           const MatrixView<T> &rhs) {
         return lhs == rhs.ConstView();
     }
 
@@ -145,11 +147,13 @@ public:
         return lhs == rhs.View();
     }
 
-    friend bool operator!=(const ConstMatrixView &lhs, const ConstMatrixView &rhs) {
+    friend bool operator!=(const ConstMatrixView &lhs,
+                           const ConstMatrixView &rhs) {
         return !(lhs == rhs);
     }
 
-    friend bool operator!=(const ConstMatrixView &lhs, const MatrixView<T> &rhs) {
+    friend bool operator!=(const ConstMatrixView &lhs,
+                           const MatrixView<T> &rhs) {
         return !(lhs == rhs);
     }
 
@@ -245,7 +249,7 @@ public:
         assert(column_.begin + c_to <= Columns() && "Invalid column index.");
 
         return ConstMatrixView<T>(
-            *ptr_, {row_.begin + r_from,row_.begin + r_to},
+            *ptr_, {row_.begin + r_from, row_.begin + r_to},
             {column_.begin + c_from, column_.begin + c_to});
     }
 
@@ -271,10 +275,7 @@ public:
     }
 
 private:
-    [[nodiscard]]
-    bool IsNullMatrixPointer() const {
-        return ptr_ == nullptr;
-    }
+    [[nodiscard]] bool IsNullMatrixPointer() const { return ptr_ == nullptr; }
 
     static Segment MakeSegment(Segment seg, IndexType max_value) {
         if (seg.end <= 0 || seg.end > max_value) {

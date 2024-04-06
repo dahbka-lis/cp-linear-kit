@@ -93,7 +93,8 @@ void CheckArithmeticMulti() {
     Matrix m2 = {{1, 2}, {-4, 2}, {0, -3}};
 
     ASSERT_TRUE(m1 * m2 == Matrix({{-16, 25}, {-12, 23}}));
-    ASSERT_TRUE(m2 * m1 == Matrix({{24, 16, 3}, {-16, -14, -2}, {-24, -15, -3}}));
+    ASSERT_TRUE(m2 * m1 ==
+                Matrix({{24, 16, 3}, {-16, -14, -2}, {-24, -15, -3}}));
 
     auto m3 = m2 * m1;
     auto identity = Matrix::Identity(3);
@@ -131,7 +132,8 @@ TEST(TEST_MATRIX, Conjugate) {
     {
         Matrix m1 = {{{1, 2}, {7, -3}}, {{0, -1}, {-5, 1}}, {{4, 0}, {2, -2}}};
         m1.Conjugate();
-        ASSERT_TRUE(m1 == Matrix({{{1, -2}, {0, 1}, {4, 0}}, {{7, 3}, {-5, -1}, {2, 2}}}));
+        ASSERT_TRUE(m1 == Matrix({{{1, -2}, {0, 1}, {4, 0}},
+                                  {{7, 3}, {-5, -1}, {2, 2}}}));
     }
     {
         Matrix m2 = {{{1, 0}, {1, 1}}, {{0, -1}, {1, 0}}};

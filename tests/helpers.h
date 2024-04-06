@@ -34,21 +34,15 @@ public:
 
     MatrixPair GetSquareMatrices() {
         auto size = GetRandomMatrixSize();
-        auto m1 = GetRandomMatrix(size, size);
-        auto m2 = GetRandomMatrix(size, size);
-
-        return {m1, m2};
+        return {GetRandomMatrix(size, size), GetRandomMatrix(size, size)};
     }
 
     MatrixPair GetRectangleMatrices() {
         auto col_row = GetRandomMatrixSize();
         auto m1_row = GetRandomMatrixSize();
         auto m2_col = GetRandomMatrixSize();
-
-        auto m1 = GetRandomMatrix(m1_row, col_row);
-        auto m2 = GetRandomMatrix(col_row, m2_col);
-
-        return {m1, m2};
+        return {GetRandomMatrix(m1_row, col_row),
+                GetRandomMatrix(col_row, m2_col)};
     }
 
 private:

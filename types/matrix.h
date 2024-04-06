@@ -1,7 +1,7 @@
 #pragma once
 
-#include "types_details.h"
 #include "matrix_view.h"
+#include "types_details.h"
 
 #include <ostream>
 #include <vector>
@@ -127,8 +127,7 @@ public:
         return lhs.View() * rhs.ConstView();
     }
 
-    friend Matrix operator*(const Matrix &lhs,
-                               const ConstMatrixView<T> &rhs) {
+    friend Matrix operator*(const Matrix &lhs, const ConstMatrixView<T> &rhs) {
         return lhs.View() * rhs;
     }
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "types_details.h"
 #include "const_matrix_view.h"
+#include "types_details.h"
 
 namespace matrix_lib {
 template <utils::FloatOrComplex T = long double>
@@ -148,7 +148,8 @@ public:
         return lhs.ConstView() == rhs.ConstView();
     }
 
-    friend bool operator==(const MatrixView &lhs, const ConstMatrixView<T> &rhs) {
+    friend bool operator==(const MatrixView &lhs,
+                           const ConstMatrixView<T> &rhs) {
         return lhs.ConstView() == rhs;
     }
 
@@ -160,7 +161,8 @@ public:
         return !(lhs == rhs);
     }
 
-    friend bool operator!=(const MatrixView &lhs, const ConstMatrixView<T> &rhs) {
+    friend bool operator!=(const MatrixView &lhs,
+                           const ConstMatrixView<T> &rhs) {
         return !(lhs == rhs);
     }
 
@@ -304,10 +306,7 @@ public:
     }
 
 private:
-    [[nodiscard]]
-    bool IsNullMatrixPointer() const {
-        return ptr_ == nullptr;
-    }
+    [[nodiscard]] bool IsNullMatrixPointer() const { return ptr_ == nullptr; }
 
     Matrix<T> *ptr_;
     Segment row_;
