@@ -2,7 +2,6 @@
 
 #include "../types/matrix.h"
 #include "../types/matrix_view.h"
-#include "is_float_complex.h"
 
 namespace matrix_lib::utils {
 namespace details {
@@ -14,6 +13,9 @@ struct IsMatrixT<Matrix<T>> : std::true_type {};
 
 template <FloatOrComplex T>
 struct IsMatrixT<MatrixView<T>> : std::true_type {};
+
+template <FloatOrComplex T>
+struct IsMatrixT<ConstMatrixView<T>> : std::true_type {};
 } // namespace details
 
 template <typename T>

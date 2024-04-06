@@ -5,12 +5,6 @@
 #include <random>
 
 namespace matrix_lib::tests {
-template <utils::MatrixType M>
-bool IsEqualMatrices(const M &m1,
-                         const M &m2) {
-    return m1 == m2;
-}
-
 template <typename T>
 class RandomMatrixGenerator {
     using IntDistribution = std::uniform_int_distribution<int32_t>;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "matrix_view.h"
 #include "types_details.h"
+#include "matrix_view.h"
 
 namespace matrix_lib {
 template <utils::FloatOrComplex T = long double>
@@ -76,7 +76,7 @@ public:
                                const ConstMatrixView &rhs) {
         assert(lhs.Columns() == rhs.Rows() &&
                "Matrix multiplication mismatch.");
-        Matrix result(lhs.Rows(), rhs.Columns());
+        Matrix<T> result(lhs.Rows(), rhs.Columns());
 
         for (IndexType i = 0; i < lhs.Rows(); ++i) {
             for (IndexType j = 0; j < rhs.Columns(); ++j) {
@@ -121,7 +121,44 @@ public:
         return lhs / scalar;
     }
 
+    friend bool operator==(const ConstMatrixView &lhs, const ConstMatrixView &rhs) {
+        if (lhs.Rows() != rhs.Rows() || lhs.Columns() != rhs.Columns()) {
+            return false;
+        }
+
+        bool is_equal = true;
+        lhs.ApplyToEach([&](const T &val, IndexType i, IndexType j) {
+            if (!utils::IsEqualFloating(val, rhs(i, j))) {
+                is_equal = false;
+                return;
+            }
+        });
+
+        return is_equal;
+    }
+
+    friend bool operator==(const ConstMatrixView &lhs, const MatrixView<T> &rhs) {
+        return lhs == rhs.ConstView();
+    }
+
+    friend bool operator==(const ConstMatrixView &lhs, const Matrix<T> &rhs) {
+        return lhs == rhs.View();
+    }
+
+    friend bool operator!=(const ConstMatrixView &lhs, const ConstMatrixView &rhs) {
+        return !(lhs == rhs);
+    }
+
+    friend bool operator!=(const ConstMatrixView &lhs, const MatrixView<T> &rhs) {
+        return !(lhs == rhs);
+    }
+
+    friend bool operator!=(const ConstMatrixView &lhs, const Matrix<T> &rhs) {
+        return !(lhs == rhs);
+    }
+
     T operator()(IndexType row_idx, IndexType col_idx) const {
+        assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
         assert(row_idx >= 0 && row_idx < Rows() && "Invalid row index.");
         assert(col_idx >= 0 && col_idx < Columns() && "Invalid column index.");
         return (*ptr_)(row_.begin + row_idx, column_.begin + col_idx);
@@ -134,6 +171,8 @@ public:
     }
 
     const ConstMatrixView &ApplyToEach(ConstFunction func) const {
+        assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
+
         for (IndexType i = row_.begin; i < row_.end; ++i) {
             for (IndexType j = column_.begin; j < column_.end; ++j) {
                 func((*ptr_)(i, j));
@@ -144,6 +183,8 @@ public:
     }
 
     const ConstMatrixView &ApplyToEach(ConstFunctionIndexes func) const {
+        assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
+
         for (IndexType i = row_.begin; i < row_.end; ++i) {
             for (IndexType j = column_.begin; j < column_.end; ++j) {
                 func((*ptr_)(i, j), i - row_.begin, j - column_.begin);
@@ -174,6 +215,7 @@ public:
     }
 
     ConstMatrixView GetRow(IndexType index) const {
+        assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
         assert(index < Rows() &&
                "Index must be less than the number of matrix rows.");
 
@@ -183,6 +225,7 @@ public:
     }
 
     ConstMatrixView GetColumn(IndexType index) const {
+        assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
         assert(index < Columns() &&
                "Index must be less than the number of matrix columns.");
 
@@ -192,39 +235,18 @@ public:
     }
 
     ConstMatrixView<T> GetSubmatrix(Segment row, Segment col) const {
-        auto [r_from, r_to] = row;
-        auto [c_from, c_to] = col;
+        auto [r_from, r_to] = MakeSegment(row, Rows());
+        auto [c_from, c_to] = MakeSegment(col, Columns());
 
-        assert(
-            r_from >= 0 && r_to <= Rows() &&
-            "The row indices do not match the number of rows in the matrix.");
-        assert(r_from < r_to && "The row index for the start of the submatrix "
-                                "must be less than the end index.");
-        assert(c_from >= 0 && c_to <= Columns() &&
-               "The column indices do not match the number of columns in the "
-               "matrix.");
-        assert(c_from < c_to && "The column index for the start of the "
-                                "submatrix must be less than the end index.");
+        assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
+        assert(row_.begin + r_from < Rows() && "Invalid row index.");
+        assert(row_.begin + r_to <= Rows() && "Invalid row index.");
+        assert(column_.begin + c_from < Columns() && "Invalid column index.");
+        assert(column_.begin + c_to <= Columns() && "Invalid column index.");
 
         return ConstMatrixView<T>(
-            *ptr_, {row_.begin + r_from, row_.begin + r_to},
+            *ptr_, {row_.begin + r_from,row_.begin + r_to},
             {column_.begin + c_from, column_.begin + c_to});
-    }
-
-    static Matrix<T> Transposed(const ConstMatrixView &rhs) {
-        return Matrix<T>::Transposed(rhs.Copy());
-    }
-
-    static Matrix<T> Conjugated(const ConstMatrixView &rhs) {
-        return Matrix<T>::Conjugated(rhs.Copy());
-    }
-
-    static Matrix<T> Normalized(const ConstMatrixView &rhs) {
-        return Matrix<T>::Normalized(rhs.Copy());
-    }
-
-    static Matrix<T> Identity(IndexType size) {
-        return Matrix<T>::Identity(size);
     }
 
     friend std::ostream &operator<<(std::ostream &ostream,
@@ -249,6 +271,11 @@ public:
     }
 
 private:
+    [[nodiscard]]
+    bool IsNullMatrixPointer() const {
+        return ptr_ == nullptr;
+    }
+
     static Segment MakeSegment(Segment seg, IndexType max_value) {
         if (seg.end <= 0 || seg.end > max_value) {
             seg.end = max_value;

@@ -1,8 +1,7 @@
 #pragma once
 
-#include "../utils/is_matrix_type.h"
-#include "matrix_view.h"
 #include "types_details.h"
+#include "matrix_view.h"
 
 #include <ostream>
 #include <vector>
@@ -111,24 +110,24 @@ public:
     }
 
     Matrix &operator*=(const ConstMatrixView<T> &rhs) {
-        View() *= rhs;
-        return *this;
+        return *this = *this * rhs;
     }
 
     Matrix &operator*=(const MatrixView<T> &rhs) {
         return *this *= rhs.ConstView();
     }
 
-    Matrix &operator*=(const Matrix<T> &rhs) { return *this *= rhs.View(); }
-    friend Matrix<T> operator*(const Matrix &lhs, const Matrix &rhs) {
+    Matrix &operator*=(const Matrix &rhs) { return *this *= rhs.View(); }
+
+    friend Matrix operator*(const Matrix &lhs, const Matrix &rhs) {
         return lhs.View() * rhs.View();
     }
 
-    friend Matrix<T> operator*(const Matrix &lhs, const MatrixView<T> &rhs) {
+    friend Matrix operator*(const Matrix &lhs, const MatrixView<T> &rhs) {
         return lhs.View() * rhs.ConstView();
     }
 
-    friend Matrix<T> operator*(const Matrix &lhs,
+    friend Matrix operator*(const Matrix &lhs,
                                const ConstMatrixView<T> &rhs) {
         return lhs.View() * rhs;
     }
@@ -163,7 +162,23 @@ public:
         return lhs.buffer_ == rhs.buffer_;
     }
 
+    friend bool operator==(const Matrix &lhs, const ConstMatrixView<T> &rhs) {
+        return lhs.View() == rhs;
+    }
+
+    friend bool operator==(const Matrix &lhs, const MatrixView<T> &rhs) {
+        return lhs.View() == rhs.ConstView();
+    }
+
     friend bool operator!=(const Matrix &lhs, const Matrix &rhs) {
+        return !(lhs == rhs);
+    }
+
+    friend bool operator!=(const Matrix &lhs, const ConstMatrixView<T> &rhs) {
+        return !(lhs == rhs);
+    }
+
+    friend bool operator!=(const Matrix &lhs, const MatrixView<T> &rhs) {
         return !(lhs == rhs);
     }
 
@@ -277,18 +292,42 @@ public:
     }
 
     static Matrix Transposed(const Matrix &rhs) {
+        return Matrix::Transposed(rhs.View());
+    }
+
+    static Matrix Transposed(const MatrixView<T> &rhs) {
+        return Matrix::Transposed(rhs.ConstView());
+    }
+
+    static Matrix Transposed(const ConstMatrixView<T> &rhs) {
         Matrix res = rhs;
         res.Transpose();
         return res;
     }
 
     static Matrix Conjugated(const Matrix &rhs) {
+        return Matrix::Conjugated(rhs.View());
+    }
+
+    static Matrix Conjugated(const MatrixView<T> &rhs) {
+        return Matrix::Conjugated(rhs.ConstView());
+    }
+
+    static Matrix Conjugated(const ConstMatrixView<T> &rhs) {
         Matrix res = rhs;
         res.Conjugate();
         return res;
     }
 
     static Matrix Normalized(const Matrix &rhs) {
+        return Matrix::Normalized(rhs.View());
+    }
+
+    static Matrix Normalized(const MatrixView<T> &rhs) {
+        return Matrix::Normalized(rhs.ConstView());
+    }
+
+    static Matrix Normalized(const ConstMatrixView<T> &rhs) {
         Matrix res = rhs;
         res.Normalize();
         return res;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../types/matrix.h"
+#include "is_matrix_type.h"
 
 namespace matrix_lib::utils {
 using IndexType = std::size_t;
