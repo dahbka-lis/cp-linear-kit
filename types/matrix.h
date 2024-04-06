@@ -64,63 +64,70 @@ public:
         return *this;
     }
 
-    // operators+
     Matrix &operator+=(const ConstMatrixView<T> &rhs) {
         View() += rhs;
         return *this;
     }
+
     Matrix &operator+=(const MatrixView<T> &rhs) {
         return *this += rhs.ConstView();
     }
+
     Matrix &operator+=(const Matrix &rhs) { return *this += rhs.View(); }
     friend Matrix<T> operator+(const Matrix<T> &lhs, const Matrix<T> &rhs) {
         return lhs.View() + rhs.View();
     }
+
     friend Matrix<T> operator+(const Matrix<T> &lhs,
                                const ConstMatrixView<T> &rhs) {
         return rhs + lhs;
     }
+
     friend Matrix<T> operator+(const Matrix<T> &lhs, const MatrixView<T> &rhs) {
         return rhs + lhs;
     }
-    // - - - - -
 
-    // operators-
     Matrix &operator-=(const ConstMatrixView<T> &rhs) {
         View() -= rhs;
         return *this;
     }
+
     Matrix &operator-=(const MatrixView<T> &rhs) {
         return *this -= rhs.ConstView();
     }
+
     Matrix &operator-=(const Matrix &rhs) { return *this -= rhs.View(); }
     friend Matrix<T> operator-(const Matrix<T> &lhs, const Matrix<T> &rhs) {
         return lhs.View() - rhs.View();
     }
+
     friend Matrix<T> operator-(const Matrix<T> &lhs,
                                const ConstMatrixView<T> &rhs) {
         return lhs.View() - rhs;
     }
+
     friend Matrix<T> operator-(const Matrix<T> &lhs, const MatrixView<T> &rhs) {
         return lhs.View() - rhs.ConstView();
     }
-    // - - - - -
 
-    // operators*
     Matrix &operator*=(const ConstMatrixView<T> &rhs) {
         View() *= rhs;
         return *this;
     }
+
     Matrix &operator*=(const MatrixView<T> &rhs) {
         return *this *= rhs.ConstView();
     }
+
     Matrix &operator*=(const Matrix<T> &rhs) { return *this *= rhs.View(); }
     friend Matrix<T> operator*(const Matrix &lhs, const Matrix &rhs) {
         return lhs.View() * rhs.View();
     }
+
     friend Matrix<T> operator*(const Matrix &lhs, const MatrixView<T> &rhs) {
         return lhs.View() * rhs.ConstView();
     }
+
     friend Matrix<T> operator*(const Matrix &lhs,
                                const ConstMatrixView<T> &rhs) {
         return lhs.View() * rhs;
@@ -130,9 +137,11 @@ public:
         View() *= scalar;
         return *this;
     }
+
     friend Matrix<T> operator*(const Matrix &lhs, T scalar) {
         return lhs.View() * scalar;
     }
+
     friend Matrix<T> operator*(T scalar, const Matrix &lhs) {
         return lhs.View() * scalar;
     }
@@ -141,13 +150,14 @@ public:
         View() /= scalar;
         return *this;
     }
+
     friend Matrix<T> operator/(const Matrix &lhs, T scalar) {
         return lhs.View() / scalar;
     }
+
     friend Matrix<T> operator/(T scalar, const Matrix &lhs) {
         return lhs.View() / scalar;
     }
-    // - - - - -
 
     friend bool operator==(const Matrix &lhs, const Matrix &rhs) {
         return lhs.buffer_ == rhs.buffer_;

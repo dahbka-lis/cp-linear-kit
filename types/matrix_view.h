@@ -36,7 +36,6 @@ public:
         return *this;
     }
 
-    // operators+
     MatrixView &operator+=(const ConstMatrixView<T> &rhs) {
         assert(Rows() == rhs.Rows() && Columns() == rhs.Columns() &&
                "Matrices must be of the same size for addition.");
@@ -45,24 +44,26 @@ public:
             [&](T &value, IndexType i, IndexType j) { value += rhs(i, j); });
         return *this;
     }
+
     MatrixView &operator+=(const MatrixView &rhs) {
         return *this += rhs.ConstView();
     }
+
     MatrixView &operator+=(const Matrix<T> &rhs) { return *this += rhs.View(); }
     friend Matrix<T> operator+(const MatrixView<T> &lhs,
                                const MatrixView<T> &rhs) {
         return lhs.ConstView() + rhs.ConstView();
     }
+
     friend Matrix<T> operator+(const MatrixView<T> &lhs,
                                const ConstMatrixView<T> &rhs) {
         return rhs + lhs;
     }
+
     friend Matrix<T> operator+(const MatrixView<T> &lhs, const Matrix<T> &rhs) {
         return lhs.ConstView() + rhs.View();
     }
-    // - - - - -
 
-    // operators-
     MatrixView &operator-=(const ConstMatrixView<T> &rhs) {
         assert(Rows() == rhs.Rows() && Columns() == rhs.Columns() &&
                "Matrices must be of the same size for addition.");
@@ -71,24 +72,26 @@ public:
             [&](T &value, IndexType i, IndexType j) { value -= rhs(i, j); });
         return *this;
     }
+
     MatrixView &operator-=(const MatrixView &rhs) {
         return *this -= rhs.ConstView();
     }
+
     MatrixView &operator-=(const Matrix<T> &rhs) { return *this -= rhs.View(); }
     friend Matrix<T> operator-(const MatrixView<T> &lhs,
                                const MatrixView<T> &rhs) {
         return lhs.ConstView() - rhs.ConstView();
     }
+
     friend Matrix<T> operator-(const MatrixView<T> &lhs,
                                const ConstMatrixView<T> &rhs) {
         return lhs.ConstView() - rhs;
     }
+
     friend Matrix<T> operator-(const MatrixView<T> &lhs, const Matrix<T> &rhs) {
         return lhs.ConstView() - rhs.View();
     }
-    // - - - - -
 
-    // operators*
     MatrixView &operator*=(const ConstMatrixView<T> &rhs) {
         assert(rhs.Columns() == rhs.Rows() &&
                "Matrix must be square for multiplication.");
@@ -96,17 +99,21 @@ public:
         ApplyToEach([&](T &val, IndexType i, IndexType j) { val = res(i, j); });
         return *this;
     }
+
     MatrixView &operator*=(const MatrixView &rhs) {
         return *this *= rhs.ConstView();
     }
+
     MatrixView &operator*=(const Matrix<T> &rhs) { return *this *= rhs.View(); }
     friend Matrix<T> operator*(const MatrixView &lhs, const MatrixView &rhs) {
         return lhs * rhs.ConstView();
     }
+
     friend Matrix<T> operator*(const MatrixView &lhs,
                                const ConstMatrixView<T> &rhs) {
         return lhs.ConstView() * rhs;
     }
+
     friend Matrix<T> operator*(const MatrixView &lhs, const Matrix<T> &rhs) {
         return lhs * rhs.View();
     }
@@ -136,7 +143,6 @@ public:
     friend Matrix<T> operator/(T scalar, const MatrixView &lhs) {
         return lhs.ConstView() / scalar;
     }
-    // - - - - -
 
     T &operator()(IndexType row_idx, IndexType col_idx) {
         assert(row_idx >= 0 && row_idx < Rows() && "Invalid row index.");

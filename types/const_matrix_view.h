@@ -36,24 +36,23 @@ public:
         return *this;
     }
 
-    // operators+
     friend Matrix<T> operator+(const ConstMatrixView<T> &lhs,
                                const ConstMatrixView<T> &rhs) {
         Matrix<T> res = lhs;
         res += rhs;
         return res;
     }
+
     friend Matrix<T> operator+(const ConstMatrixView<T> &lhs,
                                const MatrixView<T> &rhs) {
         return lhs + rhs.ConstView();
     }
+
     friend Matrix<T> operator+(const ConstMatrixView<T> &lhs,
                                const Matrix<T> &rhs) {
         return lhs + rhs.View();
     }
-    // - - - - -
 
-    // operators-
     friend Matrix<T> operator-(const ConstMatrixView<T> &lhs,
                                const ConstMatrixView<T> &rhs) {
         assert(lhs.Rows() == rhs.Rows() && lhs.Columns() == rhs.Columns() &&
@@ -62,17 +61,17 @@ public:
         res -= rhs;
         return res;
     }
+
     friend Matrix<T> operator-(const ConstMatrixView<T> &lhs,
                                const MatrixView<T> &rhs) {
         return lhs - rhs.ConstView();
     }
+
     friend Matrix<T> operator-(const ConstMatrixView<T> &lhs,
                                const Matrix<T> &rhs) {
         return lhs - rhs.View();
     }
-    // - - - - -
 
-    // operators*
     friend Matrix<T> operator*(const ConstMatrixView &lhs,
                                const ConstMatrixView &rhs) {
         assert(lhs.Columns() == rhs.Rows() &&
@@ -91,10 +90,12 @@ public:
 
         return result;
     }
+
     friend Matrix<T> operator*(const ConstMatrixView &lhs,
                                const MatrixView<T> &rhs) {
         return lhs * rhs.ConstView();
     }
+
     friend Matrix<T> operator*(const ConstMatrixView &lhs,
                                const Matrix<T> &rhs) {
         return lhs * rhs.View();
@@ -119,7 +120,6 @@ public:
     friend Matrix<T> operator/(T scalar, const ConstMatrixView &lhs) {
         return lhs / scalar;
     }
-    // - - - - -
 
     T operator()(IndexType row_idx, IndexType col_idx) const {
         assert(row_idx >= 0 && row_idx < Rows() && "Invalid row index.");
