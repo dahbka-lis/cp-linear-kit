@@ -1,15 +1,7 @@
 #pragma once
 
-#include "fwd.h"
 #include "matrix_view.h"
-
-#include "../utils/is_equal_floating.h"
-#include "../utils/is_float_complex.h"
-
-#include <cassert>
-#include <functional>
-#include <utility>
-#include <vector>
+#include "types_details.h"
 
 namespace matrix_lib {
 template <utils::FloatOrComplex T = long double>
@@ -17,15 +9,10 @@ class ConstMatrixView {
     friend class Matrix<T>;
     friend class MatrixView<T>;
 
-    using IndexType = std::ptrdiff_t;
-    using ConstFunction = std::function<void(const T &)>;
-    using ConstFunctionIndexes =
-        std::function<void(const T &, IndexType, IndexType)>;
-
-    struct Segment {
-        IndexType begin = 0;
-        IndexType end = 0;
-    };
+    using IndexType = details::Types::IndexType;
+    using Segment = details::Types::Segment;
+    using ConstFunction = details::Types::ConstFunction<T>;
+    using ConstFunctionIndexes = details::Types::ConstFunctionIndexes<T>;
 
 public:
     explicit ConstMatrixView(const Matrix<T> &matrix, Segment row = {-1, -1},
@@ -111,6 +98,26 @@ public:
     friend Matrix<T> operator*(const ConstMatrixView &lhs,
                                const Matrix<T> &rhs) {
         return lhs * rhs.View();
+    }
+
+    friend Matrix<T> operator*(const ConstMatrixView &lhs, T scalar) {
+        Matrix<T> res = lhs;
+        res *= scalar;
+        return res;
+    }
+
+    friend Matrix<T> operator*(T scalar, const ConstMatrixView &lhs) {
+        return lhs * scalar;
+    }
+
+    friend Matrix<T> operator/(const ConstMatrixView &lhs, T scalar) {
+        Matrix<T> res = lhs;
+        res /= scalar;
+        return res;
+    }
+
+    friend Matrix<T> operator/(T scalar, const ConstMatrixView &lhs) {
+        return lhs / scalar;
     }
     // - - - - -
 

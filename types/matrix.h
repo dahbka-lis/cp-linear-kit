@@ -1,28 +1,22 @@
 #pragma once
 
-#include "../utils/is_equal_floating.h"
-#include "../utils/is_float_complex.h"
 #include "../utils/is_matrix_type.h"
-#include "fwd.h"
 #include "matrix_view.h"
+#include "types_details.h"
 
-#include <cassert>
-#include <functional>
 #include <ostream>
-#include <utility>
 #include <vector>
 
 namespace matrix_lib {
 template <utils::FloatOrComplex T = long double>
 class Matrix {
-    using IndexType = std::ptrdiff_t;
-    using Segment = ConstMatrixView<T>::Segment;
     using Data = std::vector<T>;
-    using Function = std::function<void(T &)>;
-    using FunctionIndexes = std::function<void(T &, IndexType, IndexType)>;
-    using ConstFunction = std::function<void(const T &)>;
-    using ConstFunctionIndexes =
-        std::function<void(const T &, IndexType, IndexType)>;
+    using IndexType = details::Types::IndexType;
+    using Segment = details::Types::Segment;
+    using Function = details::Types::Function<T>;
+    using FunctionIndexes = details::Types::FunctionIndexes<T>;
+    using ConstFunction = details::Types::ConstFunction<T>;
+    using ConstFunctionIndexes = details::Types::ConstFunctionIndexes<T>;
 
 public:
     Matrix() = default;
@@ -31,28 +25,10 @@ public:
         : rows_(sq_size), buffer_(rows_ * rows_, T{0}) {}
 
     Matrix(IndexType row_cnt, IndexType col_cnt, T value = T{0})
-        : rows_(row_cnt), buffer_(rows_ * col_cnt, value) {
-        assert(Rows() > 0 &&
-               "Number of matrix rows must be greater than zero.");
-        assert(Columns() > 0 &&
-               "Number of matrix columns must be greater than zero.");
-    }
-
-    Matrix(std::initializer_list<T> diagonal) : Matrix(diagonal.size()) {
-        IndexType idx = 0;
-        for (auto value : diagonal) {
-            (*this)(idx, idx) = value;
-            ++idx;
-        }
-    }
+        : rows_(row_cnt), buffer_(rows_ * col_cnt, value) {}
 
     Matrix(std::initializer_list<std::initializer_list<T>> list)
         : rows_(list.size()) {
-        assert(Rows() > 0 &&
-               "Number of matrix rows must be greater than zero.");
-        assert(list.begin()->size() > 0 &&
-               "Number of matrix columns must be greater than zero.");
-
         auto columns = list.begin()->size();
         buffer_.reserve(Rows() * columns);
 
@@ -149,15 +125,35 @@ public:
                                const ConstMatrixView<T> &rhs) {
         return lhs.View() * rhs;
     }
+
+    Matrix &operator*=(T scalar) {
+        View() *= scalar;
+        return *this;
+    }
+    friend Matrix<T> operator*(const Matrix &lhs, T scalar) {
+        return lhs.View() * scalar;
+    }
+    friend Matrix<T> operator*(T scalar, const Matrix &lhs) {
+        return lhs.View() * scalar;
+    }
+
+    Matrix &operator/=(T scalar) {
+        View() /= scalar;
+        return *this;
+    }
+    friend Matrix<T> operator/(const Matrix &lhs, T scalar) {
+        return lhs.View() / scalar;
+    }
+    friend Matrix<T> operator/(T scalar, const Matrix &lhs) {
+        return lhs.View() / scalar;
+    }
     // - - - - -
 
-    template <utils::MatrixType M>
-    friend bool operator==(const Matrix &lhs, const M &rhs) {
+    friend bool operator==(const Matrix &lhs, const Matrix &rhs) {
         return lhs.buffer_ == rhs.buffer_;
     }
 
-    template <utils::MatrixType M>
-    friend bool operator!=(const Matrix &lhs, const M &rhs) {
+    friend bool operator!=(const Matrix &lhs, const Matrix &rhs) {
         return !(lhs == rhs);
     }
 
@@ -203,13 +199,9 @@ public:
         return *this;
     }
 
-    T GetEuclideanNorm() const {
-        return View().GetEuclideanNorm();
-    }
+    T GetEuclideanNorm() const { return View().GetEuclideanNorm(); }
 
-    Matrix GetDiag() const {
-        return View().GetDiag();
-    }
+    Matrix GetDiag() const { return View().GetDiag(); }
 
     MatrixView<T> GetRow(IndexType index) { return View().GetRow(index); }
 
@@ -265,20 +257,12 @@ public:
     }
 
     Matrix &Normalize() {
-        assert(Rows() == 1 || Columns() == 1 && "Normalize only for vectors.");
-
-        auto norm = GetEuclideanNorm();
-        if (!utils::IsZeroFloating(norm)) {
-            (*this) /= norm;
-        }
-
+        View().Normalize();
         return *this;
     }
 
     Matrix &RoundZeroes() {
-        ApplyToEach(
-            [](T &el) { el = (utils::IsZeroFloating(el)) ? T{0} : el; });
-
+        View().RoundZeroes();
         return *this;
     }
 
@@ -300,9 +284,33 @@ public:
         return res;
     }
 
-    static Matrix Identity(IndexType size) { return Matrix(Data(size, T{1})); }
+    static Matrix Identity(IndexType size) {
+        Matrix res(size);
+        res.ApplyToEach([&](T &el, IndexType i, IndexType j) {
+            el = (i == j) ? T{1} : T{0};
+        });
+        return res;
+    }
 
-    static Matrix Diagonal(const Data &diag) { return Matrix(diag); }
+    static Matrix Diagonal(const Matrix &vec) { return Diagonal(vec.View()); }
+
+    static Matrix Diagonal(const MatrixView<T> &vec) {
+        return Diagonal(vec.ConstView());
+    }
+
+    static Matrix Diagonal(const ConstMatrixView<T> &vec) {
+        assert(vec.Rows() == 1 ||
+               vec.Columns() == 1 &&
+                   "Creating a diagonal matrix for vectors only.");
+
+        Matrix<T> res(std::max(vec.Rows(), vec.Columns()));
+        vec.ApplyToEach([&](const T &val, IndexType i, IndexType j) {
+            auto idx = std::max(i, j);
+            res(idx, idx) = val;
+        });
+
+        return res;
+    }
 
     friend std::ostream &operator<<(std::ostream &ostream,
                                     const Matrix &matrix) {

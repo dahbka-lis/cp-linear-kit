@@ -1,24 +1,17 @@
 #pragma once
 
-#include "../utils/is_equal_floating.h"
-#include "../utils/is_float_complex.h"
 #include "const_matrix_view.h"
-#include "fwd.h"
-
-#include <cassert>
-#include <functional>
-#include <utility>
-#include <vector>
+#include "types_details.h"
 
 namespace matrix_lib {
 template <utils::FloatOrComplex T = long double>
 class MatrixView {
-    using IndexType = std::ptrdiff_t;
-    using Segment = ConstMatrixView<T>::Segment;
-    using Function = std::function<void(T &)>;
-    using FunctionIndexes = std::function<void(T &, IndexType, IndexType)>;
-    using ConstFunction = ConstMatrixView<T>::ConstFunction;
-    using ConstFunctionIndexes = ConstMatrixView<T>::ConstFunctionIndexes;
+    using IndexType = details::Types::IndexType;
+    using Segment = details::Types::Segment;
+    using Function = details::Types::Function<T>;
+    using FunctionIndexes = details::Types::FunctionIndexes<T>;
+    using ConstFunction = details::Types::ConstFunction<T>;
+    using ConstFunctionIndexes = details::Types::ConstFunctionIndexes<T>;
 
 public:
     explicit MatrixView(Matrix<T> &matrix, Segment row = {-1, -1},
@@ -117,6 +110,32 @@ public:
     friend Matrix<T> operator*(const MatrixView &lhs, const Matrix<T> &rhs) {
         return lhs * rhs.View();
     }
+
+    MatrixView &operator*=(T scalar) {
+        ApplyToEach([&](T &val) { val *= scalar; });
+        return *this;
+    }
+
+    friend Matrix<T> operator*(const MatrixView &lhs, T scalar) {
+        return lhs.ConstView() * scalar;
+    }
+
+    friend Matrix<T> operator*(T scalar, const MatrixView &lhs) {
+        return lhs.ConstView() * scalar;
+    }
+
+    MatrixView &operator/=(T scalar) {
+        ApplyToEach([&](T &val) { val /= scalar; });
+        return *this;
+    }
+
+    friend Matrix<T> operator/(const MatrixView &lhs, T scalar) {
+        return lhs.ConstView() / scalar;
+    }
+
+    friend Matrix<T> operator/(T scalar, const MatrixView &lhs) {
+        return lhs.ConstView() / scalar;
+    }
     // - - - - -
 
     T &operator()(IndexType row_idx, IndexType col_idx) {
@@ -167,13 +186,9 @@ public:
         return *this;
     }
 
-    T GetEuclideanNorm() const {
-        return ConstView().GetEuclideanNorm();
-    }
+    T GetEuclideanNorm() const { return ConstView().GetEuclideanNorm(); }
 
-    Matrix<T> GetDiag() const {
-        return ConstView().GetDiag();
-    }
+    Matrix<T> GetDiag() const { return ConstView().GetDiag(); }
 
     MatrixView GetRow(IndexType index) {
         assert(index < Rows() &&
@@ -208,6 +223,25 @@ public:
 
         return MatrixView<T>(*ptr_, {row_.begin + r_from, row_.begin + r_to},
                              {column_.begin + c_from, column_.begin + c_to});
+    }
+
+    MatrixView<T> &Normalize() {
+        assert(Rows() == 1 || Columns() == 1 && "Normalize only for vectors.");
+
+        auto norm = GetEuclideanNorm();
+        if (!utils::IsZeroFloating(norm)) {
+            (*this) /= norm;
+        } else {
+            RoundZeroes();
+        }
+
+        return *this;
+    }
+
+    MatrixView<T> &RoundZeroes() {
+        ApplyToEach(
+            [](T &el) { el = (utils::IsZeroFloating(el)) ? T{0} : el; });
+        return *this;
     }
 
     ConstMatrixView<T> ConstView() const {
