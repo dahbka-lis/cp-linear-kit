@@ -3,7 +3,7 @@
 #include "householder.h"
 
 namespace matrix_lib::algorithms {
-using IndexType = std::size_t;
+using IndexType = details::Types::IndexType;
 
 template <utils::FloatOrComplex T = long double>
 struct HessenbergBasis {

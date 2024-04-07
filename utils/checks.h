@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../types/matrix.h"
+#include "../types/types_details.h"
 #include "is_matrix_type.h"
 
 namespace matrix_lib::utils {
-using IndexType = std::size_t;
+using IndexType = matrix_lib::details::Types::IndexType;
 
 template <utils::MatrixType M>
 bool IsSquare(const M &matrix) {
@@ -66,7 +66,7 @@ bool IsNormal(const M &matrix) {
 template <utils::MatrixType M>
 bool IsUpperTriangular(const M &matrix) {
     for (IndexType i = 1; i < matrix.Rows(); ++i) {
-        for (IndexType j = 0; j < i; ++j) {
+        for (IndexType j = 0; j < std::min(i, matrix.Columns()); ++j) {
             if (!utils::IsZeroFloating(matrix(i, j))) {
                 return false;
             }

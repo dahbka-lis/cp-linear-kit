@@ -15,17 +15,21 @@ class MatrixView {
 
 public:
     explicit MatrixView(Matrix<T> &matrix, Segment row = {-1, -1},
-                        Segment col = {-1, -1})
-        : ptr_(&matrix),
-          row_(ConstMatrixView<T>::MakeSegment(row, matrix.Rows())),
-          column_(ConstMatrixView<T>::MakeSegment(col, matrix.Columns())) {}
+                        Segment col = {-1, -1}, bool is_transposed = false)
+        : ptr_(&matrix), is_transposed_(is_transposed) {
+        row_ = ConstMatrixView<T>::MakeSegment(
+            row, (is_transposed) ? matrix.Columns() : matrix.Rows());
+        column_ = ConstMatrixView<T>::MakeSegment(
+            col, (is_transposed) ? matrix.Rows() : matrix.Columns());
+    }
 
     MatrixView(const MatrixView &rhs) = default;
 
     MatrixView(MatrixView &&rhs) noexcept
         : ptr_(std::exchange(rhs.ptr_, nullptr)),
           row_(std::exchange(rhs.row_, {0, 1})),
-          column_(std::exchange(rhs.column_, {0, 1})){};
+          column_(std::exchange(rhs.column_, {0, 1})),
+          is_transposed_(std::exchange(rhs.is_transposed_, false)){};
 
     MatrixView &operator=(const MatrixView &lhs) = default;
 
@@ -33,6 +37,7 @@ public:
         ptr_ = std::exchange(rhs.ptr_, nullptr);
         row_ = std::exchange(rhs.row_, {0, 1});
         column_ = std::exchange(rhs.column_, {0, 1});
+        is_transposed_ = std::exchange(rhs.is_transposed_, false);
         return *this;
     }
 
@@ -105,6 +110,7 @@ public:
     }
 
     MatrixView &operator*=(const Matrix<T> &rhs) { return *this *= rhs.View(); }
+
     friend Matrix<T> operator*(const MatrixView &lhs, const MatrixView &rhs) {
         return lhs * rhs.ConstView();
     }
@@ -172,15 +178,21 @@ public:
 
     T &operator()(IndexType row_idx, IndexType col_idx) {
         assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
-        assert(row_idx >= 0 && row_idx < Rows() && "Invalid row index.");
-        assert(col_idx >= 0 && col_idx < Columns() && "Invalid column index.");
+
+        if (is_transposed_) {
+            return (*ptr_)(row_.begin + col_idx, column_.begin + row_idx);
+        }
+
         return (*ptr_)(row_.begin + row_idx, column_.begin + col_idx);
     }
 
     T operator()(IndexType row_idx, IndexType col_idx) const {
         assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
-        assert(row_idx >= 0 && row_idx < Rows() && "Invalid row index.");
-        assert(col_idx >= 0 && col_idx < Columns() && "Invalid column index.");
+
+        if (is_transposed_) {
+            return (*ptr_)(row_.begin + col_idx, column_.begin + row_idx);
+        }
+
         return (*ptr_)(row_.begin + row_idx, column_.begin + col_idx);
     }
 
@@ -193,9 +205,9 @@ public:
     MatrixView &ApplyToEach(Function func) {
         assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
 
-        for (IndexType i = row_.begin; i < row_.end; ++i) {
-            for (IndexType j = column_.begin; j < column_.end; ++j) {
-                func((*ptr_)(i, j));
+        for (IndexType i = 0; i < Rows(); ++i) {
+            for (IndexType j = 0; j < Columns(); ++j) {
+                func((*this)(i, j));
             }
         }
 
@@ -205,9 +217,9 @@ public:
     MatrixView &ApplyToEach(FunctionIndexes func) {
         assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
 
-        for (IndexType i = row_.begin; i < row_.end; ++i) {
-            for (IndexType j = column_.begin; j < column_.end; ++j) {
-                func((*ptr_)(i, j), i - row_.begin, j - column_.begin);
+        for (IndexType i = 0; i < Rows(); ++i) {
+            for (IndexType j = 0; j < Columns(); ++j) {
+                func((*this)(i, j), i, j);
             }
         }
 
@@ -234,7 +246,7 @@ public:
                "Index must be less than the number of matrix rows.");
 
         return MatrixView(*ptr_, {row_.begin + index, row_.begin + index + 1},
-                          {column_.begin, column_.end});
+                          {column_.begin, column_.end}, is_transposed_);
     }
 
     MatrixView GetColumn(IndexType index) {
@@ -243,7 +255,8 @@ public:
                "Index must be less than the number of matrix columns.");
 
         return MatrixView(*ptr_, {row_.begin, row_.end},
-                          {column_.begin + index, column_.begin + index + 1});
+                          {column_.begin + index, column_.begin + index + 1},
+                          is_transposed_);
     }
 
     MatrixView<T> GetSubmatrix(Segment row, Segment col) {
@@ -257,10 +270,27 @@ public:
         assert(column_.begin + c_to <= Columns() && "Invalid column index.");
 
         return MatrixView<T>(*ptr_, {row_.begin + r_from, row_.begin + r_to},
-                             {column_.begin + c_from, column_.begin + c_to});
+                             {column_.begin + c_from, column_.begin + c_to},
+                             is_transposed_);
     }
 
-    MatrixView<T> &Normalize() {
+    MatrixView &Transpose() {
+        is_transposed_ = !is_transposed_;
+        std::swap(row_, column_);
+        return *this;
+    }
+
+    MatrixView &Conjugate() {
+        Transpose();
+
+        if constexpr (utils::details::IsFloatComplexT<T>::value) {
+            ApplyToEach([](T &val) { val = std::conj(val); });
+        }
+
+        return *this;
+    }
+
+    MatrixView &Normalize() {
         assert(Rows() == 1 || Columns() == 1 && "Normalize only for vectors.");
 
         auto norm = GetEuclideanNorm();
@@ -281,7 +311,7 @@ public:
 
     ConstMatrixView<T> ConstView() const {
         return ConstMatrixView<T>(*ptr_, {row_.begin, row_.end},
-                                  {column_.begin, column_.end});
+                                  {column_.begin, column_.end}, is_transposed_);
     }
 
     friend std::ostream &operator<<(std::ostream &ostream,
@@ -311,5 +341,6 @@ private:
     Matrix<T> *ptr_;
     Segment row_;
     Segment column_;
+    bool is_transposed_ = false;
 };
 } // namespace matrix_lib

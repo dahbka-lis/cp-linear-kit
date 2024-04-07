@@ -1,11 +1,10 @@
 #pragma once
 
-#include "../types/matrix.h"
-#include "../types/matrix_view.h"
+#include "../types/types_details.h"
 #include "../utils/sign.h"
 
 namespace matrix_lib::algorithms {
-using IndexType = std::size_t;
+using IndexType = details::Types::IndexType;
 
 template <utils::FloatOrComplex T = long double>
 void HouseholderReduction(Matrix<T> &vector) {
@@ -14,7 +13,7 @@ void HouseholderReduction(Matrix<T> &vector) {
 }
 
 template <utils::FloatOrComplex T = long double>
-void HouseholderLeftReflection(Matrix<T> &matrix, const Matrix<T> &vec,
+void HouseholderLeftReflection(MatrixView<T> &matrix, const Matrix<T> &vec,
                                IndexType row = 0, IndexType c_from = 0,
                                IndexType c_to = -1) {
     if (c_to == -1) {
@@ -22,13 +21,20 @@ void HouseholderLeftReflection(Matrix<T> &matrix, const Matrix<T> &vec,
     }
 
     MatrixView<T> sub =
-        matrix.GetSubmatrix(row, row + vec.Rows(), c_from, c_to);
-    auto hh_diff = (T{2} * vec) * (Matrix<T>::Conjugated(vec) * sub);
-    matrix.AssignSubmatrix(sub.Copy() - hh_diff, row, c_from);
+        matrix.GetSubmatrix({row, row + vec.Rows()}, {c_from, c_to});
+    sub -= (T{2} * vec) * (Matrix<T>::Conjugated(vec) * sub);
 }
 
 template <utils::FloatOrComplex T = long double>
-void HouseholderRightReflection(Matrix<T> &matrix, const Matrix<T> &vec,
+void HouseholderLeftReflection(Matrix<T> &matrix, const Matrix<T> &vec,
+                               IndexType row = 0, IndexType c_from = 0,
+                               IndexType c_to = -1) {
+    auto view = matrix.View();
+    HouseholderLeftReflection(view, vec, row, c_from, c_to);
+}
+
+template <utils::FloatOrComplex T = long double>
+void HouseholderRightReflection(MatrixView<T> &matrix, const Matrix<T> &vec,
                                 IndexType col = 0, IndexType r_from = 0,
                                 IndexType r_to = -1) {
     if (r_to == -1) {
@@ -36,8 +42,14 @@ void HouseholderRightReflection(Matrix<T> &matrix, const Matrix<T> &vec,
     }
 
     MatrixView<T> sub =
-        matrix.GetSubmatrix(r_from, r_to, col, col + vec.Columns());
-    auto hh_diff = (sub * Matrix<T>::Conjugated(vec)) * (T{2} * vec);
-    matrix.AssignSubmatrix(sub.Copy() - hh_diff, r_from, col);
+        matrix.GetSubmatrix({r_from, r_to}, {col, col + vec.Columns()});
+    sub -= (sub * Matrix<T>::Conjugated(vec)) * (T{2} * vec);
+}
+
+template <utils::FloatOrComplex T = long double>
+void HouseholderRightReflection(Matrix<T> &matrix, const Matrix<T> &vec,
+                                IndexType col = 0, IndexType r_from = 0,
+                                IndexType r_to = -1) {
+    HouseholderRightReflection(matrix.View(), vec, col, r_from, r_to);
 }
 } // namespace matrix_lib::algorithms

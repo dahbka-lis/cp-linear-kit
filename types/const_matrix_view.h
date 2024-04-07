@@ -16,16 +16,21 @@ class ConstMatrixView {
 
 public:
     explicit ConstMatrixView(const Matrix<T> &matrix, Segment row = {-1, -1},
-                             Segment col = {-1, -1})
-        : ptr_(&matrix), row_(MakeSegment(row, matrix.Rows())),
-          column_(MakeSegment(col, matrix.Columns())) {}
+                             Segment col = {-1, -1}, bool is_transposed = false)
+        : ptr_(&matrix), is_transposed_(is_transposed) {
+        row_ = MakeSegment(row,
+                           (is_transposed) ? matrix.Columns() : matrix.Rows());
+        column_ = MakeSegment(col, (is_transposed) ? matrix.Rows()
+                                                   : matrix.Columns());
+    }
 
     ConstMatrixView(const ConstMatrixView &rhs) = default;
 
     ConstMatrixView(ConstMatrixView &&rhs) noexcept
         : ptr_(std::exchange(rhs.ptr_, nullptr)),
           row_(std::exchange(rhs.row_, {0, 1})),
-          column_(std::exchange(rhs.column_, {0, 1})){};
+          column_(std::exchange(rhs.column_, {0, 1})),
+          is_transposed_(std::exchange(rhs.is_transposed_, false)){};
 
     ConstMatrixView &operator=(const ConstMatrixView &lhs) = default;
 
@@ -33,6 +38,7 @@ public:
         ptr_ = std::exchange(rhs.ptr_, nullptr);
         row_ = std::exchange(rhs.row_, {0, 1});
         column_ = std::exchange(rhs.column_, {0, 1});
+        is_transposed_ = std::exchange(rhs.is_transposed_, false);
         return *this;
     }
 
@@ -163,8 +169,11 @@ public:
 
     T operator()(IndexType row_idx, IndexType col_idx) const {
         assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
-        assert(row_idx >= 0 && row_idx < Rows() && "Invalid row index.");
-        assert(col_idx >= 0 && col_idx < Columns() && "Invalid column index.");
+
+        if (is_transposed_) {
+            return (*ptr_)(row_.begin + col_idx, column_.begin + row_idx);
+        }
+
         return (*ptr_)(row_.begin + row_idx, column_.begin + col_idx);
     }
 
@@ -177,9 +186,9 @@ public:
     const ConstMatrixView &ApplyToEach(ConstFunction func) const {
         assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
 
-        for (IndexType i = row_.begin; i < row_.end; ++i) {
-            for (IndexType j = column_.begin; j < column_.end; ++j) {
-                func((*ptr_)(i, j));
+        for (IndexType i = 0; i < Rows(); ++i) {
+            for (IndexType j = 0; j < Columns(); ++j) {
+                func((*this)(i, j));
             }
         }
 
@@ -189,9 +198,9 @@ public:
     const ConstMatrixView &ApplyToEach(ConstFunctionIndexes func) const {
         assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
 
-        for (IndexType i = row_.begin; i < row_.end; ++i) {
-            for (IndexType j = column_.begin; j < column_.end; ++j) {
-                func((*ptr_)(i, j), i - row_.begin, j - column_.begin);
+        for (IndexType i = 0; i < Rows(); ++i) {
+            for (IndexType j = 0; j < Columns(); ++j) {
+                func((*this)(i, j), i, j);
             }
         }
 
@@ -225,7 +234,7 @@ public:
 
         return ConstMatrixView(*ptr_,
                                {row_.begin + index, row_.begin + index + 1},
-                               {column_.begin, column_.end});
+                               {column_.begin, column_.end}, is_transposed_);
     }
 
     ConstMatrixView GetColumn(IndexType index) const {
@@ -235,7 +244,7 @@ public:
 
         return ConstMatrixView(
             *ptr_, {row_.begin, row_.end},
-            {column_.begin + index, column_.begin + index + 1});
+            {column_.begin + index, column_.begin + index + 1}, is_transposed_);
     }
 
     ConstMatrixView<T> GetSubmatrix(Segment row, Segment col) const {
@@ -250,7 +259,7 @@ public:
 
         return ConstMatrixView<T>(
             *ptr_, {row_.begin + r_from, row_.begin + r_to},
-            {column_.begin + c_from, column_.begin + c_to});
+            {column_.begin + c_from, column_.begin + c_to}, is_transposed_);
     }
 
     friend std::ostream &operator<<(std::ostream &ostream,
@@ -292,5 +301,6 @@ private:
     const Matrix<T> *ptr_;
     Segment row_;
     Segment column_;
+    bool is_transposed_ = false;
 };
 } // namespace matrix_lib

@@ -3,7 +3,7 @@
 #include "../types/matrix.h"
 
 namespace matrix_lib::algorithms {
-using IndexType = std::size_t;
+using IndexType = details::Types::IndexType;
 
 template <utils::FloatOrComplex T = long double>
 struct GivensPair {
@@ -33,7 +33,7 @@ Matrix<T> GetGivensMatrix(IndexType size, IndexType from, IndexType to,
     res(from, from) = cos;
     res(from, to) = -sin;
 
-    if constexpr (utils::IsFloatComplexValue<T>()) {
+    if constexpr (utils::details::IsFloatComplexT<T>::value) {
         res(to, from) = std::conj(sin);
         res(to, to) = std::conj(cos);
     } else {
