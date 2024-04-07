@@ -8,6 +8,7 @@ template <utils::FloatOrComplex T = long double>
 class MatrixView {
     using IndexType = details::Types::IndexType;
     using Segment = details::Types::Segment;
+    using MatrixState = details::Types::MatrixState;
     using Function = details::Types::Function<T>;
     using FunctionIndexes = details::Types::FunctionIndexes<T>;
     using ConstFunction = details::Types::ConstFunction<T>;
@@ -15,12 +16,13 @@ class MatrixView {
 
 public:
     explicit MatrixView(Matrix<T> &matrix, Segment row = {-1, -1},
-                        Segment col = {-1, -1}, bool is_transposed = false)
-        : ptr_(&matrix), is_transposed_(is_transposed) {
+                        Segment col = {-1, -1},
+                        MatrixState state = {false, false})
+        : ptr_(&matrix), state_(state) {
         row_ = ConstMatrixView<T>::MakeSegment(
-            row, (is_transposed) ? matrix.Columns() : matrix.Rows());
+            row, (state_.is_transposed) ? matrix.Columns() : matrix.Rows());
         column_ = ConstMatrixView<T>::MakeSegment(
-            col, (is_transposed) ? matrix.Rows() : matrix.Columns());
+            col, (state_.is_transposed) ? matrix.Rows() : matrix.Columns());
     }
 
     MatrixView(const MatrixView &rhs) = default;
@@ -29,7 +31,7 @@ public:
         : ptr_(std::exchange(rhs.ptr_, nullptr)),
           row_(std::exchange(rhs.row_, {0, 1})),
           column_(std::exchange(rhs.column_, {0, 1})),
-          is_transposed_(std::exchange(rhs.is_transposed_, false)){};
+          state_(std::exchange(rhs.state_, MatrixState{})){};
 
     MatrixView &operator=(const MatrixView &lhs) = default;
 
@@ -37,7 +39,7 @@ public:
         ptr_ = std::exchange(rhs.ptr_, nullptr);
         row_ = std::exchange(rhs.row_, {0, 1});
         column_ = std::exchange(rhs.column_, {0, 1});
-        is_transposed_ = std::exchange(rhs.is_transposed_, false);
+        state_ = std::exchange(rhs.state_, MatrixState{});
         return *this;
     }
 
@@ -179,7 +181,7 @@ public:
     T &operator()(IndexType row_idx, IndexType col_idx) {
         assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
 
-        if (is_transposed_) {
+        if (state_.is_transposed) {
             return (*ptr_)(row_.begin + col_idx, column_.begin + row_idx);
         }
 
@@ -189,7 +191,21 @@ public:
     T operator()(IndexType row_idx, IndexType col_idx) const {
         assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
 
-        if (is_transposed_) {
+        if constexpr (utils::details::IsFloatComplexT<T>::value) {
+            if (state_.is_transposed && state_.is_conjugated) {
+                return std::conj(
+                    (*ptr_)(row_.begin + col_idx, column_.begin + row_idx));
+            } else if (state_.is_transposed) {
+                return (*ptr_)(row_.begin + col_idx, column_.begin + row_idx);
+            } else if (state_.is_conjugated) {
+                return std::conj(
+                    (*ptr_)(row_.begin + row_idx, column_.begin + col_idx));
+            }
+
+            return (*ptr_)(row_.begin + row_idx, column_.begin + col_idx);
+        }
+
+        if (state_.is_transposed) {
             return (*ptr_)(row_.begin + col_idx, column_.begin + row_idx);
         }
 
@@ -246,7 +262,7 @@ public:
                "Index must be less than the number of matrix rows.");
 
         return MatrixView(*ptr_, {row_.begin + index, row_.begin + index + 1},
-                          {column_.begin, column_.end}, is_transposed_);
+                          {column_.begin, column_.end}, state_);
     }
 
     MatrixView GetColumn(IndexType index) {
@@ -256,7 +272,7 @@ public:
 
         return MatrixView(*ptr_, {row_.begin, row_.end},
                           {column_.begin + index, column_.begin + index + 1},
-                          is_transposed_);
+                          state_);
     }
 
     MatrixView<T> GetSubmatrix(Segment row, Segment col) {
@@ -271,22 +287,18 @@ public:
 
         return MatrixView<T>(*ptr_, {row_.begin + r_from, row_.begin + r_to},
                              {column_.begin + c_from, column_.begin + c_to},
-                             is_transposed_);
+                             state_);
     }
 
     MatrixView &Transpose() {
-        is_transposed_ = !is_transposed_;
+        state_.is_transposed = !state_.is_transposed;
         std::swap(row_, column_);
         return *this;
     }
 
     MatrixView &Conjugate() {
         Transpose();
-
-        if constexpr (utils::details::IsFloatComplexT<T>::value) {
-            ApplyToEach([](T &val) { val = std::conj(val); });
-        }
-
+        state_.is_conjugated = !state_.is_conjugated;
         return *this;
     }
 
@@ -311,7 +323,28 @@ public:
 
     ConstMatrixView<T> ConstView() const {
         return ConstMatrixView<T>(*ptr_, {row_.begin, row_.end},
-                                  {column_.begin, column_.end}, is_transposed_);
+                                  {column_.begin, column_.end}, state_);
+    }
+
+    static MatrixView Transposed(Matrix<T> &rhs) {
+        return MatrixView::Transposed(rhs.View());
+    }
+
+    static MatrixView Transposed(MatrixView<T> &rhs) {
+        auto view = rhs;
+        view.Transpose();
+        return view;
+    }
+
+    static MatrixView Conjugated(Matrix<T> &rhs) {
+        auto view = rhs.View();
+        return MatrixView::Conjugated(view);
+    }
+
+    static MatrixView Conjugated(MatrixView<T> &rhs) {
+        auto view = rhs;
+        view.Conjugate();
+        return view;
     }
 
     friend std::ostream &operator<<(std::ostream &ostream,
@@ -341,6 +374,6 @@ private:
     Matrix<T> *ptr_;
     Segment row_;
     Segment column_;
-    bool is_transposed_ = false;
+    MatrixState state_;
 };
 } // namespace matrix_lib

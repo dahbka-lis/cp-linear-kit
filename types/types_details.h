@@ -38,6 +38,11 @@ struct Types {
         IndexType begin = 0;
         IndexType end = 1;
     };
+
+    struct MatrixState {
+        bool is_transposed = false;
+        bool is_conjugated = false;
+    };
 };
 } // namespace details
 } // namespace matrix_lib

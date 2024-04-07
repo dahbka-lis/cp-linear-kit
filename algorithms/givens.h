@@ -13,9 +13,7 @@ struct GivensPair {
 
 template <utils::FloatOrComplex T = long double>
 GivensPair<T> GetGivensCoefficients(T first_elem, T second_elem) {
-    auto abs_first = std::abs(first_elem);
-    auto abs_second = std::abs(second_elem);
-    auto sqrt_abs = std::sqrt(abs_first * abs_first + abs_second * abs_second);
+    auto sqrt_abs = std::sqrt(std::norm(first_elem) + std::norm(second_elem));
 
     if (utils::IsZeroFloating(sqrt_abs)) {
         return {T{1}, T{0}};
@@ -53,7 +51,12 @@ void GivensLeftRotation(Matrix<T> &matrix, IndexType from, IndexType to,
         auto cp_from = matrix(from, i);
         auto cp_to = matrix(to, i);
 
-        matrix(from, i) = cos * cp_from - sin * cp_to;
+        if constexpr (utils::details::IsFloatComplexT<T>::value) {
+            matrix(from, i) = std::conj(cos) * cp_from - std::conj(sin) * cp_to;
+        } else {
+            matrix(from, i) = cos * cp_from + sin * cp_to;
+        }
+
         matrix(to, i) = cos * cp_to + sin * cp_from;
     }
 }
@@ -61,14 +64,14 @@ void GivensLeftRotation(Matrix<T> &matrix, IndexType from, IndexType to,
 template <utils::FloatOrComplex T = long double>
 void GivensRightRotation(Matrix<T> &matrix, IndexType from, IndexType to,
                          T first, T second) {
-    auto [cos, sin] = GetGivensCoefficients(first, second);
+    auto [cos, sin] = GetGivensCoefficients(second, first);
 
     for (IndexType i = 0; i < matrix.Rows(); ++i) {
         auto cp_from = matrix(i, from);
         auto cp_to = matrix(i, to);
 
-        matrix(i, from) = cos * cp_from - sin * cp_to;
-        matrix(i, to) = cos * cp_to + sin * cp_from;
+        matrix(i, from) = cos * cp_from + sin * cp_to;
+        matrix(i, to) = cos * cp_to - sin * cp_from;
     }
 }
 } // namespace matrix_lib::algorithms

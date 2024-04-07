@@ -7,9 +7,15 @@ namespace matrix_lib::algorithms {
 using IndexType = details::Types::IndexType;
 
 template <utils::FloatOrComplex T = long double>
-void HouseholderReduction(Matrix<T> &vector) {
+void HouseholderReduction(MatrixView<T> &vector) {
     vector(0, 0) += utils::Sign(vector(0, 0)) * vector.GetEuclideanNorm();
     vector.Normalize();
+}
+
+template <utils::FloatOrComplex T = long double>
+void HouseholderReduction(Matrix<T> &vector) {
+    auto view = vector.View();
+    HouseholderReduction(view);
 }
 
 template <utils::FloatOrComplex T = long double>
@@ -22,7 +28,7 @@ void HouseholderLeftReflection(MatrixView<T> &matrix, const Matrix<T> &vec,
 
     MatrixView<T> sub =
         matrix.GetSubmatrix({row, row + vec.Rows()}, {c_from, c_to});
-    sub -= (T{2} * vec) * (Matrix<T>::Conjugated(vec) * sub);
+    sub -= (T{2} * vec) * (ConstMatrixView<T>::Conjugated(vec) * sub);
 }
 
 template <utils::FloatOrComplex T = long double>
@@ -43,7 +49,7 @@ void HouseholderRightReflection(MatrixView<T> &matrix, const Matrix<T> &vec,
 
     MatrixView<T> sub =
         matrix.GetSubmatrix({r_from, r_to}, {col, col + vec.Columns()});
-    sub -= (sub * Matrix<T>::Conjugated(vec)) * (T{2} * vec);
+    sub -= (sub * ConstMatrixView<T>::Conjugated(vec)) * (T{2} * vec);
 }
 
 template <utils::FloatOrComplex T = long double>

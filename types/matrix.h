@@ -290,34 +290,6 @@ public:
         return *this;
     }
 
-    static Matrix Transposed(const Matrix &rhs) {
-        return Matrix::Transposed(rhs.View());
-    }
-
-    static Matrix Transposed(const MatrixView<T> &rhs) {
-        return Matrix::Transposed(rhs.ConstView());
-    }
-
-    static Matrix Transposed(const ConstMatrixView<T> &rhs) {
-        Matrix res = rhs;
-        res.Transpose();
-        return res;
-    }
-
-    static Matrix Conjugated(const Matrix &rhs) {
-        return Matrix::Conjugated(rhs.View());
-    }
-
-    static Matrix Conjugated(const MatrixView<T> &rhs) {
-        return Matrix::Conjugated(rhs.ConstView());
-    }
-
-    static Matrix Conjugated(const ConstMatrixView<T> &rhs) {
-        Matrix res = rhs;
-        res.Conjugate();
-        return res;
-    }
-
     static Matrix Normalized(const Matrix &rhs) {
         return Matrix::Normalized(rhs.View());
     }
