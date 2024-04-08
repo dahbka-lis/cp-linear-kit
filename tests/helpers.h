@@ -20,11 +20,16 @@ public:
                                    int32_t value_from = -100,
                                    int32_t value_to = 100)
         : rng_(seed), rd_number_(value_from, value_to),
-          rd_matrix_size_(matrix_min_size, matrix_max_size) {}
+          rd_matrix_size_(matrix_min_size, matrix_max_size) {
+    }
 
-    int32_t GetRandomValue() { return rd_number_(rng_); }
+    int32_t GetRandomValue() {
+        return rd_number_(rng_);
+    }
 
-    int32_t GetRandomMatrixSize() { return rd_matrix_size_(rng_); }
+    int32_t GetRandomMatrixSize() {
+        return rd_matrix_size_(rng_);
+    }
 
     Matrix<T> GetRandomMatrix(int32_t row, int32_t col) {
         Matrix<T> result(row, col);
