@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../matrix_utils/checks.h"
 #include "householder.h"
 
 namespace matrix_lib::algorithms {

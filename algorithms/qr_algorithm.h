@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../utils/checks.h"
+#include "../matrix_utils/checks.h"
 #include "givens.h"
 #include "qr_decomposition.h"
 
@@ -33,8 +33,8 @@ struct SpectralPair {
 
 template <utils::FloatOrComplex T = long double>
 SpectralPair<T> GetRealSpectralDecomposition(const MatrixView<T> &matrix,
-                                         T shift = T{0},
-                                         std::size_t it_cnt = 100) {
+                                             T shift = T{0},
+                                             std::size_t it_cnt = 100) {
     assert(utils::IsHermitian(matrix) &&
            "Spectral decomposition for hermitian matrix.");
 
@@ -55,8 +55,8 @@ SpectralPair<T> GetRealSpectralDecomposition(const MatrixView<T> &matrix,
 
 template <utils::FloatOrComplex T = long double>
 SpectralPair<T> GetRealSpectralDecomposition(const Matrix<T> &matrix,
-                                         T shift = T{0},
-                                         std::size_t it_cnt = 50) {
+                                             T shift = T{0},
+                                             std::size_t it_cnt = 50) {
     return GetRealSpectralDecomposition(matrix.View(), shift, it_cnt);
 }
 

@@ -8,7 +8,7 @@ using IndexType = details::Types::IndexType;
 
 template <utils::FloatOrComplex T = long double>
 void HouseholderReduction(MatrixView<T> &vector) {
-    vector(0, 0) += utils::Sign(vector(0, 0)) * vector.GetEuclideanNorm();
+    vector(0, 0) -= utils::Sign(vector(0, 0)) * vector.GetEuclideanNorm();
     vector.Normalize();
 }
 
@@ -28,7 +28,7 @@ void HouseholderLeftReflection(MatrixView<T> &matrix, const Matrix<T> &vec,
 
     MatrixView<T> sub =
         matrix.GetSubmatrix({row, row + vec.Rows()}, {c_from, c_to});
-    sub -= (T{2} * vec) * (ConstMatrixView<T>::Conjugated(vec) * sub);
+    sub -= (T{2} * vec) * (Matrix<T>::Conjugated(vec) * sub);
 }
 
 template <utils::FloatOrComplex T = long double>
@@ -49,7 +49,7 @@ void HouseholderRightReflection(MatrixView<T> &matrix, const Matrix<T> &vec,
 
     MatrixView<T> sub =
         matrix.GetSubmatrix({r_from, r_to}, {col, col + vec.Columns()});
-    sub -= (sub * ConstMatrixView<T>::Conjugated(vec)) * (T{2} * vec);
+    sub -= (sub * Matrix<T>::Conjugated(vec)) * (T{2} * vec);
 }
 
 template <utils::FloatOrComplex T = long double>

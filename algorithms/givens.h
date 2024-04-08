@@ -23,26 +23,6 @@ GivensPair<T> GetGivensCoefficients(T first_elem, T second_elem) {
 }
 
 template <utils::FloatOrComplex T = long double>
-Matrix<T> GetGivensMatrix(IndexType size, IndexType from, IndexType to,
-                          T first_elem, T second_elem) {
-    auto res = Matrix<T>::Identity(size);
-    auto [cos, sin] = GetGivensCoefficients(first_elem, second_elem);
-
-    res(from, from) = cos;
-    res(from, to) = -sin;
-
-    if constexpr (utils::details::IsFloatComplexT<T>::value) {
-        res(to, from) = std::conj(sin);
-        res(to, to) = std::conj(cos);
-    } else {
-        res(to, from) = sin;
-        res(to, to) = cos;
-    }
-
-    return res;
-}
-
-template <utils::FloatOrComplex T = long double>
 void GivensLeftRotation(Matrix<T> &matrix, IndexType from, IndexType to,
                         T first, T second) {
     auto [cos, sin] = GetGivensCoefficients(first, second);
@@ -54,7 +34,7 @@ void GivensLeftRotation(Matrix<T> &matrix, IndexType from, IndexType to,
         if constexpr (utils::details::IsFloatComplexT<T>::value) {
             matrix(from, i) = std::conj(cos) * cp_from - std::conj(sin) * cp_to;
         } else {
-            matrix(from, i) = cos * cp_from + sin * cp_to;
+            matrix(from, i) = cos * cp_from - sin * cp_to;
         }
 
         matrix(to, i) = cos * cp_to + sin * cp_from;
@@ -64,14 +44,23 @@ void GivensLeftRotation(Matrix<T> &matrix, IndexType from, IndexType to,
 template <utils::FloatOrComplex T = long double>
 void GivensRightRotation(Matrix<T> &matrix, IndexType from, IndexType to,
                          T first, T second) {
-    auto [cos, sin] = GetGivensCoefficients(second, first);
+    auto [cos, sin] = GetGivensCoefficients(first, second);
 
     for (IndexType i = 0; i < matrix.Rows(); ++i) {
         auto cp_from = matrix(i, from);
         auto cp_to = matrix(i, to);
 
-        matrix(i, from) = cos * cp_from + sin * cp_to;
-        matrix(i, to) = cos * cp_to - sin * cp_from;
+        if constexpr (utils::details::IsFloatComplexT<T>::value) {
+            matrix(i, from) = std::conj(cos) * cp_from + std::conj(sin) * cp_to;
+        } else {
+            matrix(i, from) = cos * cp_from + sin * cp_to;
+        }
+
+        if constexpr (utils::details::IsFloatComplexT<T>::value) {
+            matrix(i, to) = cos * cp_to - sin * cp_from;
+        } else {
+            matrix(i, to) = cos * cp_to - sin * cp_from;
+        }
     }
 }
 } // namespace matrix_lib::algorithms
