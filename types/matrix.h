@@ -21,10 +21,12 @@ public:
     Matrix() = default;
 
     explicit Matrix(IndexType sq_size)
-        : rows_(sq_size), buffer_(rows_ * rows_, T{0}) {}
+        : rows_(sq_size), buffer_(rows_ * rows_, T{0}) {
+    }
 
     Matrix(IndexType row_cnt, IndexType col_cnt, T value = T{0})
-        : rows_(row_cnt), buffer_(rows_ * col_cnt, value) {}
+        : rows_(row_cnt), buffer_(rows_ * col_cnt, value) {
+    }
 
     Matrix(std::initializer_list<std::initializer_list<T>> list)
         : rows_(list.size()) {
@@ -48,12 +50,14 @@ public:
         });
     }
 
-    Matrix(const MatrixView<T> &rhs) : Matrix(rhs.ConstView()) {}
+    Matrix(const MatrixView<T> &rhs) : Matrix(rhs.ConstView()) {
+    }
 
     Matrix(const Matrix &rhs) = default;
 
     Matrix(Matrix &&rhs) noexcept
-        : rows_(std::exchange(rhs.rows_, 0)), buffer_(std::move(rhs.buffer_)) {}
+        : rows_(std::exchange(rhs.rows_, 0)), buffer_(std::move(rhs.buffer_)) {
+    }
 
     Matrix &operator=(const Matrix &rhs) = default;
 
@@ -72,7 +76,10 @@ public:
         return *this += rhs.ConstView();
     }
 
-    Matrix &operator+=(const Matrix &rhs) { return *this += rhs.View(); }
+    Matrix &operator+=(const Matrix &rhs) {
+        return *this += rhs.View();
+    }
+
     friend Matrix<T> operator+(const Matrix<T> &lhs, const Matrix<T> &rhs) {
         return lhs.View() + rhs.View();
     }
@@ -95,7 +102,10 @@ public:
         return *this -= rhs.ConstView();
     }
 
-    Matrix &operator-=(const Matrix &rhs) { return *this -= rhs.View(); }
+    Matrix &operator-=(const Matrix &rhs) {
+        return *this -= rhs.View();
+    }
+
     friend Matrix<T> operator-(const Matrix<T> &lhs, const Matrix<T> &rhs) {
         return lhs.View() - rhs.View();
     }
@@ -117,7 +127,9 @@ public:
         return *this *= rhs.ConstView();
     }
 
-    Matrix &operator*=(const Matrix &rhs) { return *this *= rhs.View(); }
+    Matrix &operator*=(const Matrix &rhs) {
+        return *this *= rhs.View();
+    }
 
     friend Matrix operator*(const Matrix &lhs, const Matrix &rhs) {
         return lhs.View() * rhs.View();
@@ -193,15 +205,21 @@ public:
         return buffer_[Columns() * row_idx + col_idx];
     }
 
-    [[nodiscard]] IndexType Rows() const { return rows_; }
+    [[nodiscard]] IndexType Rows() const {
+        return rows_;
+    }
 
     [[nodiscard]] IndexType Columns() const {
         return (rows_ == 0) ? 0 : buffer_.size() / rows_;
     }
 
-    MatrixView<T> View() { return MatrixView<T>(*this); }
+    MatrixView<T> View() {
+        return MatrixView<T>(*this);
+    }
 
-    ConstMatrixView<T> View() const { return ConstMatrixView<T>(*this); }
+    ConstMatrixView<T> View() const {
+        return ConstMatrixView<T>(*this);
+    }
 
     Matrix &ApplyToEach(Function func) {
         View().ApplyToEach(func);
@@ -223,13 +241,21 @@ public:
         return *this;
     }
 
-    T GetEuclideanNorm() const { return View().GetEuclideanNorm(); }
+    T GetEuclideanNorm() const {
+        return View().GetEuclideanNorm();
+    }
 
-    Matrix GetDiag() const { return View().GetDiag(); }
+    Matrix GetDiag() const {
+        return View().GetDiag();
+    }
 
-    MatrixView<T> GetRow(IndexType index) { return View().GetRow(index); }
+    MatrixView<T> GetRow(IndexType index) {
+        return View().GetRow(index);
+    }
 
-    MatrixView<T> GetColumn(IndexType index) { return View().GetColumn(index); }
+    MatrixView<T> GetColumn(IndexType index) {
+        return View().GetColumn(index);
+    }
 
     MatrixView<T> GetSubmatrix(Segment row, Segment col) {
         return View().GetSubmatrix(row, col);
@@ -290,6 +316,62 @@ public:
         return *this;
     }
 
+    static MatrixView<T> Transposed(MatrixView<T> &rhs) {
+        auto view = rhs;
+        view.Transpose();
+        return view;
+    }
+
+    static MatrixView<T> Transposed(Matrix<T> &rhs) {
+        MatrixView<T> view = rhs.View();
+        return Matrix::Transposed(view);
+    }
+
+    static ConstMatrixView<T> Transposed(const ConstMatrixView<T> &rhs) {
+        ConstMatrixView<T> res = ConstMatrixView<T>(
+            *rhs.ptr_, rhs.column_, rhs.row_,
+            {!rhs.state_.is_transposed, rhs.state_.is_conjugated});
+        return res;
+    }
+
+    static ConstMatrixView<T> Transposed(const MatrixView<T> &rhs) {
+        ConstMatrixView<T> view = rhs.ConstView();
+        return Matrix::Transposed(view);
+    }
+
+    static ConstMatrixView<T> Transposed(const Matrix<T> &rhs) {
+        ConstMatrixView<T> view = rhs.View();
+        return Matrix::Transposed(view);
+    }
+
+    static MatrixView<T> Conjugated(MatrixView<T> &rhs) {
+        auto view = rhs;
+        view.Conjugate();
+        return view;
+    }
+
+    static MatrixView<T> Conjugated(Matrix<T> &rhs) {
+        auto view = rhs.View();
+        return Matrix::Conjugated(view);
+    }
+
+    static ConstMatrixView<T> Conjugated(const ConstMatrixView<T> &rhs) {
+        ConstMatrixView<T> res = ConstMatrixView<T>(
+            *rhs.ptr_, rhs.column_, rhs.row_,
+            {!rhs.state_.is_transposed, !rhs.state_.is_conjugated});
+        return res;
+    }
+
+    static ConstMatrixView<T> Conjugated(const MatrixView<T> &rhs) {
+        ConstMatrixView<T> view = rhs.ConstView();
+        return Matrix::Conjugated(view);
+    }
+
+    static ConstMatrixView<T> Conjugated(const Matrix<T> &rhs) {
+        ConstMatrixView<T> view = rhs.View();
+        return Matrix::Conjugated(view);
+    }
+
     static Matrix Normalized(const Matrix &rhs) {
         return Matrix::Normalized(rhs.View());
     }
@@ -312,7 +394,9 @@ public:
         return res;
     }
 
-    static Matrix Diagonal(const Matrix &vec) { return Diagonal(vec.View()); }
+    static Matrix Diagonal(const Matrix &vec) {
+        return Diagonal(vec.View());
+    }
 
     static Matrix Diagonal(const MatrixView<T> &vec) {
         return Diagonal(vec.ConstView());

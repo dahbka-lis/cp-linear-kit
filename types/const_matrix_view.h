@@ -193,7 +193,9 @@ public:
         return (*ptr_)(row_.begin + row_idx, column_.begin + col_idx);
     }
 
-    [[nodiscard]] IndexType Rows() const { return row_.end - row_.begin; }
+    [[nodiscard]] IndexType Rows() const {
+        return row_.end - row_.begin;
+    }
 
     [[nodiscard]] IndexType Columns() const {
         return column_.end - column_.begin;
@@ -299,38 +301,10 @@ public:
         return ostream;
     }
 
-    static ConstMatrixView Transposed(const ConstMatrixView &rhs) {
-        ConstMatrixView res = ConstMatrixView(
-            *rhs.ptr_, rhs.column_, rhs.row_,
-            {!rhs.state_.is_transposed, rhs.state_.is_conjugated});
-        return res;
-    }
-
-    static ConstMatrixView Transposed(const MatrixView<T> &rhs) {
-        return ConstMatrixView::Transposed(rhs.ConstView());
-    }
-
-    static ConstMatrixView Transposed(const Matrix<T> &rhs) {
-        return ConstMatrixView::Transposed(rhs.View());
-    }
-
-    static ConstMatrixView Conjugated(const ConstMatrixView &rhs) {
-        ConstMatrixView res = ConstMatrixView(
-            *rhs.ptr_, rhs.column_, rhs.row_,
-            {!rhs.state_.is_transposed, !rhs.state_.is_conjugated});
-        return res;
-    }
-
-    static ConstMatrixView Conjugated(const MatrixView<T> &rhs) {
-        return ConstMatrixView::Conjugated(rhs.ConstView());
-    }
-
-    static ConstMatrixView Conjugated(const Matrix<T> &rhs) {
-        return ConstMatrixView::Conjugated(rhs.View());
-    }
-
 private:
-    [[nodiscard]] bool IsNullMatrixPointer() const { return ptr_ == nullptr; }
+    [[nodiscard]] bool IsNullMatrixPointer() const {
+        return ptr_ == nullptr;
+    }
 
     static Segment MakeSegment(Segment seg, IndexType max_value) {
         if (seg.end <= 0 || seg.end > max_value) {
