@@ -201,11 +201,13 @@ public:
     }
 
     [[nodiscard]] IndexType Rows() const {
-        return row_.end - row_.begin;
+        assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
+        return std::min(row_.end - row_.begin, ptr_->Rows());
     }
 
     [[nodiscard]] IndexType Columns() const {
-        return column_.end - column_.begin;
+        assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
+        return std::min(column_.end - column_.begin, ptr_->Columns());
     }
 
     const ConstMatrixView &ApplyToEach(ConstFunction func) const {
