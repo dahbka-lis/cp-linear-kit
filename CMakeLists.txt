@@ -17,8 +17,15 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 enable_testing()
 
+file(GLOB TEST_FILES "tests/*.cpp")
+
 add_executable(test_matrix tests/test_matrix.cpp)
+add_executable(test_matrix_view tests/test_matrix_view.cpp)
+add_executable(test_all ${TEST_FILES})
+
 target_link_libraries(test_matrix PUBLIC gtest_main)
+target_link_libraries(test_matrix_view PUBLIC gtest_main)
+target_link_libraries(test_all PUBLIC gtest_main)
 
 include(GoogleTest)
-gtest_discover_tests(test_matrix)
+gtest_discover_tests(test_matrix test_matrix_view)
