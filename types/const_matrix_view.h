@@ -84,6 +84,11 @@ public:
                                const ConstMatrixView &rhs) {
         assert(lhs.Columns() == rhs.Rows() &&
                "Matrix multiplication mismatch.");
+
+        if (lhs.Rows() == 0 || rhs.Columns() == 0) {
+            return Matrix<T>();
+        }
+
         Matrix<T> result(lhs.Rows(), rhs.Columns());
 
         for (IndexType i = 0; i < lhs.Rows(); ++i) {
@@ -96,6 +101,7 @@ public:
             }
         }
 
+        result.RoundZeroes();
         return result;
     }
 

@@ -49,6 +49,7 @@ public:
 
         ApplyToEach(
             [&](T &value, IndexType i, IndexType j) { value += rhs(i, j); });
+        RoundZeroes();
         return *this;
     }
 
@@ -80,6 +81,7 @@ public:
 
         ApplyToEach(
             [&](T &value, IndexType i, IndexType j) { value -= rhs(i, j); });
+        RoundZeroes();
         return *this;
     }
 
@@ -136,6 +138,7 @@ public:
 
     MatrixView &operator*=(T scalar) {
         ApplyToEach([&](T &val) { val *= scalar; });
+        RoundZeroes();
         return *this;
     }
 
@@ -149,6 +152,7 @@ public:
 
     MatrixView &operator/=(T scalar) {
         ApplyToEach([&](T &val) { val /= scalar; });
+        RoundZeroes();
         return *this;
     }
 
@@ -289,9 +293,10 @@ public:
         if (!utils::IsZeroFloating(norm)) {
             (*this) /= norm;
         } else {
-            RoundZeroes();
+            ApplyToEach([](T &val) { val = T{0}; });
         }
 
+        RoundZeroes();
         return *this;
     }
 

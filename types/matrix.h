@@ -21,21 +21,20 @@ public:
     Matrix() = default;
 
     explicit Matrix(IndexType sq_size)
-        : rows_(sq_size), buffer_(rows_ * rows_, T{0}) {
+        : cols_(CorrectSize(sq_size)), buffer_(cols_ * cols_, T{0}) {
     }
 
     Matrix(IndexType row_cnt, IndexType col_cnt, T value = T{0})
-        : rows_(row_cnt), buffer_(rows_ * col_cnt, value) {
+        : cols_(CorrectSize(col_cnt)), buffer_(cols_ * CorrectSize(row_cnt), value) {
     }
 
     Matrix(std::initializer_list<std::initializer_list<T>> list)
-        : rows_(list.size()) {
-        auto columns = list.begin()->size();
-        buffer_.reserve(Rows() * columns);
+        : cols_(list.begin()->size()) {
+        buffer_.reserve(Columns() * list.size());
 
         for (auto sublist : list) {
             assert(
-                sublist.size() == columns &&
+                sublist.size() == cols_ &&
                 "Size of matrix rows must be equal to the number of columns.");
 
             for (auto value : sublist) {
@@ -56,13 +55,13 @@ public:
     Matrix(const Matrix &rhs) = default;
 
     Matrix(Matrix &&rhs) noexcept
-        : rows_(std::exchange(rhs.rows_, 0)), buffer_(std::move(rhs.buffer_)) {
+        : cols_(std::exchange(rhs.cols_, 0)), buffer_(std::move(rhs.buffer_)) {
     }
 
     Matrix &operator=(const Matrix &rhs) = default;
 
     Matrix &operator=(Matrix &&rhs) noexcept {
-        rows_ = std::exchange(rhs.rows_, 0);
+        cols_ = std::exchange(rhs.cols_, 0);
         buffer_ = std::move(rhs.buffer_);
         return *this;
     }
@@ -80,16 +79,16 @@ public:
         return *this += rhs.View();
     }
 
-    friend Matrix<T> operator+(const Matrix<T> &lhs, const Matrix<T> &rhs) {
+    friend Matrix operator+(const Matrix<T> &lhs, const Matrix<T> &rhs) {
         return lhs.View() + rhs.View();
     }
 
-    friend Matrix<T> operator+(const Matrix<T> &lhs,
+    friend Matrix operator+(const Matrix<T> &lhs,
                                const ConstMatrixView<T> &rhs) {
         return rhs + lhs;
     }
 
-    friend Matrix<T> operator+(const Matrix<T> &lhs, const MatrixView<T> &rhs) {
+    friend Matrix operator+(const Matrix<T> &lhs, const MatrixView<T> &rhs) {
         return rhs + lhs;
     }
 
@@ -106,16 +105,16 @@ public:
         return *this -= rhs.View();
     }
 
-    friend Matrix<T> operator-(const Matrix<T> &lhs, const Matrix<T> &rhs) {
+    friend Matrix operator-(const Matrix<T> &lhs, const Matrix<T> &rhs) {
         return lhs.View() - rhs.View();
     }
 
-    friend Matrix<T> operator-(const Matrix<T> &lhs,
+    friend Matrix operator-(const Matrix<T> &lhs,
                                const ConstMatrixView<T> &rhs) {
         return lhs.View() - rhs;
     }
 
-    friend Matrix<T> operator-(const Matrix<T> &lhs, const MatrixView<T> &rhs) {
+    friend Matrix operator-(const Matrix<T> &lhs, const MatrixView<T> &rhs) {
         return lhs.View() - rhs.ConstView();
     }
 
@@ -206,11 +205,11 @@ public:
     }
 
     [[nodiscard]] IndexType Rows() const {
-        return rows_;
+        return (cols_ == 0) ? IndexType{0} : buffer_.size() / cols_;
     }
 
     [[nodiscard]] IndexType Columns() const {
-        return (rows_ == 0) ? 0 : buffer_.size() / rows_;
+        return cols_;
     }
 
     MatrixView<T> View() {
@@ -292,7 +291,7 @@ public:
             } while (swap_idx != i);
         }
 
-        rows_ = Columns();
+        cols_ = Rows();
         return *this;
     }
 
@@ -438,7 +437,11 @@ public:
     }
 
 private:
-    IndexType rows_ = 0;
+    static IndexType CorrectSize(IndexType size) {
+        return std::max(IndexType{0}, size);
+    }
+
+    IndexType cols_ = 0;
     Data buffer_;
 };
 } // namespace matrix_lib
