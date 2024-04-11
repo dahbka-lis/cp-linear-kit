@@ -13,19 +13,19 @@ using matrix_lib::tests::RandomMatrixGenerator;
 using matrix_lib::utils::IsEqualFloating;
 
 TEST(TEST_MATRIX, BasicConstructors) {
-        {
-            Matrix<> clear;
-            ASSERT_TRUE(clear.Rows() == 0 && clear.Columns() == 0);
+    {
+        Matrix<> clear;
+        ASSERT_TRUE(clear.Rows() == 0 && clear.Columns() == 0);
 
-            Matrix<> col_clear(3, 0);
-            ASSERT_TRUE(col_clear.Rows() == 0 && col_clear.Columns() == 0);
+        Matrix<> col_clear(3, 0);
+        ASSERT_TRUE(col_clear.Rows() == 0 && col_clear.Columns() == 0);
 
-            Matrix<> row_clear(0, 3);
-            ASSERT_TRUE(row_clear.Rows() == 0 && row_clear.Columns() == 0);
+        Matrix<> row_clear(0, 3);
+        ASSERT_TRUE(row_clear.Rows() == 0 && row_clear.Columns() == 0);
 
-            Matrix<> list_clear = {};
-            ASSERT_TRUE(list_clear.Rows() == 0 && list_clear.Columns() == 0);
-        }
+        Matrix<> list_clear = {};
+        ASSERT_TRUE(list_clear.Rows() == 0 && list_clear.Columns() == 0);
+    }
     {
         Matrix<float> square(5);
         EXPECT_EQ(square.Rows(), 5);
@@ -161,12 +161,12 @@ TEST(TEST_MATRIX, Transpose) {
         ASSERT_TRUE(m2 == Matrix({{0, 0}, {2, 2}, {4, 4}}));
         ASSERT_TRUE(m3 == Matrix({{0, 2, 4}, {0, 2, 4}}));
     }
-        {
-            Matrix clear;
-            clear.Transpose();
-            ASSERT_TRUE(clear == Matrix{});
-            ASSERT_TRUE(clear.Rows() == 0 && clear.Columns() == 0);
-        }
+    {
+        Matrix clear;
+        clear.Transpose();
+        ASSERT_TRUE(clear == Matrix{});
+        ASSERT_TRUE(clear.Rows() == 0 && clear.Columns() == 0);
+    }
 }
 
 TEST(TEST_MATRIX, Conjugate) {
@@ -185,12 +185,12 @@ TEST(TEST_MATRIX, Conjugate) {
         ASSERT_TRUE(m2 == Matrix({{{1, 0}, {1, 1}}, {{0, -1}, {1, 0}}}));
         ASSERT_TRUE(m3 == Matrix({{{1, 0}, {0, 1}}, {{1, -1}, {1, 0}}}));
     }
-        {
-            Matrix clear;
-            clear.Conjugate();
-            ASSERT_TRUE(clear == Matrix{});
-            ASSERT_TRUE(clear.Rows() == 0 && clear.Columns() == 0);
-        }
+    {
+        Matrix clear;
+        clear.Conjugate();
+        ASSERT_TRUE(clear == Matrix{});
+        ASSERT_TRUE(clear.Rows() == 0 && clear.Columns() == 0);
+    }
 }
 
 TEST(TEST_MATRIX, ApplyToEach) {

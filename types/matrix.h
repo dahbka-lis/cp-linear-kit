@@ -25,7 +25,11 @@ public:
     }
 
     Matrix(IndexType row_cnt, IndexType col_cnt, T value = T{0})
-        : cols_(CorrectSize(col_cnt)), buffer_(cols_ * CorrectSize(row_cnt), value) {
+        : cols_(CorrectSize(col_cnt)),
+          buffer_(cols_ * CorrectSize(row_cnt), value) {
+        if (row_cnt == IndexType{0}) {
+            cols_ = IndexType{0};
+        }
     }
 
     Matrix(std::initializer_list<std::initializer_list<T>> list)
@@ -84,7 +88,7 @@ public:
     }
 
     friend Matrix operator+(const Matrix<T> &lhs,
-                               const ConstMatrixView<T> &rhs) {
+                            const ConstMatrixView<T> &rhs) {
         return rhs + lhs;
     }
 
@@ -110,7 +114,7 @@ public:
     }
 
     friend Matrix operator-(const Matrix<T> &lhs,
-                               const ConstMatrixView<T> &rhs) {
+                            const ConstMatrixView<T> &rhs) {
         return lhs.View() - rhs;
     }
 

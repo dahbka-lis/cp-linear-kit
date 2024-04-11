@@ -2,6 +2,7 @@
 
 #include "matrix_view.h"
 #include "types_details.h"
+#include <iostream>
 
 namespace matrix_lib {
 template <utils::FloatOrComplex T = long double>
@@ -82,12 +83,12 @@ public:
 
     friend Matrix<T> operator*(const ConstMatrixView &lhs,
                                const ConstMatrixView &rhs) {
-        assert(lhs.Columns() == rhs.Rows() &&
-               "Matrix multiplication mismatch.");
-
-        if (lhs.Rows() == 0 || rhs.Columns() == 0) {
+        if (lhs.Rows() == 0 || rhs.Rows() == 0) {
             return Matrix<T>();
         }
+
+        assert(lhs.Columns() == rhs.Rows() &&
+               "Matrix multiplication mismatch.");
 
         Matrix<T> result(lhs.Rows(), rhs.Columns());
 
