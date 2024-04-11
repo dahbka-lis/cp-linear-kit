@@ -15,7 +15,7 @@ class RandomMatrixGenerator {
     };
 
 public:
-    explicit RandomMatrixGenerator(int32_t seed, int32_t matrix_min_size = 1,
+    explicit RandomMatrixGenerator(int32_t seed, int32_t matrix_min_size = 0,
                                    int32_t matrix_max_size = 100,
                                    int32_t value_from = -100,
                                    int32_t value_to = 100)

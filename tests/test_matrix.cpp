@@ -13,6 +13,19 @@ using matrix_lib::tests::RandomMatrixGenerator;
 using matrix_lib::utils::IsEqualFloating;
 
 TEST(TEST_MATRIX, BasicConstructors) {
+        {
+            Matrix<> clear;
+            ASSERT_TRUE(clear.Rows() == 0 && clear.Columns() == 0);
+
+            Matrix<> col_clear(3, 0);
+            ASSERT_TRUE(col_clear.Rows() == 0 && col_clear.Columns() == 0);
+
+            Matrix<> row_clear(0, 3);
+            ASSERT_TRUE(row_clear.Rows() == 0 && row_clear.Columns() == 0);
+
+            Matrix<> list_clear = {};
+            ASSERT_TRUE(list_clear.Rows() == 0 && list_clear.Columns() == 0);
+        }
     {
         Matrix<float> square(5);
         EXPECT_EQ(square.Rows(), 5);
@@ -72,6 +85,15 @@ void CheckArithmeticSum() {
     m1 += m1;
     m1 += m2;
     ASSERT_TRUE(m1 == Matrix({{9, 12, 15}, {18, 21, 24}}));
+
+    Matrix clear;
+    clear += clear;
+    ASSERT_TRUE(clear == Matrix{});
+    ASSERT_TRUE(clear.Rows() == 0 && clear.Columns() == 0);
+
+    Matrix double_clear = clear + clear;
+    ASSERT_TRUE(double_clear == clear);
+    ASSERT_TRUE(double_clear.Rows() == 0 && double_clear.Columns() == 0);
 }
 
 void CheckArithmeticDiff() {
@@ -84,6 +106,15 @@ void CheckArithmeticDiff() {
     m1 -= m2;
     m1 -= m2;
     ASSERT_TRUE(m1 == Matrix({{15, 4}, {3, -7}, {0, 33}}));
+
+    Matrix clear;
+    clear -= clear;
+    ASSERT_TRUE(clear == Matrix{});
+    ASSERT_TRUE(clear.Rows() == 0 && clear.Columns() == 0);
+
+    Matrix double_clear = clear - clear;
+    ASSERT_TRUE(double_clear == clear);
+    ASSERT_TRUE(double_clear.Rows() == 0 && double_clear.Columns() == 0);
 }
 
 void CheckArithmeticMulti() {
@@ -101,6 +132,12 @@ void CheckArithmeticMulti() {
 
     EXPECT_TRUE(m3 * identity == m3);
     EXPECT_TRUE(identity * m3 == m3);
+
+    Matrix clear;
+    ASSERT_TRUE(clear * clear == Matrix{});
+
+    clear *= clear;
+    ASSERT_TRUE(clear == Matrix{});
 }
 
 TEST(TEST_MATRIX, Arithmetic) {
@@ -124,6 +161,12 @@ TEST(TEST_MATRIX, Transpose) {
         ASSERT_TRUE(m2 == Matrix({{0, 0}, {2, 2}, {4, 4}}));
         ASSERT_TRUE(m3 == Matrix({{0, 2, 4}, {0, 2, 4}}));
     }
+        {
+            Matrix clear;
+            clear.Transpose();
+            ASSERT_TRUE(clear == Matrix{});
+            ASSERT_TRUE(clear.Rows() == 0 && clear.Columns() == 0);
+        }
 }
 
 TEST(TEST_MATRIX, Conjugate) {
@@ -142,6 +185,12 @@ TEST(TEST_MATRIX, Conjugate) {
         ASSERT_TRUE(m2 == Matrix({{{1, 0}, {1, 1}}, {{0, -1}, {1, 0}}}));
         ASSERT_TRUE(m3 == Matrix({{{1, 0}, {0, 1}}, {{1, -1}, {1, 0}}}));
     }
+        {
+            Matrix clear;
+            clear.Conjugate();
+            ASSERT_TRUE(clear == Matrix{});
+            ASSERT_TRUE(clear.Rows() == 0 && clear.Columns() == 0);
+        }
 }
 
 TEST(TEST_MATRIX, ApplyToEach) {
@@ -159,6 +208,12 @@ TEST(TEST_MATRIX, ApplyToEach) {
         [](long double &elem, size_t i, size_t j) { elem = (i == j); });
 
     ASSERT_TRUE(matrix == Matrix<>::Identity(3));
+
+    Matrix<> clear;
+    clear.ApplyToEach([](long double &elem) { elem = 1; });
+
+    ASSERT_TRUE(clear == Matrix<>{});
+    ASSERT_TRUE(clear.Rows() == 0 && clear.Columns() == 0);
 }
 
 TEST(TEST_MATRIX, Normalize) {
