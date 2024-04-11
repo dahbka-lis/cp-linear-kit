@@ -182,9 +182,9 @@ public:
         if constexpr (utils::details::IsFloatComplexT<T>::value) {
             if (state_.is_transposed && state_.is_conjugated) {
                 return std::conj(
-                    (*ptr_)(row_.begin + col_idx, column_.begin + row_idx));
+                        (*ptr_)(column_.begin + col_idx, row_.begin + row_idx));
             } else if (state_.is_transposed) {
-                return (*ptr_)(row_.begin + col_idx, column_.begin + row_idx);
+                return (*ptr_)(column_.begin + col_idx, row_.begin + row_idx);
             } else if (state_.is_conjugated) {
                 return std::conj(
                     (*ptr_)(row_.begin + row_idx, column_.begin + col_idx));
@@ -194,7 +194,7 @@ public:
         }
 
         if (state_.is_transposed) {
-            return (*ptr_)(row_.begin + col_idx, column_.begin + row_idx);
+            return (*ptr_)(column_.begin + col_idx, row_.begin + row_idx);
         }
 
         return (*ptr_)(row_.begin + row_idx, column_.begin + col_idx);
