@@ -202,12 +202,14 @@ public:
 
     [[nodiscard]] IndexType Rows() const {
         assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
-        return std::min(row_.end - row_.begin, ptr_->Rows());
+        auto min = (state_.is_transposed) ? ptr_->Columns() : ptr_->Rows();
+        return std::min(row_.end - row_.begin, min);
     }
 
     [[nodiscard]] IndexType Columns() const {
         assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
-        return std::min(column_.end - column_.begin, ptr_->Columns());
+        auto min = (state_.is_transposed) ? ptr_->Rows() : ptr_->Columns();
+        return std::min(column_.end - column_.begin, min);
     }
 
     const ConstMatrixView &ApplyToEach(ConstFunction func) const {
