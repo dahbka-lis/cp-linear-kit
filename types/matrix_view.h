@@ -1,6 +1,7 @@
 #pragma once
 
 #include "const_matrix_view.h"
+#include "matrix.h"
 #include "types_details.h"
 
 namespace matrix_lib {
@@ -15,6 +16,8 @@ class MatrixView {
     using ConstFunctionIndexes = details::Types::ConstFunctionIndexes<T>;
 
 public:
+    using Type = T;
+
     explicit MatrixView(Matrix<T> &matrix, Segment row = {-1, -1},
                         Segment col = {-1, -1},
                         MatrixState state = {false, false})
@@ -43,155 +46,8 @@ public:
         return *this;
     }
 
-    MatrixView &operator+=(const ConstMatrixView<T> &rhs) {
-        assert(Rows() == rhs.Rows() && Columns() == rhs.Columns() &&
-               "Matrices must be of the same size for addition.");
-
-        ApplyToEach(
-            [&](T &value, IndexType i, IndexType j) { value += rhs(i, j); });
-        RoundZeroes();
-        return *this;
-    }
-
-    MatrixView &operator+=(const MatrixView &rhs) {
-        return *this += rhs.ConstView();
-    }
-
-    MatrixView &operator+=(const Matrix<T> &rhs) {
-        return *this += rhs.View();
-    }
-
-    friend Matrix<T> operator+(const MatrixView<T> &lhs,
-                               const MatrixView<T> &rhs) {
-        return lhs.ConstView() + rhs.ConstView();
-    }
-
-    friend Matrix<T> operator+(const MatrixView<T> &lhs,
-                               const ConstMatrixView<T> &rhs) {
-        return rhs + lhs;
-    }
-
-    friend Matrix<T> operator+(const MatrixView<T> &lhs, const Matrix<T> &rhs) {
-        return lhs.ConstView() + rhs.View();
-    }
-
-    MatrixView &operator-=(const ConstMatrixView<T> &rhs) {
-        assert(Rows() == rhs.Rows() && Columns() == rhs.Columns() &&
-               "Matrices must be of the same size for addition.");
-
-        ApplyToEach(
-            [&](T &value, IndexType i, IndexType j) { value -= rhs(i, j); });
-        RoundZeroes();
-        return *this;
-    }
-
-    MatrixView &operator-=(const MatrixView &rhs) {
-        return *this -= rhs.ConstView();
-    }
-
-    MatrixView &operator-=(const Matrix<T> &rhs) {
-        return *this -= rhs.View();
-    }
-
-    friend Matrix<T> operator-(const MatrixView<T> &lhs,
-                               const MatrixView<T> &rhs) {
-        return lhs.ConstView() - rhs.ConstView();
-    }
-
-    friend Matrix<T> operator-(const MatrixView<T> &lhs,
-                               const ConstMatrixView<T> &rhs) {
-        return lhs.ConstView() - rhs;
-    }
-
-    friend Matrix<T> operator-(const MatrixView<T> &lhs, const Matrix<T> &rhs) {
-        return lhs.ConstView() - rhs.View();
-    }
-
-    MatrixView &operator*=(const ConstMatrixView<T> &rhs) {
-        assert(rhs.Columns() == rhs.Rows() &&
-               "Matrix must be square for multiplication.");
-        auto res = *this * rhs;
-        ApplyToEach([&](T &val, IndexType i, IndexType j) { val = res(i, j); });
-        return *this;
-    }
-
-    MatrixView &operator*=(const MatrixView &rhs) {
-        return *this *= rhs.ConstView();
-    }
-
-    MatrixView &operator*=(const Matrix<T> &rhs) {
-        return *this *= rhs.View();
-    }
-
-    friend Matrix<T> operator*(const MatrixView &lhs, const MatrixView &rhs) {
-        return lhs * rhs.ConstView();
-    }
-
-    friend Matrix<T> operator*(const MatrixView &lhs,
-                               const ConstMatrixView<T> &rhs) {
-        return lhs.ConstView() * rhs;
-    }
-
-    friend Matrix<T> operator*(const MatrixView &lhs, const Matrix<T> &rhs) {
-        return lhs * rhs.View();
-    }
-
-    MatrixView &operator*=(T scalar) {
-        ApplyToEach([&](T &val) { val *= scalar; });
-        RoundZeroes();
-        return *this;
-    }
-
-    friend Matrix<T> operator*(const MatrixView &lhs, T scalar) {
-        return lhs.ConstView() * scalar;
-    }
-
-    friend Matrix<T> operator*(T scalar, const MatrixView &lhs) {
-        return lhs.ConstView() * scalar;
-    }
-
-    MatrixView &operator/=(T scalar) {
-        ApplyToEach([&](T &val) { val /= scalar; });
-        RoundZeroes();
-        return *this;
-    }
-
-    friend Matrix<T> operator/(const MatrixView &lhs, T scalar) {
-        return lhs.ConstView() / scalar;
-    }
-
-    friend Matrix<T> operator/(T scalar, const MatrixView &lhs) {
-        return lhs.ConstView() / scalar;
-    }
-
-    friend bool operator==(const MatrixView &lhs, const MatrixView &rhs) {
-        return lhs.ConstView() == rhs.ConstView();
-    }
-
-    friend bool operator==(const MatrixView &lhs,
-                           const ConstMatrixView<T> &rhs) {
-        return lhs.ConstView() == rhs;
-    }
-
-    friend bool operator==(const MatrixView &lhs, const Matrix<T> &rhs) {
-        return lhs.ConstView() == rhs.View();
-    }
-
-    friend bool operator!=(const MatrixView &lhs, const MatrixView &rhs) {
-        return !(lhs == rhs);
-    }
-
-    friend bool operator!=(const MatrixView &lhs,
-                           const ConstMatrixView<T> &rhs) {
-        return !(lhs == rhs);
-    }
-
-    friend bool operator!=(const MatrixView &lhs, const Matrix<T> &rhs) {
-        return !(lhs == rhs);
-    }
-
     T &operator()(IndexType row_idx, IndexType col_idx) {
-        assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
+        assert(ptr_ != nullptr && "Matrix pointer is null.");
 
         if (state_.is_transposed) {
             return (*ptr_)(column_.begin + col_idx, row_.begin + row_idx);
@@ -201,7 +57,7 @@ public:
     }
 
     T operator()(IndexType row_idx, IndexType col_idx) const {
-        assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
+        assert(ptr_ != nullptr && "Matrix pointer is null.");
 
         if constexpr (utils::details::IsFloatComplexT<T>::value) {
             if (state_.is_transposed && state_.is_conjugated) {
@@ -225,19 +81,19 @@ public:
     }
 
     [[nodiscard]] IndexType Rows() const {
-        assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
+        assert(ptr_ != nullptr && "Matrix pointer is null.");
         auto min = (state_.is_transposed) ? ptr_->Columns() : ptr_->Rows();
         return std::min(row_.end - row_.begin, min);
     }
 
     [[nodiscard]] IndexType Columns() const {
-        assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
+        assert(ptr_ != nullptr && "Matrix pointer is null.");
         auto min = (state_.is_transposed) ? ptr_->Rows() : ptr_->Columns();
         return std::min(column_.end - column_.begin, min);
     }
 
-    MatrixView &ApplyToEach(Function func) {
-        assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
+    MatrixView &ApplyForEach(Function func) {
+        assert(ptr_ != nullptr && "Matrix pointer is null.");
 
         for (IndexType i = 0; i < Rows(); ++i) {
             for (IndexType j = 0; j < Columns(); ++j) {
@@ -248,8 +104,8 @@ public:
         return *this;
     }
 
-    MatrixView &ApplyToEach(FunctionIndexes func) {
-        assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
+    MatrixView &ApplyForEach(FunctionIndexes func) {
+        assert(ptr_ != nullptr && "Matrix pointer is null.");
 
         for (IndexType i = 0; i < Rows(); ++i) {
             for (IndexType j = 0; j < Columns(); ++j) {
@@ -260,13 +116,13 @@ public:
         return *this;
     }
 
-    MatrixView &ApplyToEach(ConstFunction func) const {
-        ConstView().ApplyToEach(func);
+    const MatrixView &ForEach(ConstFunction func) const {
+        ConstView().ForEach(func);
         return *this;
     }
 
-    MatrixView &ApplyToEach(ConstFunctionIndexes func) const {
-        ConstView().ApplyToEach(func);
+    const MatrixView &ForEach(ConstFunctionIndexes func) const {
+        ConstView().ForEach(func);
         return *this;
     }
 
@@ -297,7 +153,7 @@ public:
         if (!utils::IsZeroFloating(norm)) {
             (*this) /= norm;
         } else {
-            ApplyToEach([](T &val) { val = T{0}; });
+            ApplyForEach([](T &val) { val = T{0}; });
         }
 
         RoundZeroes();
@@ -305,7 +161,7 @@ public:
     }
 
     MatrixView<T> &RoundZeroes() {
-        ApplyToEach(
+        ApplyForEach(
             [](T &el) { el = (utils::IsZeroFloating(el)) ? T{0} : el; });
         return *this;
     }
@@ -316,7 +172,7 @@ public:
     }
 
     MatrixView GetRow(IndexType index) {
-        assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
+        assert(ptr_ != nullptr && "Matrix pointer is null.");
         assert(index < Rows() &&
                "Index must be less than the number of matrix rows.");
 
@@ -325,7 +181,7 @@ public:
     }
 
     MatrixView GetColumn(IndexType index) {
-        assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
+        assert(ptr_ != nullptr && "Matrix pointer is null.");
         assert(index < Columns() &&
                "Index must be less than the number of matrix columns.");
 
@@ -338,7 +194,7 @@ public:
         auto [r_from, r_to] = ConstMatrixView<T>::MakeSegment(row, Rows());
         auto [c_from, c_to] = ConstMatrixView<T>::MakeSegment(col, Columns());
 
-        assert(!IsNullMatrixPointer() && "Matrix pointer is null.");
+        assert(ptr_ != nullptr && "Matrix pointer is null.");
         assert(row_.begin + r_from < Rows() && "Invalid row index.");
         assert(row_.begin + r_to <= Rows() && "Invalid row index.");
         assert(column_.begin + c_from < Columns() && "Invalid column index.");
@@ -371,10 +227,6 @@ public:
     }
 
 private:
-    [[nodiscard]] bool IsNullMatrixPointer() const {
-        return ptr_ == nullptr;
-    }
-
     Matrix<T> *ptr_;
     Segment row_;
     Segment column_;

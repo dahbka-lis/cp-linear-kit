@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../matrix_utils/is_matrix_type.h"
+#include "const_matrix_view.h"
 #include "matrix_view.h"
 #include "types_details.h"
 
@@ -18,6 +20,8 @@ class Matrix {
     using ConstFunctionIndexes = details::Types::ConstFunctionIndexes<T>;
 
 public:
+    using Type = T;
+
     Matrix() = default;
 
     explicit Matrix(IndexType sq_size)
@@ -48,7 +52,7 @@ public:
     }
 
     Matrix(const ConstMatrixView<T> &rhs) : Matrix(rhs.Rows(), rhs.Columns()) {
-        rhs.ApplyToEach([&](const T &val, IndexType i, IndexType j) {
+        rhs.ForEach([&](const T &val, IndexType i, IndexType j) {
             (*this)(i, j) = val;
         });
     }
@@ -68,132 +72,6 @@ public:
         cols_ = std::exchange(rhs.cols_, 0);
         buffer_ = std::move(rhs.buffer_);
         return *this;
-    }
-
-    Matrix &operator+=(const ConstMatrixView<T> &rhs) {
-        View() += rhs;
-        return *this;
-    }
-
-    Matrix &operator+=(const MatrixView<T> &rhs) {
-        return *this += rhs.ConstView();
-    }
-
-    Matrix &operator+=(const Matrix &rhs) {
-        return *this += rhs.View();
-    }
-
-    friend Matrix operator+(const Matrix<T> &lhs, const Matrix<T> &rhs) {
-        return lhs.View() + rhs.View();
-    }
-
-    friend Matrix operator+(const Matrix<T> &lhs,
-                            const ConstMatrixView<T> &rhs) {
-        return rhs + lhs;
-    }
-
-    friend Matrix operator+(const Matrix<T> &lhs, const MatrixView<T> &rhs) {
-        return rhs + lhs;
-    }
-
-    Matrix &operator-=(const ConstMatrixView<T> &rhs) {
-        View() -= rhs;
-        return *this;
-    }
-
-    Matrix &operator-=(const MatrixView<T> &rhs) {
-        return *this -= rhs.ConstView();
-    }
-
-    Matrix &operator-=(const Matrix &rhs) {
-        return *this -= rhs.View();
-    }
-
-    friend Matrix operator-(const Matrix<T> &lhs, const Matrix<T> &rhs) {
-        return lhs.View() - rhs.View();
-    }
-
-    friend Matrix operator-(const Matrix<T> &lhs,
-                            const ConstMatrixView<T> &rhs) {
-        return lhs.View() - rhs;
-    }
-
-    friend Matrix operator-(const Matrix<T> &lhs, const MatrixView<T> &rhs) {
-        return lhs.View() - rhs.ConstView();
-    }
-
-    Matrix &operator*=(const ConstMatrixView<T> &rhs) {
-        return *this = *this * rhs;
-    }
-
-    Matrix &operator*=(const MatrixView<T> &rhs) {
-        return *this *= rhs.ConstView();
-    }
-
-    Matrix &operator*=(const Matrix &rhs) {
-        return *this *= rhs.View();
-    }
-
-    friend Matrix operator*(const Matrix &lhs, const Matrix &rhs) {
-        return lhs.View() * rhs.View();
-    }
-
-    friend Matrix operator*(const Matrix &lhs, const MatrixView<T> &rhs) {
-        return lhs.View() * rhs.ConstView();
-    }
-
-    friend Matrix operator*(const Matrix &lhs, const ConstMatrixView<T> &rhs) {
-        return lhs.View() * rhs;
-    }
-
-    Matrix &operator*=(T scalar) {
-        View() *= scalar;
-        return *this;
-    }
-
-    friend Matrix<T> operator*(const Matrix &lhs, T scalar) {
-        return lhs.View() * scalar;
-    }
-
-    friend Matrix<T> operator*(T scalar, const Matrix &lhs) {
-        return lhs.View() * scalar;
-    }
-
-    Matrix &operator/=(T scalar) {
-        View() /= scalar;
-        return *this;
-    }
-
-    friend Matrix<T> operator/(const Matrix &lhs, T scalar) {
-        return lhs.View() / scalar;
-    }
-
-    friend Matrix<T> operator/(T scalar, const Matrix &lhs) {
-        return lhs.View() / scalar;
-    }
-
-    friend bool operator==(const Matrix &lhs, const Matrix &rhs) {
-        return lhs.cols_ == rhs.cols_ && lhs.buffer_ == rhs.buffer_;
-    }
-
-    friend bool operator==(const Matrix &lhs, const ConstMatrixView<T> &rhs) {
-        return lhs.View() == rhs;
-    }
-
-    friend bool operator==(const Matrix &lhs, const MatrixView<T> &rhs) {
-        return lhs.View() == rhs.ConstView();
-    }
-
-    friend bool operator!=(const Matrix &lhs, const Matrix &rhs) {
-        return !(lhs == rhs);
-    }
-
-    friend bool operator!=(const Matrix &lhs, const ConstMatrixView<T> &rhs) {
-        return !(lhs == rhs);
-    }
-
-    friend bool operator!=(const Matrix &lhs, const MatrixView<T> &rhs) {
-        return !(lhs == rhs);
     }
 
     T &operator()(IndexType row_idx, IndexType col_idx) {
@@ -224,23 +102,23 @@ public:
         return ConstMatrixView<T>(*this);
     }
 
-    Matrix &ApplyToEach(Function func) {
-        View().ApplyToEach(func);
+    Matrix &ApplyForEach(Function func) {
+        View().ApplyForEach(func);
         return *this;
     }
 
-    Matrix &ApplyToEach(FunctionIndexes func) {
-        View().ApplyToEach(func);
+    Matrix &ApplyForEach(FunctionIndexes func) {
+        View().ApplyForEach(func);
         return *this;
     }
 
-    Matrix &ApplyToEach(ConstFunction func) const {
-        View().ApplyToEach(func);
+    const Matrix &ForEach(ConstFunction func) const {
+        View().ForEach(func);
         return *this;
     }
 
-    Matrix &ApplyToEach(ConstFunctionIndexes func) const {
-        View().ApplyToEach(func);
+    const Matrix &ForEach(ConstFunctionIndexes func) const {
+        View().ForEach(func);
         return *this;
     }
 
@@ -303,7 +181,7 @@ public:
         Transpose();
 
         if constexpr (utils::details::IsFloatComplexT<T>::value) {
-            ApplyToEach([](T &val) { val = std::conj(val); });
+            ApplyForEach([](T &val) { val = std::conj(val); });
         }
 
         return *this;
@@ -391,7 +269,7 @@ public:
 
     static Matrix Identity(IndexType size) {
         Matrix res(size);
-        res.ApplyToEach([&](T &el, IndexType i, IndexType j) {
+        res.ApplyForEach([&](T &el, IndexType i, IndexType j) {
             el = (i == j) ? T{1} : T{0};
         });
         return res;
@@ -411,7 +289,7 @@ public:
                    "Creating a diagonal matrix for vectors only.");
 
         Matrix<T> res(std::max(vec.Rows(), vec.Columns()));
-        vec.ApplyToEach([&](const T &val, IndexType i, IndexType j) {
+        vec.ForEach([&](const T &val, IndexType i, IndexType j) {
             auto idx = std::max(i, j);
             res(idx, idx) = val;
         });
@@ -448,4 +326,206 @@ private:
     IndexType cols_ = 0;
     Data buffer_;
 };
+
+using IndexType = details::Types::IndexType;
+
+template <utils::MatrixType F, utils::MatrixType S>
+Matrix<typename F::Type> operator+(const F &lhs, const S &rhs) {
+    using T = typename F::Type;
+
+    assert(lhs.Rows() == rhs.Rows() && lhs.Columns() == rhs.Columns() &&
+           "Matrices must have the same size for sum.");
+
+    Matrix<T> result = lhs;
+    for (IndexType i = 0; i < lhs.Rows(); ++i) {
+        for (IndexType j = 0; j < lhs.Columns(); ++j) {
+            result(i, j) += rhs(i, j);
+        }
+    }
+
+    return result;
+}
+
+template <utils::MutableMatrixType F, utils::MatrixType S>
+F &operator+=(F &lhs, const S &rhs) {
+    using T = typename F::Type;
+
+    assert(lhs.Rows() == rhs.Rows() && lhs.Columns() == rhs.Columns() &&
+           "Matrices must have the same size for sum.");
+
+    for (IndexType i = 0; i < lhs.Rows(); ++i) {
+        for (IndexType j = 0; j < lhs.Columns(); ++j) {
+            lhs(i, j) += rhs(i, j);
+        }
+    }
+
+    return lhs;
+}
+
+template <utils::MatrixType F, utils::MatrixType S>
+Matrix<typename F::Type> operator-(const F &lhs, const S &rhs) {
+    using T = typename F::Type;
+
+    assert(lhs.Rows() == rhs.Rows() && lhs.Columns() == rhs.Columns() &&
+           "Matrices must have the same size for subtraction.");
+
+    Matrix<T> result = lhs;
+    for (IndexType i = 0; i < lhs.Rows(); ++i) {
+        for (IndexType j = 0; j < lhs.Columns(); ++j) {
+            result(i, j) -= rhs(i, j);
+        }
+    }
+
+    return result;
+}
+
+template <utils::MutableMatrixType F, utils::MatrixType S>
+F &operator-=(F &lhs, const S &rhs) {
+    using T = typename F::Type;
+
+    assert(lhs.Rows() == rhs.Rows() && lhs.Columns() == rhs.Columns() &&
+           "Matrices must have the same size for sum.");
+
+    for (IndexType i = 0; i < lhs.Rows(); ++i) {
+        for (IndexType j = 0; j < lhs.Columns(); ++j) {
+            lhs(i, j) -= rhs(i, j);
+        }
+    }
+
+    return lhs;
+}
+
+template <utils::MatrixType F, utils::MatrixType S>
+Matrix<typename F::Type> operator*(const F &lhs, const S &rhs) {
+    using T = typename F::Type;
+
+    if (lhs.Rows() == 0 || rhs.Rows() == 0) {
+        return Matrix<T>();
+    }
+
+    assert(lhs.Columns() == rhs.Rows() && "Matrix multiplication mismatch.");
+
+    Matrix<T> result(lhs.Rows(), rhs.Columns());
+
+    for (IndexType i = 0; i < lhs.Rows(); ++i) {
+        for (IndexType j = 0; j < rhs.Columns(); ++j) {
+            T sum = 0;
+            for (IndexType k = 0; k < lhs.Columns(); ++k) {
+                sum += lhs(i, k) * rhs(k, j);
+            }
+            result(i, j) = sum;
+        }
+    }
+
+    result.RoundZeroes();
+    return result;
+}
+
+template <utils::MutableMatrixType F, utils::MatrixType S>
+F &operator*=(F &lhs, const S &rhs) {
+    using T = typename F::Type;
+
+    if (lhs.Rows() == 0 || rhs.Rows() == 0) {
+        return lhs;
+    }
+
+    assert(lhs.Columns() == rhs.Rows() && rhs.Rows() == rhs.Columns() &&
+           "Matrix multiplication mismatch.");
+    auto result = lhs * rhs;
+
+    for (IndexType i = 0; i < lhs.Rows(); ++i) {
+        for (IndexType j = 0; j < lhs.Columns(); ++j) {
+            lhs(i, j) = result(i, j);
+        }
+    }
+
+    lhs.RoundZeroes();
+    return lhs;
+}
+
+template <utils::MatrixType F>
+Matrix<typename F::Type> operator*(const F &lhs, typename F::Type scalar) {
+    using T = typename F::Type;
+    Matrix<T> result = lhs;
+
+    for (IndexType i = 0; i < lhs.Rows(); ++i) {
+        for (IndexType j = 0; j < lhs.Columns(); ++j) {
+            result(i, j) *= scalar;
+        }
+    }
+
+    result.RoundZeroes();
+    return result;
+}
+
+template <utils::MatrixType F>
+Matrix<typename F::Type> operator*(typename F::Type scalar, const F &rhs) {
+    return rhs * scalar;
+}
+
+template <utils::MutableMatrixType F>
+F &operator*=(F &lhs, typename F::Type scalar) {
+    for (IndexType i = 0; i < lhs.Rows(); ++i) {
+        for (IndexType j = 0; j < lhs.Columns(); ++j) {
+            lhs(i, j) *= scalar;
+        }
+    }
+
+    lhs.RoundZeroes();
+    return lhs;
+}
+
+template <utils::MatrixType F>
+Matrix<typename F::Type> operator/(const F &lhs, typename F::Type scalar) {
+    using T = typename F::Type;
+    Matrix<T> result = lhs;
+
+    for (IndexType i = 0; i < lhs.Rows(); ++i) {
+        for (IndexType j = 0; j < lhs.Columns(); ++j) {
+            result(i, j) /= scalar;
+        }
+    }
+
+    result.RoundZeroes();
+    return result;
+}
+
+template <utils::MatrixType F>
+Matrix<typename F::Type> operator/(typename F::Type scalar, const F &rhs) {
+    return rhs / scalar;
+}
+
+template <utils::MutableMatrixType F>
+F &operator/=(F &lhs, typename F::Type scalar) {
+    for (IndexType i = 0; i < lhs.Rows(); ++i) {
+        for (IndexType j = 0; j < lhs.Columns(); ++j) {
+            lhs(i, j) /= scalar;
+        }
+    }
+
+    lhs.RoundZeroes();
+    return lhs;
+}
+
+template <utils::MatrixType F, utils::MatrixType S>
+bool operator==(const F &lhs, const S &rhs) {
+    if (lhs.Rows() != rhs.Rows() || lhs.Columns() != rhs.Columns()) {
+        return false;
+    }
+
+    for (IndexType i = 0; i < lhs.Rows(); ++i) {
+        for (IndexType j = 0; j < lhs.Columns(); ++j) {
+            if (lhs(i, j) != rhs(i, j)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+template <utils::MatrixType F, utils::MatrixType S>
+bool operator!=(const F &lhs, const S &rhs) {
+    return !(lhs == rhs);
+}
 } // namespace matrix_lib
