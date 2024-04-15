@@ -5,6 +5,7 @@
 #include "matrix_view.h"
 #include "types_details.h"
 
+#include <istream>
 #include <ostream>
 #include <vector>
 
@@ -316,6 +317,24 @@ public:
         }
         ostream << ']';
         return ostream;
+    }
+
+    friend std::istream &operator>>(std::istream &istream, Matrix &matrix) {
+        IndexType row = matrix.Rows();
+        IndexType col = matrix.Columns();
+
+        if (row == 0) {
+            istream >> row >> col;
+            matrix = Matrix<T>(row, col);
+        }
+
+        for (IndexType i = 0; i < row; ++i) {
+            for (IndexType j = 0; j < col; ++j) {
+                istream >> matrix(i, j);
+            }
+        }
+
+        return istream;
     }
 
 private:
