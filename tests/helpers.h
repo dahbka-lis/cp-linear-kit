@@ -33,7 +33,7 @@ public:
 
     Matrix<T> GetRandomMatrix(int32_t row, int32_t col) {
         Matrix<T> result(row, col);
-        result.ApplyToEach([&](T &val) { val = GetRandomValue(); });
+        result.ApplyForEach([&](T &val) { val = GetRandomValue(); });
         return result;
     }
 

@@ -195,22 +195,22 @@ TEST(TEST_MATRIX, Conjugate) {
 
 TEST(TEST_MATRIX, ApplyToEach) {
     Matrix<> matrix = Matrix<>::Identity(3);
-    matrix.ApplyToEach([](long double &elem) { elem += 10; });
+    matrix.ApplyForEach([](long double &elem) { elem += 10; });
 
     ASSERT_TRUE(matrix == Matrix<>({{11, 10, 10}, {10, 11, 10}, {10, 10, 11}}));
-    matrix.ApplyToEach([&](const long double &elem, size_t i, size_t j) {
+    matrix.ForEach([&](const long double &elem, size_t i, size_t j) {
         if (i != j) {
             EXPECT_DOUBLE_EQ(elem, 10.0l);
         }
     });
 
-    matrix.ApplyToEach(
+    matrix.ApplyForEach(
         [](long double &elem, size_t i, size_t j) { elem = (i == j); });
 
     ASSERT_TRUE(matrix == Matrix<>::Identity(3));
 
     Matrix<> clear;
-    clear.ApplyToEach([](long double &elem) { elem = 1; });
+    clear.ApplyForEach([](long double &elem) { elem = 1; });
 
     ASSERT_TRUE(clear == Matrix<>{});
     ASSERT_TRUE(clear.Rows() == 0 && clear.Columns() == 0);
@@ -272,8 +272,8 @@ TEST(TEST_MATRIX, Stress) {
                 m2 = m1 - m2;
             } else if (random_id == 2) {
                 auto [m1, m2] = gen.GetRectangleMatrices();
+                m2 = m2 * Matrix::Transposed(m2);
                 m1 *= m2;
-                m2 = m1 * Matrix::Transposed(m2);
             } else {
                 auto [m1, m2] = gen.GetRectangleMatrices();
                 m1.Transpose();

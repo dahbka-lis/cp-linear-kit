@@ -239,13 +239,13 @@ TEST(TEST_MATRIX_VIEW, ApplyToEach) {
     Matrix<Type> matrix = Matrix<Type>::Identity(2);
 
     auto row = matrix.GetRow(1);
-    row.ApplyToEach([](long double &val) { val = 3; });
+    row.ApplyForEach([](long double &val) { val = 3; });
 
     ASSERT_TRUE(row == Matrix<Type>({{3, 3}}));
     ASSERT_TRUE(matrix == Matrix<Type>({{1, 0}, {3, 3}}));
 
     auto col = matrix.GetColumn(0);
-    col.ApplyToEach([](long double &val) { val *= 3; });
+    col.ApplyForEach([](long double &val) { val *= 3; });
 
     ASSERT_TRUE(col == Matrix<Type>({{3}, {9}}));
     ASSERT_TRUE(matrix == Matrix<Type>({{3, 0}, {9, 3}}));
