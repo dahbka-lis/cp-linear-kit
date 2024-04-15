@@ -17,7 +17,7 @@ class ConstMatrixView {
     using ConstFunctionIndexes = details::Types::ConstFunctionIndexes<T>;
 
 public:
-    using Type = T;
+    using ElemType = T;
 
     explicit ConstMatrixView(const Matrix<T> &matrix, Segment row = {-1, -1},
                              Segment col = {-1, -1},

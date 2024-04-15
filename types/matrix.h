@@ -20,7 +20,7 @@ class Matrix {
     using ConstFunctionIndexes = details::Types::ConstFunctionIndexes<T>;
 
 public:
-    using Type = T;
+    using ElemType = T;
 
     Matrix() = default;
 
@@ -330,8 +330,8 @@ private:
 using IndexType = details::Types::IndexType;
 
 template <utils::MatrixType F, utils::MatrixType S>
-Matrix<typename F::Type> operator+(const F &lhs, const S &rhs) {
-    using T = typename F::Type;
+Matrix<typename F::ElemType> operator+(const F &lhs, const S &rhs) {
+    using T = typename F::ElemType;
 
     assert(lhs.Rows() == rhs.Rows() && lhs.Columns() == rhs.Columns() &&
            "Matrices must have the same size for sum.");
@@ -348,8 +348,6 @@ Matrix<typename F::Type> operator+(const F &lhs, const S &rhs) {
 
 template <utils::MutableMatrixType F, utils::MatrixType S>
 F &operator+=(F &lhs, const S &rhs) {
-    using T = typename F::Type;
-
     assert(lhs.Rows() == rhs.Rows() && lhs.Columns() == rhs.Columns() &&
            "Matrices must have the same size for sum.");
 
@@ -363,8 +361,8 @@ F &operator+=(F &lhs, const S &rhs) {
 }
 
 template <utils::MatrixType F, utils::MatrixType S>
-Matrix<typename F::Type> operator-(const F &lhs, const S &rhs) {
-    using T = typename F::Type;
+Matrix<typename F::ElemType> operator-(const F &lhs, const S &rhs) {
+    using T = typename F::ElemType;
 
     assert(lhs.Rows() == rhs.Rows() && lhs.Columns() == rhs.Columns() &&
            "Matrices must have the same size for subtraction.");
@@ -381,8 +379,6 @@ Matrix<typename F::Type> operator-(const F &lhs, const S &rhs) {
 
 template <utils::MutableMatrixType F, utils::MatrixType S>
 F &operator-=(F &lhs, const S &rhs) {
-    using T = typename F::Type;
-
     assert(lhs.Rows() == rhs.Rows() && lhs.Columns() == rhs.Columns() &&
            "Matrices must have the same size for sum.");
 
@@ -396,8 +392,8 @@ F &operator-=(F &lhs, const S &rhs) {
 }
 
 template <utils::MatrixType F, utils::MatrixType S>
-Matrix<typename F::Type> operator*(const F &lhs, const S &rhs) {
-    using T = typename F::Type;
+Matrix<typename F::ElemType> operator*(const F &lhs, const S &rhs) {
+    using T = typename F::ElemType;
 
     if (lhs.Rows() == 0 || rhs.Rows() == 0) {
         return Matrix<T>();
@@ -423,16 +419,14 @@ Matrix<typename F::Type> operator*(const F &lhs, const S &rhs) {
 
 template <utils::MutableMatrixType F, utils::MatrixType S>
 F &operator*=(F &lhs, const S &rhs) {
-    using T = typename F::Type;
-
     if (lhs.Rows() == 0 || rhs.Rows() == 0) {
         return lhs;
     }
 
     assert(lhs.Columns() == rhs.Rows() && rhs.Rows() == rhs.Columns() &&
            "Matrix multiplication mismatch.");
-    auto result = lhs * rhs;
 
+    auto result = lhs * rhs;
     for (IndexType i = 0; i < lhs.Rows(); ++i) {
         for (IndexType j = 0; j < lhs.Columns(); ++j) {
             lhs(i, j) = result(i, j);
@@ -444,8 +438,9 @@ F &operator*=(F &lhs, const S &rhs) {
 }
 
 template <utils::MatrixType F>
-Matrix<typename F::Type> operator*(const F &lhs, typename F::Type scalar) {
-    using T = typename F::Type;
+Matrix<typename F::ElemType> operator*(const F &lhs,
+                                       typename F::ElemType scalar) {
+    using T = typename F::ElemType;
     Matrix<T> result = lhs;
 
     for (IndexType i = 0; i < lhs.Rows(); ++i) {
@@ -459,12 +454,13 @@ Matrix<typename F::Type> operator*(const F &lhs, typename F::Type scalar) {
 }
 
 template <utils::MatrixType F>
-Matrix<typename F::Type> operator*(typename F::Type scalar, const F &rhs) {
+Matrix<typename F::ElemType> operator*(typename F::ElemType scalar,
+                                       const F &rhs) {
     return rhs * scalar;
 }
 
 template <utils::MutableMatrixType F>
-F &operator*=(F &lhs, typename F::Type scalar) {
+F &operator*=(F &lhs, typename F::ElemType scalar) {
     for (IndexType i = 0; i < lhs.Rows(); ++i) {
         for (IndexType j = 0; j < lhs.Columns(); ++j) {
             lhs(i, j) *= scalar;
@@ -476,8 +472,9 @@ F &operator*=(F &lhs, typename F::Type scalar) {
 }
 
 template <utils::MatrixType F>
-Matrix<typename F::Type> operator/(const F &lhs, typename F::Type scalar) {
-    using T = typename F::Type;
+Matrix<typename F::ElemType> operator/(const F &lhs,
+                                       typename F::ElemType scalar) {
+    using T = typename F::ElemType;
     Matrix<T> result = lhs;
 
     for (IndexType i = 0; i < lhs.Rows(); ++i) {
@@ -491,12 +488,13 @@ Matrix<typename F::Type> operator/(const F &lhs, typename F::Type scalar) {
 }
 
 template <utils::MatrixType F>
-Matrix<typename F::Type> operator/(typename F::Type scalar, const F &rhs) {
+Matrix<typename F::ElemType> operator/(typename F::ElemType scalar,
+                                       const F &rhs) {
     return rhs / scalar;
 }
 
 template <utils::MutableMatrixType F>
-F &operator/=(F &lhs, typename F::Type scalar) {
+F &operator/=(F &lhs, typename F::ElemType scalar) {
     for (IndexType i = 0; i < lhs.Rows(); ++i) {
         for (IndexType j = 0; j < lhs.Columns(); ++j) {
             lhs(i, j) /= scalar;
