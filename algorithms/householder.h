@@ -1,27 +1,23 @@
 #pragma once
 
+#include "../matrix_utils/is_matrix_type.h"
 #include "../types/types_details.h"
 #include "../utils/sign.h"
 
 namespace matrix_lib::algorithms {
 using IndexType = details::Types::IndexType;
 
-template <utils::FloatOrComplex T = long double>
-void HouseholderReduction(MatrixView<T> &vector) {
+template <utils::MutableMatrixType M>
+void HouseholderReduction(M &vector) {
     vector(0, 0) -= utils::Sign(vector(0, 0)) * vector.GetEuclideanNorm();
     vector.Normalize();
 }
 
-template <utils::FloatOrComplex T = long double>
-void HouseholderReduction(Matrix<T> &vector) {
-    auto view = vector.View();
-    HouseholderReduction(view);
-}
+template <utils::MutableMatrixType M, utils::MatrixType V>
+void HouseholderLeftReflection(M &matrix, const V &vec, IndexType row = 0,
+                               IndexType c_from = 0, IndexType c_to = -1) {
+    using T = typename M::ElemType;
 
-template <utils::FloatOrComplex T = long double>
-void HouseholderLeftReflection(MatrixView<T> &matrix, const Matrix<T> &vec,
-                               IndexType row = 0, IndexType c_from = 0,
-                               IndexType c_to = -1) {
     if (c_to == -1) {
         c_to = matrix.Columns();
     }
@@ -31,18 +27,11 @@ void HouseholderLeftReflection(MatrixView<T> &matrix, const Matrix<T> &vec,
     sub -= (T{2} * vec) * (Matrix<T>::Conjugated(vec) * sub);
 }
 
-template <utils::FloatOrComplex T = long double>
-void HouseholderLeftReflection(Matrix<T> &matrix, const Matrix<T> &vec,
-                               IndexType row = 0, IndexType c_from = 0,
-                               IndexType c_to = -1) {
-    auto view = matrix.View();
-    HouseholderLeftReflection(view, vec, row, c_from, c_to);
-}
+template <utils::MutableMatrixType M, utils::MatrixType V>
+void HouseholderRightReflection(M &matrix, const V &vec, IndexType col = 0,
+                                IndexType r_from = 0, IndexType r_to = -1) {
+    using T = typename M::ElemType;
 
-template <utils::FloatOrComplex T = long double>
-void HouseholderRightReflection(MatrixView<T> &matrix, const Matrix<T> &vec,
-                                IndexType col = 0, IndexType r_from = 0,
-                                IndexType r_to = -1) {
     if (r_to == -1) {
         r_to = matrix.Rows();
     }
@@ -50,13 +39,5 @@ void HouseholderRightReflection(MatrixView<T> &matrix, const Matrix<T> &vec,
     MatrixView<T> sub =
         matrix.GetSubmatrix({r_from, r_to}, {col, col + vec.Columns()});
     sub -= (sub * Matrix<T>::Conjugated(vec)) * (T{2} * vec);
-}
-
-template <utils::FloatOrComplex T = long double>
-void HouseholderRightReflection(Matrix<T> &matrix, const Matrix<T> &vec,
-                                IndexType col = 0, IndexType r_from = 0,
-                                IndexType r_to = -1) {
-    auto view = matrix.View();
-    HouseholderRightReflection(view, vec, col, r_from, r_to);
 }
 } // namespace matrix_lib::algorithms

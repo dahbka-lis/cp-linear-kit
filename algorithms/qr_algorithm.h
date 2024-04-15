@@ -5,8 +5,8 @@
 #include "qr_decomposition.h"
 
 namespace matrix_lib::algorithms {
-template <utils::FloatOrComplex T = long double>
-T GetWilkinsonShift(const ConstMatrixView<T> &matrix) {
+template <utils::MatrixType M>
+typename M::ElemType GetWilkinsonShift(const M &matrix) {
     assert(matrix.Rows() == 2 && "Wilkinson shift for 2x2 matrix.");
     assert(matrix.Columns() == 2 && "Wilkinson shift for 2x2 matrix.");
     assert(matrix(0, 1) == matrix(1, 0) &&
@@ -21,21 +21,18 @@ T GetWilkinsonShift(const ConstMatrixView<T> &matrix) {
 }
 
 template <utils::FloatOrComplex T = long double>
-T GetWilkinsonShift(const Matrix<T> &matrix) {
-    auto view = matrix.View();
-    return GetWilkinsonShift(view);
-}
-
-template <utils::FloatOrComplex T = long double>
 struct SpectralPair {
     Matrix<T> D;
     Matrix<T> Q;
 };
 
-template <utils::FloatOrComplex T = long double>
-SpectralPair<T> GetRealSpectralDecomposition(const ConstMatrixView<T> &matrix,
-                                             T shift = T{0},
-                                             std::size_t it_cnt = 100) {
+template <utils::MatrixType M>
+SpectralPair<typename M::ElemType>
+GetRealSpecDecomposition(const M &matrix,
+                         typename M::ElemType shift = typename M::ElemType{0},
+                         std::size_t it_cnt = 100) {
+    using T = typename M::ElemType;
+
     assert(utils::IsHermitian(matrix) &&
            "Spectral decomposition for hermitian matrix.");
 
@@ -54,14 +51,6 @@ SpectralPair<T> GetRealSpectralDecomposition(const ConstMatrixView<T> &matrix,
     return {D, transform};
 }
 
-template <utils::FloatOrComplex T = long double>
-SpectralPair<T> GetRealSpectralDecomposition(const Matrix<T> &matrix,
-                                             T shift = T{0},
-                                             std::size_t it_cnt = 50) {
-    auto view = matrix.View();
-    return GetRealSpectralDecomposition(view, shift, it_cnt);
-}
-
 template <utils::FloatOrComplex T>
 struct DiagBasisQR {
     Matrix<T> U;
@@ -69,9 +58,11 @@ struct DiagBasisQR {
     Matrix<T> VT;
 };
 
-template <utils::FloatOrComplex T = long double>
-DiagBasisQR<T> BidiagonalAlgorithmQR(const ConstMatrixView<T> &B,
-                                     IndexType it_cnt = 100) {
+template <utils::MatrixType M>
+DiagBasisQR<typename M::ElemType>
+BidiagonalAlgorithmQR(const M &B, IndexType it_cnt = 100) {
+    using T = typename M::ElemType;
+
     Matrix<T> S = B;
     IndexType r = S.Rows();
     IndexType c = S.Columns();
@@ -111,12 +102,5 @@ DiagBasisQR<T> BidiagonalAlgorithmQR(const ConstMatrixView<T> &B,
     }
 
     return {U, S, VT};
-}
-
-template <utils::FloatOrComplex T = long double>
-DiagBasisQR<T> BidiagonalAlgorithmQR(const Matrix<T> &B,
-                                     IndexType it_cnt = 100) {
-    auto view = B.View();
-    return BidiagonalAlgorithmQR(view, it_cnt);
 }
 } // namespace matrix_lib::algorithms

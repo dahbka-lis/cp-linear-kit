@@ -24,7 +24,8 @@ GivensPair<T> GetGivensCoefficients(T first_elem, T second_elem) {
 
 template <utils::MutableMatrixType M>
 void GivensLeftRotation(M &matrix, IndexType f_row, IndexType s_row,
-                        typename M::ElemType first, typename M::ElemType second) {
+                        typename M::ElemType first,
+                        typename M::ElemType second) {
     using T = typename M::ElemType;
     auto [cos, sin] = GetGivensCoefficients(first, second);
 
@@ -45,7 +46,8 @@ void GivensLeftRotation(M &matrix, IndexType f_row, IndexType s_row,
 
 template <utils::MutableMatrixType M>
 void GivensRightRotation(M &matrix, IndexType f_col, IndexType s_col,
-                         typename M::ElemType first, typename M::ElemType second) {
+                         typename M::ElemType first,
+                         typename M::ElemType second) {
     using T = typename M::ElemType;
     auto [cos, sin] = GetGivensCoefficients(first, second);
 

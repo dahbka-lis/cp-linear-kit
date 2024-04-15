@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../matrix_utils/checks.h"
+#include "../matrix_utils/is_matrix_type.h"
 #include "householder.h"
 
 namespace matrix_lib::algorithms {
@@ -12,8 +13,10 @@ struct HessenbergBasis {
     Matrix<T> Q;
 };
 
-template <utils::FloatOrComplex T = long double>
-HessenbergBasis<T> GetHessenbergForm(const ConstMatrixView<T> &matrix) {
+template <utils::MatrixType M>
+HessenbergBasis<typename M::ElemType> GetHessenbergForm(const M &matrix) {
+    using T = typename M::ElemType;
+
     assert(utils::IsSquare(matrix) && "Hessenberg form for square matrices");
 
     Matrix<T> Q = Matrix<T>::Identity(matrix.Rows());
@@ -31,16 +34,6 @@ HessenbergBasis<T> GetHessenbergForm(const ConstMatrixView<T> &matrix) {
 
     Q.Conjugate();
     H.RoundZeroes();
-    return {H, Q};
-}
-
-template <utils::FloatOrComplex T = long double>
-HessenbergBasis<T> GetHessenbergForm(const MatrixView<T> &matrix) {
-    return GetHessenbergForm(matrix.ConstView());
-}
-
-template <utils::FloatOrComplex T = long double>
-HessenbergBasis<T> GetHessenbergForm(const Matrix<T> &matrix) {
-    return GetHessenbergForm(matrix.View());
+    return {std::move(H), std::move(Q)};
 }
 } // namespace matrix_lib::algorithms

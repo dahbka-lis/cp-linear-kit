@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../matrix_utils/is_matrix_type.h"
 #include "householder.h"
 
 namespace matrix_lib::algorithms {
@@ -12,8 +13,10 @@ struct BidiagonalBasis {
     Matrix<T> VT;
 };
 
-template <utils::FloatOrComplex T = long double>
-BidiagonalBasis<T> Bidiagonalize(const ConstMatrixView<T> &matrix) {
+template <utils::MatrixType M>
+BidiagonalBasis<typename M::ElemType> Bidiagonalize(const M &matrix) {
+    using T = typename M::ElemType;
+
     Matrix<T> B = matrix;
     Matrix<T> U = Matrix<T>::Identity(B.Rows());
     Matrix<T> V = Matrix<T>::Identity(B.Columns());
@@ -39,11 +42,6 @@ BidiagonalBasis<T> Bidiagonalize(const ConstMatrixView<T> &matrix) {
     U.Conjugate();
     V.Conjugate();
     B.RoundZeroes();
-    return {U, B, V};
-}
-
-template <utils::FloatOrComplex T = long double>
-BidiagonalBasis<T> Bidiagonalize(const Matrix<T> &matrix) {
-    return Bidiagonalize(matrix.View());
+    return {std::move(U), std::move(B), std::move(V)};
 }
 } // namespace matrix_lib::algorithms
