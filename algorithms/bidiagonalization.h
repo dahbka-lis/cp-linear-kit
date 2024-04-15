@@ -13,21 +13,21 @@ struct BidiagonalBasis {
 };
 
 template <utils::FloatOrComplex T = long double>
-BidiagonalBasis<T> Bidiagonalize(const MatrixView<T> &matrix) {
-    Matrix<T> B = matrix.Copy();
+BidiagonalBasis<T> Bidiagonalize(const ConstMatrixView<T> &matrix) {
+    Matrix<T> B = matrix;
     Matrix<T> U = Matrix<T>::Identity(B.Rows());
     Matrix<T> V = Matrix<T>::Identity(B.Columns());
 
     for (IndexType col = 0; col < std::min(B.Rows(), B.Columns()); ++col) {
-        auto col_reduction = B.GetSubmatrix(col, B.Rows(), col, col + 1).Copy();
+        Matrix<T> col_reduction = B.GetSubmatrix({col, B.Rows()}, {col, col + 1});
         HouseholderReduction(col_reduction);
 
         HouseholderLeftReflection(B, col_reduction, col, col);
         HouseholderLeftReflection(U, col_reduction, col);
 
         if (col + 2 < B.Columns()) {
-            auto row_reduction =
-                B.GetSubmatrix(col, col + 1, col + 1, B.Columns()).Copy();
+            Matrix<T> row_reduction =
+                B.GetSubmatrix({col, col + 1}, {col + 1, B.Columns()});
             HouseholderReduction(row_reduction);
 
             HouseholderRightReflection(B, row_reduction, col + 1, col);
