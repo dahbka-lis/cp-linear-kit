@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../matrix_utils/checks.h"
+#include "../matrix_utils/is_matrix_type.h"
 #include "../types/types_details.h"
 #include "givens.h"
 #include "householder.h"
@@ -14,11 +15,33 @@ struct PairQR {
     Matrix<T> R;
 };
 
-template <utils::FloatOrComplex T>
-PairQR<T> HessenbergQR(const ConstMatrixView<T> &matrix);
+template <utils::MatrixType M>
+PairQR<typename M::ElemType> HessenbergQR(const M &matrix) {
+    using T = typename M::ElemType;
 
-template <utils::FloatOrComplex T = long double>
-PairQR<T> HouseholderQR(const ConstMatrixView<T> &matrix) {
+    assert(utils::IsHessenberg(matrix) &&
+           "Hessenberg QR for hessenberg form of matrix.");
+
+    Matrix<T> Q = Matrix<T>::Identity(matrix.Rows());
+    Matrix<T> R = matrix;
+
+    for (IndexType i = 0; i < std::min(R.Rows() - 1, R.Columns()); ++i) {
+        auto first = R(i, i);
+        auto second = R(i + 1, i);
+
+        GivensLeftRotation(R, i, i + 1, first, second);
+        GivensLeftRotation(Q, i, i + 1, first, second);
+    }
+
+    Q.Conjugate();
+    R.RoundZeroes();
+    return {std::move(Q), std::move(R)};
+}
+
+template <utils::MatrixType M>
+PairQR<typename M::ElemType> HouseholderQR(const M &matrix) {
+    using T = typename M::ElemType;
+
     if (utils::IsHessenberg(matrix)) {
         return HessenbergQR(matrix);
     }
@@ -40,18 +63,10 @@ PairQR<T> HouseholderQR(const ConstMatrixView<T> &matrix) {
     return {std::move(Q), std::move(R)};
 }
 
-template <utils::FloatOrComplex T = long double>
-PairQR<T> HouseholderQR(const MatrixView<T> &matrix) {
-    return HouseholderQR(matrix.ConstView());
-}
+template <utils::MatrixType M>
+PairQR<typename M::ElemType> GivensQR(const M &matrix) {
+    using T = typename M::ElemType;
 
-template <utils::FloatOrComplex T = long double>
-PairQR<T> HouseholderQR(const Matrix<T> &matrix) {
-    return HouseholderQR(matrix.View());
-}
-
-template <utils::FloatOrComplex T = long double>
-PairQR<T> GivensQR(const ConstMatrixView<T> &matrix) {
     if (utils::IsHessenberg(matrix)) {
         return HessenbergQR(matrix);
     }
@@ -73,46 +88,5 @@ PairQR<T> GivensQR(const ConstMatrixView<T> &matrix) {
     Q.Conjugate();
     R.RoundZeroes();
     return {std::move(Q), std::move(R)};
-}
-
-template <utils::FloatOrComplex T = long double>
-PairQR<T> GivensQR(const MatrixView<T> &matrix) {
-    return GivensQR(matrix.ConstView());
-}
-
-template <utils::FloatOrComplex T = long double>
-PairQR<T> GivensQR(const Matrix<T> &matrix) {
-    return GivensQR(matrix.View());
-}
-
-template <utils::FloatOrComplex T = long double>
-PairQR<T> HessenbergQR(const ConstMatrixView<T> &matrix) {
-    assert(utils::IsHessenberg(matrix) &&
-           "Hessenberg QR for hessenberg form of matrix.");
-
-    Matrix<T> Q = Matrix<T>::Identity(matrix.Rows());
-    Matrix<T> R = matrix;
-
-    for (IndexType i = 0; i < std::min(R.Rows() - 1, R.Columns()); ++i) {
-        auto first = R(i, i);
-        auto second = R(i + 1, i);
-
-        GivensLeftRotation(R, i, i + 1, first, second);
-        GivensLeftRotation(Q, i, i + 1, first, second);
-    }
-
-    Q.Conjugate();
-    R.RoundZeroes();
-    return {std::move(Q), std::move(R)};
-}
-
-template <utils::FloatOrComplex T = long double>
-PairQR<T> HessenbergQR(const MatrixView<T> &matrix) {
-    return HessenbergQR(matrix.ConstView());
-}
-
-template <utils::FloatOrComplex T = long double>
-PairQR<T> HessenbergQR(const Matrix<T> &matrix) {
-    return HessenbergQR(matrix.View());
 }
 } // namespace matrix_lib::algorithms
