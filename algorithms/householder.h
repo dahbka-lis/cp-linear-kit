@@ -56,6 +56,7 @@ template <utils::FloatOrComplex T = long double>
 void HouseholderRightReflection(Matrix<T> &matrix, const Matrix<T> &vec,
                                 IndexType col = 0, IndexType r_from = 0,
                                 IndexType r_to = -1) {
-    HouseholderRightReflection(matrix.View(), vec, col, r_from, r_to);
+    auto view = matrix.View();
+    HouseholderRightReflection(view, vec, col, r_from, r_to);
 }
 } // namespace matrix_lib::algorithms
