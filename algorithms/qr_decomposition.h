@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../matrix_utils/checks.h"
 #include "../types/types_details.h"
 #include "givens.h"
 #include "householder.h"
@@ -65,10 +66,11 @@ PairQR<T> GivensQR(const ConstMatrixView<T> &matrix) {
             auto second = R(row + 1, col);
 
             GivensLeftRotation(R, row, row + 1, first, second);
-            GivensRightRotation(Q, row + 1, row, first, second);
+            GivensLeftRotation(Q, row, row + 1, first, second);
         }
     }
 
+    Q.Conjugate();
     R.RoundZeroes();
     return {std::move(Q), std::move(R)};
 }
@@ -96,9 +98,10 @@ PairQR<T> HessenbergQR(const ConstMatrixView<T> &matrix) {
         auto second = R(i + 1, i);
 
         GivensLeftRotation(R, i, i + 1, first, second);
-        GivensRightRotation(Q, i + 1, i, first, second);
+        GivensLeftRotation(Q, i, i + 1, first, second);
     }
 
+    Q.Conjugate();
     R.RoundZeroes();
     return {std::move(Q), std::move(R)};
 }

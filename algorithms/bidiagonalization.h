@@ -19,7 +19,8 @@ BidiagonalBasis<T> Bidiagonalize(const ConstMatrixView<T> &matrix) {
     Matrix<T> V = Matrix<T>::Identity(B.Columns());
 
     for (IndexType col = 0; col < std::min(B.Rows(), B.Columns()); ++col) {
-        Matrix<T> col_reduction = B.GetSubmatrix({col, B.Rows()}, {col, col + 1});
+        Matrix<T> col_reduction =
+            B.GetSubmatrix({col, B.Rows()}, {col, col + 1});
         HouseholderReduction(col_reduction);
 
         HouseholderLeftReflection(B, col_reduction, col, col);

@@ -13,25 +13,30 @@ struct HessenbergBasis {
 };
 
 template <utils::FloatOrComplex T = long double>
-HessenbergBasis<T> GetHessenbergForm(const MatrixView<T> &matrix) {
+HessenbergBasis<T> GetHessenbergForm(const ConstMatrixView<T> &matrix) {
     assert(utils::IsSquare(matrix) && "Hessenberg form for square matrices");
 
-    auto Q = Matrix<T>::Identity(matrix.Rows());
-    auto H = matrix.Copy();
+    Matrix<T> Q = Matrix<T>::Identity(matrix.Rows());
+    Matrix<T> H = matrix;
 
     for (IndexType col = 0; col < std::min(matrix.Rows(), matrix.Columns()) - 2;
          ++col) {
-        auto vec = H.GetSubmatrix(col + 1, H.Rows(), col, col + 1).Copy();
+        Matrix<T> vec = H.GetSubmatrix({col + 1, H.Rows()}, {col, col + 1});
         HouseholderReduction(vec);
 
-        HouseholderLeftReflection(H, vec, col + 1, col);
-        HouseholderRightReflection(H, Matrix<T>::Conjugated(vec), col + 1, col);
         HouseholderLeftReflection(Q, vec, col + 1);
+        HouseholderLeftReflection(H, vec, col + 1, col);
+        HouseholderRightReflection(H, vec.Conjugate(), col + 1, col);
     }
 
     Q.Conjugate();
     H.RoundZeroes();
     return {H, Q};
+}
+
+template <utils::FloatOrComplex T = long double>
+HessenbergBasis<T> GetHessenbergForm(const MatrixView<T> &matrix) {
+    return GetHessenbergForm(matrix.ConstView());
 }
 
 template <utils::FloatOrComplex T = long double>
