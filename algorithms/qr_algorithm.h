@@ -6,7 +6,7 @@
 
 namespace matrix_lib::algorithms {
 template <utils::FloatOrComplex T = long double>
-T GetWilkinsonShift(const MatrixView<T> &matrix) {
+T GetWilkinsonShift(const ConstMatrixView<T> &matrix) {
     assert(matrix.Rows() == 2 && "Wilkinson shift for 2x2 matrix.");
     assert(matrix.Columns() == 2 && "Wilkinson shift for 2x2 matrix.");
     assert(matrix(0, 1) == matrix(1, 0) &&
@@ -22,7 +22,8 @@ T GetWilkinsonShift(const MatrixView<T> &matrix) {
 
 template <utils::FloatOrComplex T = long double>
 T GetWilkinsonShift(const Matrix<T> &matrix) {
-    return GetWilkinsonShift(matrix.View());
+    auto view = matrix.View();
+    return GetWilkinsonShift(view);
 }
 
 template <utils::FloatOrComplex T = long double>
@@ -32,7 +33,7 @@ struct SpectralPair {
 };
 
 template <utils::FloatOrComplex T = long double>
-SpectralPair<T> GetRealSpectralDecomposition(const MatrixView<T> &matrix,
+SpectralPair<T> GetRealSpectralDecomposition(const ConstMatrixView<T> &matrix,
                                              T shift = T{0},
                                              std::size_t it_cnt = 100) {
     assert(utils::IsHermitian(matrix) &&
@@ -57,7 +58,8 @@ template <utils::FloatOrComplex T = long double>
 SpectralPair<T> GetRealSpectralDecomposition(const Matrix<T> &matrix,
                                              T shift = T{0},
                                              std::size_t it_cnt = 50) {
-    return GetRealSpectralDecomposition(matrix.View(), shift, it_cnt);
+    auto view = matrix.View();
+    return GetRealSpectralDecomposition(view, shift, it_cnt);
 }
 
 template <utils::FloatOrComplex T>
@@ -68,14 +70,9 @@ struct DiagBasisQR {
 };
 
 template <utils::FloatOrComplex T = long double>
-DiagBasisQR<T> BidiagonalAlgorithmQR(const MatrixView<T> &B,
-                                     IndexType it_cnt = 30) {
-    assert(B.Rows() == 2 && B.Columns() == 2 &&
-           "Bigiagonal QR algorithm for 2x2 matrix.");
-    assert(utils::IsBidiagonal(B) &&
-           "Bigiagonal QR algorithm for bidiagonal matrix.");
-
-    auto S = B.Copy();
+DiagBasisQR<T> BidiagonalAlgorithmQR(const ConstMatrixView<T> &B,
+                                     IndexType it_cnt = 100) {
+    Matrix<T> S = B;
     IndexType r = S.Rows();
     IndexType c = S.Columns();
     IndexType size = std::min(r, c);
@@ -84,7 +81,7 @@ DiagBasisQR<T> BidiagonalAlgorithmQR(const MatrixView<T> &B,
     auto VT = Matrix<T>::Identity(c);
 
     while (it_cnt--) {
-        auto minor = S.GetSubmatrix(r - 2, r, c - 2, c);
+        auto minor = S.GetSubmatrix({r - 2, r}, {c - 2, c});
         auto BB = Matrix<T>(2);
 
         BB(0, 0) = minor(0, 0) * minor(0, 0) +
@@ -118,7 +115,8 @@ DiagBasisQR<T> BidiagonalAlgorithmQR(const MatrixView<T> &B,
 
 template <utils::FloatOrComplex T = long double>
 DiagBasisQR<T> BidiagonalAlgorithmQR(const Matrix<T> &B,
-                                     IndexType it_cnt = 30) {
-    return BidiagonalAlgorithmQR(B.View(), it_cnt);
+                                     IndexType it_cnt = 100) {
+    auto view = B.View();
+    return BidiagonalAlgorithmQR(view, it_cnt);
 }
 } // namespace matrix_lib::algorithms
