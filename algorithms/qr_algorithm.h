@@ -7,7 +7,8 @@
 namespace matrix_lib::algorithms {
 template <utils::MatrixType M>
 typename M::ElemType GetWilkinsonShift(const M &matrix) {
-    assert(matrix.Rows() == 2 && matrix.Columns() == 2 && "Wilkinson shift for 2x2 matrix.");
+    assert(matrix.Rows() == 2 && matrix.Columns() == 2 &&
+           "Wilkinson shift for 2x2 matrix.");
     assert(matrix(0, 1) == matrix(1, 0) &&
            "Wilkinson shift for symmetric matrix.");
 
@@ -28,8 +29,8 @@ struct SpectralPair {
 template <utils::MatrixType M>
 SpectralPair<typename M::ElemType>
 GetSpecDecomposition(const M &matrix,
-                         typename M::ElemType shift = typename M::ElemType{0},
-                         std::size_t it_cnt = 100) {
+                     typename M::ElemType shift = typename M::ElemType{0},
+                     std::size_t it_cnt = 100) {
     using T = typename M::ElemType;
 
     assert(utils::IsHermitian(matrix) &&
@@ -80,8 +81,8 @@ struct DiagBasisQR {
 };
 
 template <utils::MatrixType M>
-DiagBasisQR<typename M::ElemType>
-BidiagAlgorithmQR(const M &B, IndexType it_cnt = 100) {
+DiagBasisQR<typename M::ElemType> BidiagAlgorithmQR(const M &B,
+                                                    IndexType it_cnt = 100) {
     using T = typename M::ElemType;
 
     Matrix<T> D = B;
