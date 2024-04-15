@@ -173,7 +173,7 @@ public:
     }
 
     friend bool operator==(const Matrix &lhs, const Matrix &rhs) {
-        return lhs.buffer_ == rhs.buffer_;
+        return lhs.cols_ == rhs.cols_ && lhs.buffer_ == rhs.buffer_;
     }
 
     friend bool operator==(const Matrix &lhs, const ConstMatrixView<T> &rhs) {
