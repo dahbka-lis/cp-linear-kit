@@ -7,8 +7,7 @@
 namespace matrix_lib::algorithms {
 template <utils::MatrixType M>
 typename M::ElemType GetWilkinsonShift(const M &matrix) {
-    assert(matrix.Rows() == 2 && "Wilkinson shift for 2x2 matrix.");
-    assert(matrix.Columns() == 2 && "Wilkinson shift for 2x2 matrix.");
+    assert(matrix.Rows() == 2 && matrix.Columns() == 2 && "Wilkinson shift for 2x2 matrix.");
     assert(matrix(0, 1) == matrix(1, 0) &&
            "Wilkinson shift for symmetric matrix.");
 
@@ -23,12 +22,12 @@ typename M::ElemType GetWilkinsonShift(const M &matrix) {
 template <utils::FloatOrComplex T = long double>
 struct SpectralPair {
     Matrix<T> D;
-    Matrix<T> Q;
+    Matrix<T> U;
 };
 
 template <utils::MatrixType M>
 SpectralPair<typename M::ElemType>
-GetRealSpecDecomposition(const M &matrix,
+GetSpecDecomposition(const M &matrix,
                          typename M::ElemType shift = typename M::ElemType{0},
                          std::size_t it_cnt = 100) {
     using T = typename M::ElemType;
@@ -36,19 +35,41 @@ GetRealSpecDecomposition(const M &matrix,
     assert(utils::IsHermitian(matrix) &&
            "Spectral decomposition for hermitian matrix.");
 
-    auto D = matrix.Copy();
-    auto shift_I = Matrix<T>::Identity(D.Rows(), shift);
-    auto transform = Matrix<T>::Identity(D.Rows());
+    Matrix<T> D = matrix;
+    Matrix<T> shift_I = Matrix<T>::Identity(D.Rows()) * shift;
+    Matrix<T> U = Matrix<T>::Identity(D.Rows());
 
     for (std::size_t i = 0; i < it_cnt; ++i) {
         auto [Q, R] = HouseholderQR(D - shift_I);
         D = R * Q + shift_I;
-        transform *= Q;
+        U *= Q;
 
         D.RoundZeroes();
     }
 
-    return {D, transform};
+    return {std::move(D), std::move(U)};
+}
+
+template <utils::MatrixType M>
+typename M::ElemType GetBidiagWilkinsonShift(const M &S) {
+    using T = typename M::ElemType;
+
+    auto r = S.Rows();
+    auto c = S.Columns();
+
+    auto minor = S.GetSubmatrix({r - 2, r}, {c - 2, c});
+    auto BB = Matrix<T>(2);
+
+    BB(0, 0) = minor(0, 0) * minor(0, 0);
+    BB(1, 0) = minor(0, 0) * minor(0, 1);
+    BB(0, 1) = BB(1, 0);
+    BB(1, 1) = minor(0, 1) * minor(0, 1) + minor(1, 1) * minor(1, 1);
+
+    if (r >= 3) {
+        BB(0, 0) += S(r - 3, c - 2) * S(r - 3, c - 2);
+    }
+
+    return GetWilkinsonShift(BB);
 }
 
 template <utils::FloatOrComplex T>
@@ -60,47 +81,35 @@ struct DiagBasisQR {
 
 template <utils::MatrixType M>
 DiagBasisQR<typename M::ElemType>
-BidiagonalAlgorithmQR(const M &B, IndexType it_cnt = 100) {
+BidiagAlgorithmQR(const M &B, IndexType it_cnt = 100) {
     using T = typename M::ElemType;
 
-    Matrix<T> S = B;
-    IndexType r = S.Rows();
-    IndexType c = S.Columns();
-    IndexType size = std::min(r, c);
+    Matrix<T> D = B;
+    IndexType size = std::min(D.Rows(), D.Columns());
 
-    auto U = Matrix<T>::Identity(r);
-    auto VT = Matrix<T>::Identity(c);
+    auto U = Matrix<T>::Identity(D.Rows());
+    auto VT = Matrix<T>::Identity(D.Columns());
 
-    while (it_cnt--) {
-        auto minor = S.GetSubmatrix({r - 2, r}, {c - 2, c});
-        auto BB = Matrix<T>(2);
-
-        BB(0, 0) = minor(0, 0) * minor(0, 0) +
-                   ((r >= 3) ? S(r - 3, c - 2) * S(r - 3, c - 2) : T{0});
-        BB(1, 0) = minor(0, 0) * minor(0, 1);
-        BB(0, 1) = BB(1, 0);
-        BB(1, 1) = minor(0, 1) * minor(0, 1) + minor(1, 1) * minor(1, 1);
-
-        auto shift = GetWilkinsonShift(BB);
-
+    while (--it_cnt) {
+        auto shift = GetBidiagWilkinsonShift(D);
         for (IndexType i = 0; i < size; ++i) {
-            if (i + 1 < S.Columns()) {
-                auto f_elem = (i > 0) ? S(i - 1, i) : S(0, 0) * S(0, 0) - shift;
-                auto s_elem = (i > 0) ? S(i - 1, i + 1) : S(0, 1) * S(0, 0);
+            if (i + 1 < D.Columns()) {
+                auto f_elem = (i > 0) ? D(i - 1, i) : D(0, 0) * D(0, 0) - shift;
+                auto s_elem = (i > 0) ? D(i - 1, i + 1) : D(0, 1) * D(0, 0);
 
                 GivensLeftRotation(VT, i, i + 1, f_elem, s_elem);
-                GivensRightRotation(S, i, i + 1, f_elem, s_elem);
+                GivensRightRotation(D, i, i + 1, f_elem, s_elem);
             }
 
-            if (i + 1 < S.Rows()) {
-                GivensRightRotation(U, i, i + 1, S(i, i), S(i + 1, i));
-                GivensLeftRotation(S, i, i + 1, S(i, i), S(i + 1, i));
+            if (i + 1 < D.Rows()) {
+                GivensRightRotation(U, i, i + 1, D(i, i), D(i + 1, i));
+                GivensLeftRotation(D, i, i + 1, D(i, i), D(i + 1, i));
             }
         }
 
-        S.RoundZeroes();
+        D.RoundZeroes();
     }
 
-    return {U, S, VT};
+    return {std::move(U), std::move(D), std::move(VT)};
 }
 } // namespace matrix_lib::algorithms
