@@ -8,14 +8,15 @@ namespace matrix_lib::algorithms {
 using IndexType = details::Types::IndexType;
 
 template <utils::MutableMatrixType M>
-void HouseholderReduction(M &vector) {
+inline void HouseholderReduction(M &vector) {
     vector(0, 0) -= utils::Sign(vector(0, 0)) * vector.GetEuclideanNorm();
     vector.Normalize();
 }
 
 template <utils::MutableMatrixType M, utils::MatrixType V>
-void HouseholderLeftReflection(M &matrix, const V &vec, IndexType row = 0,
-                               IndexType c_from = 0, IndexType c_to = -1) {
+inline void HouseholderLeftReflection(M &matrix, const V &vec,
+                                      IndexType row = 0, IndexType c_from = 0,
+                                      IndexType c_to = -1) {
     using T = typename M::ElemType;
 
     if (c_to == -1) {
@@ -28,8 +29,9 @@ void HouseholderLeftReflection(M &matrix, const V &vec, IndexType row = 0,
 }
 
 template <utils::MutableMatrixType M, utils::MatrixType V>
-void HouseholderRightReflection(M &matrix, const V &vec, IndexType col = 0,
-                                IndexType r_from = 0, IndexType r_to = -1) {
+inline void HouseholderRightReflection(M &matrix, const V &vec,
+                                       IndexType col = 0, IndexType r_from = 0,
+                                       IndexType r_to = -1) {
     using T = typename M::ElemType;
 
     if (r_to == -1) {

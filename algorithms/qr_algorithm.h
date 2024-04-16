@@ -5,8 +5,9 @@
 #include "qr_decomposition.h"
 
 namespace matrix_lib::algorithms {
+namespace details {
 template <utils::MatrixType M>
-typename M::ElemType GetWilkinsonShift(const M &matrix) {
+inline typename M::ElemType GetWilkinsonShift(const M &matrix) {
     assert(matrix.Rows() == 2 && matrix.Columns() == 2 &&
            "Wilkinson shift for 2x2 matrix.");
     assert(matrix(0, 1) == matrix(1, 0) &&
@@ -20,14 +21,44 @@ typename M::ElemType GetWilkinsonShift(const M &matrix) {
            (utils::Sign(d) * matrix(0, 1) * matrix(0, 1)) / coefficient;
 }
 
+template <utils::MatrixType M>
+inline typename M::ElemType GetBidiagWilkinsonShift(const M &S) {
+    using T = typename M::ElemType;
+
+    auto r = S.Rows();
+    auto c = S.Columns();
+
+    auto minor = S.GetSubmatrix({r - 2, r}, {c - 2, c});
+    auto BB = Matrix<T>(2);
+
+    BB(0, 0) = minor(0, 0) * minor(0, 0);
+    BB(1, 0) = minor(0, 0) * minor(0, 1);
+    BB(0, 1) = BB(1, 0);
+    BB(1, 1) = minor(0, 1) * minor(0, 1) + minor(1, 1) * minor(1, 1);
+
+    if (r >= 3) {
+        BB(0, 0) += S(r - 3, c - 2) * S(r - 3, c - 2);
+    }
+
+    return GetWilkinsonShift(BB);
+}
+
 template <utils::FloatOrComplex T = long double>
 struct SpectralPair {
     Matrix<T> D;
     Matrix<T> U;
 };
 
+template <utils::FloatOrComplex T>
+struct DiagBasisQR {
+    Matrix<T> U;
+    Matrix<T> D;
+    Matrix<T> VT;
+};
+} // namespace details
+
 template <utils::MatrixType M>
-SpectralPair<typename M::ElemType>
+inline details::SpectralPair<typename M::ElemType>
 GetSpecDecomposition(const M &matrix,
                      typename M::ElemType shift = typename M::ElemType{0},
                      std::size_t it_cnt = 100) {
@@ -52,37 +83,8 @@ GetSpecDecomposition(const M &matrix,
 }
 
 template <utils::MatrixType M>
-typename M::ElemType GetBidiagWilkinsonShift(const M &S) {
-    using T = typename M::ElemType;
-
-    auto r = S.Rows();
-    auto c = S.Columns();
-
-    auto minor = S.GetSubmatrix({r - 2, r}, {c - 2, c});
-    auto BB = Matrix<T>(2);
-
-    BB(0, 0) = minor(0, 0) * minor(0, 0);
-    BB(1, 0) = minor(0, 0) * minor(0, 1);
-    BB(0, 1) = BB(1, 0);
-    BB(1, 1) = minor(0, 1) * minor(0, 1) + minor(1, 1) * minor(1, 1);
-
-    if (r >= 3) {
-        BB(0, 0) += S(r - 3, c - 2) * S(r - 3, c - 2);
-    }
-
-    return GetWilkinsonShift(BB);
-}
-
-template <utils::FloatOrComplex T>
-struct DiagBasisQR {
-    Matrix<T> U;
-    Matrix<T> D;
-    Matrix<T> VT;
-};
-
-template <utils::MatrixType M>
-DiagBasisQR<typename M::ElemType> BidiagAlgorithmQR(const M &B,
-                                                    IndexType it_cnt = 100) {
+inline details::DiagBasisQR<typename M::ElemType>
+BidiagAlgorithmQR(const M &B, IndexType it_cnt = 100) {
     using T = typename M::ElemType;
 
     Matrix<T> D = B;
@@ -92,7 +94,7 @@ DiagBasisQR<typename M::ElemType> BidiagAlgorithmQR(const M &B,
     auto VT = Matrix<T>::Identity(D.Columns());
 
     while (--it_cnt) {
-        auto shift = GetBidiagWilkinsonShift(D);
+        auto shift = details::GetBidiagWilkinsonShift(D);
         for (IndexType i = 0; i < size; ++i) {
             if (i + 1 < D.Columns()) {
                 auto f_elem = (i > 0) ? D(i - 1, i) : D(0, 0) * D(0, 0) - shift;

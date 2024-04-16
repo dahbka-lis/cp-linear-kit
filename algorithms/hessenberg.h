@@ -5,16 +5,19 @@
 #include "householder.h"
 
 namespace matrix_lib::algorithms {
-using IndexType = details::Types::IndexType;
-
+namespace details {
 template <utils::FloatOrComplex T = long double>
 struct HessenbergBasis {
     Matrix<T> H;
     Matrix<T> Q;
 };
+} // namespace details
+
+using IndexType = matrix_lib::details::Types::IndexType;
 
 template <utils::MatrixType M>
-HessenbergBasis<typename M::ElemType> GetHessenbergForm(const M &matrix) {
+inline details::HessenbergBasis<typename M::ElemType>
+GetHessenbergForm(const M &matrix) {
     using T = typename M::ElemType;
 
     assert(utils::IsSquare(matrix) && "Hessenberg form for square matrices");

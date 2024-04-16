@@ -3,8 +3,7 @@
 #include "../types/matrix.h"
 
 namespace matrix_lib::algorithms {
-using IndexType = details::Types::IndexType;
-
+namespace details {
 template <utils::FloatOrComplex T = long double>
 struct GivensPair {
     T cos = T{0};
@@ -12,7 +11,7 @@ struct GivensPair {
 };
 
 template <utils::FloatOrComplex T = long double>
-GivensPair<T> GetGivensCoefficients(T first_elem, T second_elem) {
+inline GivensPair<T> GetGivensCoefficients(T first_elem, T second_elem) {
     auto sqrt_abs = std::sqrt(std::norm(first_elem) + std::norm(second_elem));
 
     if (utils::IsZeroFloating(sqrt_abs)) {
@@ -21,13 +20,16 @@ GivensPair<T> GetGivensCoefficients(T first_elem, T second_elem) {
 
     return {first_elem / sqrt_abs, -second_elem / sqrt_abs};
 }
+} // namespace details
+
+using IndexType = matrix_lib::details::Types::IndexType;
 
 template <utils::MutableMatrixType M>
-void GivensLeftRotation(M &matrix, IndexType f_row, IndexType s_row,
-                        typename M::ElemType first,
-                        typename M::ElemType second) {
+inline void GivensLeftRotation(M &matrix, IndexType f_row, IndexType s_row,
+                               typename M::ElemType first,
+                               typename M::ElemType second) {
     using T = typename M::ElemType;
-    auto [cos, sin] = GetGivensCoefficients(first, second);
+    auto [cos, sin] = details::GetGivensCoefficients(first, second);
 
     for (IndexType i = 0; i < matrix.Columns(); ++i) {
         auto cp_from = matrix(f_row, i);
@@ -45,11 +47,11 @@ void GivensLeftRotation(M &matrix, IndexType f_row, IndexType s_row,
 }
 
 template <utils::MutableMatrixType M>
-void GivensRightRotation(M &matrix, IndexType f_col, IndexType s_col,
-                         typename M::ElemType first,
-                         typename M::ElemType second) {
+inline void GivensRightRotation(M &matrix, IndexType f_col, IndexType s_col,
+                                typename M::ElemType first,
+                                typename M::ElemType second) {
     using T = typename M::ElemType;
-    auto [cos, sin] = GetGivensCoefficients(first, second);
+    auto [cos, sin] = details::GetGivensCoefficients(first, second);
 
     for (IndexType i = 0; i < matrix.Rows(); ++i) {
         auto cp_from = matrix(i, f_col);

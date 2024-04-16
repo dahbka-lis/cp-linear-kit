@@ -4,17 +4,20 @@
 #include "householder.h"
 
 namespace matrix_lib::algorithms {
-using IndexType = details::Types::IndexType;
-
+namespace details {
 template <utils::FloatOrComplex T = long double>
 struct BidiagonalBasis {
     Matrix<T> U;
     Matrix<T> B;
     Matrix<T> VT;
 };
+} // namespace details
+
+using IndexType = matrix_lib::details::Types::IndexType;
 
 template <utils::MatrixType M>
-BidiagonalBasis<typename M::ElemType> Bidiagonalize(const M &matrix) {
+inline details::BidiagonalBasis<typename M::ElemType>
+Bidiagonalize(const M &matrix) {
     using T = typename M::ElemType;
 
     Matrix<T> B = matrix;

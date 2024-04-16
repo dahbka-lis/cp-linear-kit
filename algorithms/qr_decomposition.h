@@ -7,16 +7,18 @@
 #include "householder.h"
 
 namespace matrix_lib::algorithms {
-using IndexType = details::Types::IndexType;
-
+namespace details {
 template <utils::FloatOrComplex T = long double>
 struct PairQR {
     Matrix<T> Q;
     Matrix<T> R;
 };
+} // namespace details
+
+using IndexType = matrix_lib::details::Types::IndexType;
 
 template <utils::MatrixType M>
-PairQR<typename M::ElemType> HessenbergQR(const M &matrix) {
+inline details::PairQR<typename M::ElemType> HessenbergQR(const M &matrix) {
     using T = typename M::ElemType;
 
     assert(utils::IsHessenberg(matrix) &&
@@ -39,7 +41,7 @@ PairQR<typename M::ElemType> HessenbergQR(const M &matrix) {
 }
 
 template <utils::MatrixType M>
-PairQR<typename M::ElemType> HouseholderQR(const M &matrix) {
+inline details::PairQR<typename M::ElemType> HouseholderQR(const M &matrix) {
     using T = typename M::ElemType;
 
     if (utils::IsHessenberg(matrix)) {
@@ -64,7 +66,7 @@ PairQR<typename M::ElemType> HouseholderQR(const M &matrix) {
 }
 
 template <utils::MatrixType M>
-PairQR<typename M::ElemType> GivensQR(const M &matrix) {
+inline details::PairQR<typename M::ElemType> GivensQR(const M &matrix) {
     using T = typename M::ElemType;
 
     if (utils::IsHessenberg(matrix)) {
