@@ -5,7 +5,7 @@
 
 namespace matrix_lib::utils {
 template <utils::FloatOrComplex T = long double>
-T Sign(T value) {
+inline T Sign(T value) {
     if constexpr (utils::details::IsFloatComplexT<T>::value) {
         if (utils::IsZeroFloating(value)) {
             return T{0};
