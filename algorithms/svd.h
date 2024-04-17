@@ -2,6 +2,7 @@
 
 #include "bidiagonalization.h"
 #include "qr_algorithm.h"
+#include <iostream>
 
 namespace matrix_lib::algorithms {
 namespace details {
@@ -14,8 +15,10 @@ struct SingularBasis {
 
 template <utils::MutableMatrixType M>
 inline void ToPositiveSingular(M &S, M &VT) {
+    using T = typename M::ElemType;
+
     for (IndexType i = 0; i < std::min(S.Rows(), S.Columns()); ++i) {
-        if (S(i, i) >= 0)
+        if (!utils::IsZeroFloating(S(i, i)))
             continue;
 
         S(i, i) *= -1;
@@ -47,12 +50,18 @@ inline void SwapRows(M &matrix, IndexType first, IndexType second) {
 
 template <utils::MutableMatrixType M>
 inline void SortSingular(M &U, M &S, M &VT) {
+    using T = typename M::ElemType;
     auto min_size = std::min(S.Rows(), S.Columns());
 
     for (IndexType i = 0; i < min_size; ++i) {
         for (IndexType j = 0; j < min_size - i - 1; ++j) {
-            if (S(j, j) >= S(j + 1, j + 1))
-                continue;
+            if constexpr (utils::details::IsFloatComplexT<T>::value) {
+                if (S(j, j).real() >= S(j + 1, j + 1).real())
+                    continue;
+            } else {
+                if (S(j, j) >= S(j + 1, j + 1))
+                    continue;
+            }
 
             std::swap(S(j, j), S(j + 1, j + 1));
             SwapColumns(U, j, j + 1);
@@ -64,6 +73,16 @@ inline void SortSingular(M &U, M &S, M &VT) {
 
 template <utils::MatrixType M>
 inline details::SingularBasis<typename M::ElemType> SVD(const M &matrix) {
+    using T = typename M::ElemType;
+
+    if (matrix.Rows() < matrix.Columns()) {
+        auto [U, S, VT] = SVD(Matrix<typename M::ElemType>::Transposed(matrix));
+        U.Conjugate();
+        S.Conjugate();
+        VT.Conjugate();
+        return {std::move(VT), std::move(S), std::move(U)};
+    }
+
     auto [U1, B, VT1] = Bidiagonalize(matrix);
     auto [U2, S, VT2] = BidiagAlgorithmQR(B);
 
