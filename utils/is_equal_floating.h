@@ -9,7 +9,17 @@ namespace matrix_lib::utils {
 namespace details {
 template <FloatOrComplex T>
 struct TypeEpsilon {
-    static constexpr T kValue = std::numeric_limits<T>::epsilon();
+    static constexpr T kValue = 1e-6;
+};
+
+template <>
+struct TypeEpsilon<double> {
+    static constexpr double kValue = 1e-10;
+};
+
+template <>
+struct TypeEpsilon<long double> {
+    static constexpr double kValue = 1e-16;
 };
 
 template <typename T>
