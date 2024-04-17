@@ -32,18 +32,26 @@ template <FloatOrComplex T>
 static constexpr auto Eps = details::TypeEpsilon<T>::kValue;
 
 template <FloatOrComplex T = long double>
-bool IsEqualFloating(T lhs, T rhs) {
+bool IsEqualFloating(T lhs, T rhs, T eps = T{-1}) {
+    if (eps == T{-1}) {
+        eps = Eps<T>;
+    }
+
     if constexpr (details::IsFloatComplexT<T>::value) {
-        auto is_equal_real = std::abs(lhs.real() - rhs.real()) < Eps<T>;
-        auto is_equal_imag = std::abs(lhs.imag() - rhs.imag()) < Eps<T>;
+        auto is_equal_real = std::abs(lhs.real() - rhs.real()) < eps;
+        auto is_equal_imag = std::abs(lhs.imag() - rhs.imag()) < eps;
         return is_equal_real && is_equal_imag;
     } else {
-        return std::abs(lhs - rhs) < Eps<T>;
+        return std::abs(lhs - rhs) < eps;
     }
 }
 
 template <FloatOrComplex T = long double>
-bool IsZeroFloating(T lhs) {
-    return IsEqualFloating<T>(lhs, T{0});
+bool IsZeroFloating(T lhs, T eps = T{-1}) {
+    if (eps == T{-1}) {
+        eps = Eps<T>;
+    }
+
+    return IsEqualFloating<T>(lhs, T{0}, eps);
 }
 } // namespace matrix_lib::utils

@@ -100,7 +100,7 @@ template <utils::MutableMatrixType M>
 inline void StepBidiagQR(M &U, M &D, M &VT) {
     using T = typename M::ElemType;
 
-    T shift = T{0};
+    T shift = GetBidiagWilkinsonShift(D);
     auto size = std::min(D.Rows(), D.Columns());
 
     for (IndexType i = 0; i < size; ++i) {
@@ -146,9 +146,10 @@ BidiagAlgorithmQR(const M &B, IndexType it_cnt) {
         }
     }
 
+    it_cnt *= D.Columns();
     while (--it_cnt) {
         details::StepBidiagQR(U, D, VT);
-        D.RoundZeroes();
+        D.RoundZeroes(eps);
     }
 
     return {std::move(U), std::move(D), std::move(VT)};

@@ -160,9 +160,13 @@ public:
         return *this;
     }
 
-    MatrixView<T> &RoundZeroes() {
+    MatrixView<T> &RoundZeroes(T eps = T{-1}) {
+        if (eps == T{-1}) {
+            eps = utils::Eps<T>;
+        }
+
         ApplyForEach(
-            [](T &el) { el = (utils::IsZeroFloating(el)) ? T{0} : el; });
+            [&](T &el) { el = (utils::IsZeroFloating(el, eps)) ? T{0} : el; });
         return *this;
     }
 

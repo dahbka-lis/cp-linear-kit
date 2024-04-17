@@ -193,8 +193,8 @@ public:
         return *this;
     }
 
-    Matrix &RoundZeroes() {
-        View().RoundZeroes();
+    Matrix &RoundZeroes(T eps = T{-1}) {
+        View().RoundZeroes(eps);
         return *this;
     }
 
