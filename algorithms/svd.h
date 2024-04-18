@@ -2,7 +2,6 @@
 
 #include "bidiagonalization.h"
 #include "qr_algorithm.h"
-#include <iostream>
 
 namespace matrix_lib::algorithms {
 namespace details {
@@ -55,13 +54,8 @@ inline void SortSingular(M &U, M &S, M &VT) {
 
     for (IndexType i = 0; i < min_size; ++i) {
         for (IndexType j = 0; j < min_size - i - 1; ++j) {
-            if constexpr (utils::details::IsFloatComplexT<T>::value) {
-                if (S(j, j).real() >= S(j + 1, j + 1).real())
-                    continue;
-            } else {
-                if (S(j, j) >= S(j + 1, j + 1))
-                    continue;
-            }
+            if (S(j, j) >= S(j + 1, j + 1))
+                continue;
 
             std::swap(S(j, j), S(j + 1, j + 1));
             SwapColumns(U, j, j + 1);
@@ -72,14 +66,15 @@ inline void SortSingular(M &U, M &S, M &VT) {
 } // namespace details
 
 template <utils::MatrixType M>
+    requires utils::details::FloatingPoint<typename M::ElemType>
 inline details::SingularBasis<typename M::ElemType> SVD(const M &matrix) {
     using T = typename M::ElemType;
 
     if (matrix.Rows() < matrix.Columns()) {
         auto [U, S, VT] = SVD(Matrix<typename M::ElemType>::Transposed(matrix));
-        U.Conjugate();
-        S.Conjugate();
-        VT.Conjugate();
+        U.Transpose();
+        S.Transpose();
+        VT.Transpose();
         return {std::move(VT), std::move(S), std::move(U)};
     }
 

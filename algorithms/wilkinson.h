@@ -25,14 +25,14 @@ inline typename M::ElemType GetWilkinsonShift(const M &matrix,
 template <utils::MatrixType M>
 inline typename M::ElemType GetBidiagWilkinsonShift(const M &S) {
     using T = typename M::ElemType;
-    assert(S.Columns() >= 2 && "Wrong end index.");
+    assert(S.Columns() >= 2 && "Wrong columns count.");
 
     auto sub_idx = S.Columns();
     Matrix<T> S_gram =
         S.GetSubmatrix({sub_idx - 2, sub_idx}, {sub_idx - 2, sub_idx});
 
     S_gram.Conjugate();
-    S_gram *= Matrix<T>::Conjugated(S_gram);
+    S_gram *= S.GetSubmatrix({sub_idx - 2, sub_idx}, {sub_idx - 2, sub_idx});
 
     if (sub_idx >= 3) {
         S_gram(0, 0) +=

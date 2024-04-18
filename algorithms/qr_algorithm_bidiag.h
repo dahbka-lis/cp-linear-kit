@@ -109,23 +109,12 @@ BidiagAlgorithmQR(const M &B, IndexType it_cnt) {
     auto eps = utils::Eps<T> * threshold;
 
     for (IndexType i = 0; i < std::min(D.Rows(), D.Columns() - 1); ++i) {
-        if constexpr (utils::details::IsFloatComplexT<T>::value) {
-            if (std::abs(D(i, i + 1)) < eps.real() &&
-                std::abs(D(i, i)) >= eps.real()) {
-                return details::SplitBidiagQR(D, i);
-            }
+        if (std::abs(D(i, i + 1)) < eps && std::abs(D(i, i)) >= eps) {
+            return details::SplitBidiagQR(D, i);
+        }
 
-            if (std::abs(D(i, i)) < eps.real()) {
-                return details::CancellationBidiagQR(D, U, i);
-            }
-        } else {
-            if (std::abs(D(i, i + 1)) < eps && std::abs(D(i, i)) >= eps) {
-                return details::SplitBidiagQR(D, i);
-            }
-
-            if (std::abs(D(i, i)) < eps) {
-                return details::CancellationBidiagQR(D, U, i);
-            }
+        if (std::abs(D(i, i)) < eps) {
+            return details::CancellationBidiagQR(D, U, i);
         }
     }
 
@@ -135,8 +124,8 @@ BidiagAlgorithmQR(const M &B, IndexType it_cnt) {
         D.RoundZeroes(eps);
     }
 
-    U.Conjugate();
-    VT.Conjugate();
+    U.Transpose();
+    VT.Transpose();
     return {std::move(U), std::move(D), std::move(VT)};
 }
 } // namespace matrix_lib::algorithms
