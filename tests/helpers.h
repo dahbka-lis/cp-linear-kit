@@ -41,6 +41,17 @@ public:
         return result;
     }
 
+    Matrix<T> GetRandomSymmetricMatrix(int32_t size) {
+        Matrix<T> result(size);
+        for (IndexType i = 0; i < size; ++i) {
+            for (IndexType j = i; j < size; ++j) {
+                result(i, j) = GetRandomTypeNumber();
+                result(j, i) = result(i, j);
+            }
+        }
+        return result;
+    }
+
 private:
     static constexpr int32_t kMatrixMinSize = 0;
     static constexpr int32_t kMatrixMaxSize = 100;
