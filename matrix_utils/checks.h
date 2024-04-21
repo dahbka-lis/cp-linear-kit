@@ -6,6 +6,27 @@
 namespace matrix_lib::utils {
 using IndexType = matrix_lib::details::Types::IndexType;
 
+template <utils::MatrixType F, utils::MatrixType S>
+inline bool
+AreEqualMatrices(const F &first, const S &second,
+                 typename F::ElemType eps = typename F::ElemType{-1}) {
+    using T = F::ElemType;
+
+    if (first.Rows() != second.Rows() || first.Columns() != second.Columns()) {
+        return false;
+    }
+
+    for (IndexType i = 0; i < first.Rows(); ++i) {
+        for (IndexType j = 0; j < first.Columns(); ++j) {
+            if (!utils::IsEqualFloating(first(i, j), second(i, j), eps)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 template <utils::MatrixType M>
 inline bool IsSquare(const M &matrix) {
     return matrix.Rows() == matrix.Columns();
@@ -13,12 +34,14 @@ inline bool IsSquare(const M &matrix) {
 
 template <utils::MatrixType M>
 inline bool IsUnitary(const M &matrix) {
+    using T = M::ElemType;
+
     if (!IsSquare(matrix)) {
         return false;
     }
 
-    auto prod = matrix * M::Conjugated(matrix);
-    return prod == M::Identity(matrix.Rows());
+    auto prod = matrix * Matrix<T>::Conjugated(matrix);
+    return AreEqualMatrices(prod, Matrix<T>::Identity(matrix.Rows()));
 }
 
 template <utils::MatrixType M>
@@ -58,9 +81,11 @@ inline bool IsSymmetric(const M &matrix) {
 
 template <utils::MatrixType M>
 inline bool IsNormal(const M &matrix) {
-    auto m1 = matrix * M::Conjugated(matrix);
-    auto m2 = M::Conjugated(matrix) * matrix;
-    return m1 == m2;
+    using T = M::ElemType;
+
+    auto m1 = matrix * Matrix<T>::Conjugated(matrix);
+    auto m2 = Matrix<T>::Conjugated(matrix) * matrix;
+    return AreEqualMatrices(m1, m2);
 }
 
 template <utils::MatrixType M>
@@ -112,6 +137,6 @@ inline bool IsHessenberg(const M &matrix) {
         }
     }
 
-    return IsSquare(matrix);
+    return true;
 }
 } // namespace matrix_lib::utils
