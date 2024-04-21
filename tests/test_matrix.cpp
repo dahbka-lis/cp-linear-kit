@@ -250,7 +250,7 @@ TEST(TEST_MATRIX, DiagonalMatrix) {
 }
 
 TEST(TEST_MATRIX, Stress) {
-    using Type = std::complex<long double>;
+    using Type = Complex<long double>;
     using MatrixGenerator = RandomMatrixGenerator<Type>;
     using Matrix = Matrix<Type>;
 

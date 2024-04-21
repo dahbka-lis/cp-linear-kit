@@ -284,7 +284,7 @@ std::pair<int32_t, int32_t> GetMinMaxSize(int32_t first, int32_t second) {
 }
 
 TEST(TEST_MATRIX_VIEW, Stress) {
-    using Type = std::complex<long double>;
+    using Type = Complex<long double>;
     using MatrixGenerator = RandomMatrixGenerator<Type>;
 
     const size_t it_count = 100u;
