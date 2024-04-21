@@ -5,7 +5,7 @@
 #include "../utils/sign.h"
 
 namespace matrix_lib::algorithms {
-using IndexType = details::Types::IndexType;
+using IndexType = matrix_lib::details::Types::IndexType;
 
 template <utils::MutableMatrixType M>
 inline void HouseholderReduction(M &vector) {
