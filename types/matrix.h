@@ -53,9 +53,11 @@ public:
     }
 
     Matrix(const ConstMatrixView<T> &rhs) : Matrix(rhs.Rows(), rhs.Columns()) {
-        rhs.ForEach([&](const T &val, IndexType i, IndexType j) {
-            (*this)(i, j) = val;
-        });
+        for (IndexType i = 0; i < Rows(); ++i) {
+            for (IndexType j = 0; j < Columns(); ++j) {
+                (*this)(i, j) = rhs(i, j);
+            }
+        }
     }
 
     Matrix(const MatrixView<T> &rhs) : Matrix(rhs.ConstView()) {
