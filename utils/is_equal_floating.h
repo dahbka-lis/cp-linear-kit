@@ -19,7 +19,7 @@ struct TypeEpsilon<double> {
 
 template <>
 struct TypeEpsilon<long double> {
-    static constexpr double kValue = 1e-16;
+    static constexpr double kValue = 1e-15;
 };
 
 template <typename T>
@@ -32,7 +32,7 @@ template <FloatOrComplex T>
 static constexpr auto Eps = details::TypeEpsilon<T>::kValue;
 
 template <FloatOrComplex T = long double>
-bool IsEqualFloating(T lhs, T rhs, T eps = T{-1}) {
+inline bool IsEqualFloating(T lhs, T rhs, T eps = T{-1}) {
     if (eps == T{-1}) {
         eps = Eps<T>;
     }
@@ -47,11 +47,7 @@ bool IsEqualFloating(T lhs, T rhs, T eps = T{-1}) {
 }
 
 template <FloatOrComplex T = long double>
-bool IsZeroFloating(T lhs, T eps = T{-1}) {
-    if (eps == T{-1}) {
-        eps = Eps<T>;
-    }
-
+inline bool IsZeroFloating(T lhs, T eps = T{-1}) {
     return IsEqualFloating<T>(lhs, T{0}, eps);
 }
 } // namespace matrix_lib::utils
