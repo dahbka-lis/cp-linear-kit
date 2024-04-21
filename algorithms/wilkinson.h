@@ -10,6 +10,10 @@ inline typename M::ElemType GetWilkinsonShift(const M &matrix,
                                               IndexType end_idx) {
     using T = typename M::ElemType;
 
+    if (matrix.Rows() == 0) {
+        return T{0};
+    }
+
     assert(end_idx >= 2 && end_idx <= matrix.Rows() && "Wrong end index.");
 
     auto d =
