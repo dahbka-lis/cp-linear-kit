@@ -63,6 +63,25 @@ inline void SortSingular(M &U, M &S, M &VT) {
         }
     }
 }
+
+template <utils::MatrixType M>
+inline Matrix<typename M::ElemType> GetTruncSingular(const M &S_full) {
+    using T = typename M::ElemType;
+
+    IndexType zero_idx = 0;
+    for (zero_idx = 0; zero_idx < std::min(S_full.Rows(), S_full.Columns());
+         ++zero_idx) {
+        if (utils::IsZeroFloating(S_full(zero_idx, zero_idx)))
+            break;
+    }
+
+    Matrix<T> S(1, zero_idx);
+    for (IndexType i = 0; i < zero_idx; ++i) {
+        S(0, i) = S_full(i, i);
+    }
+
+    return S;
+}
 } // namespace details
 
 template <utils::MatrixType M>
@@ -73,20 +92,20 @@ inline details::SingularBasis<typename M::ElemType> SVD(const M &matrix) {
     if (matrix.Rows() < matrix.Columns()) {
         auto [U, S, VT] = SVD(Matrix<typename M::ElemType>::Transposed(matrix));
         U.Transpose();
-        S.Transpose();
         VT.Transpose();
         return {std::move(VT), std::move(S), std::move(U)};
     }
 
     auto [U1, B, VT1] = Bidiagonalize(matrix);
-    auto [U2, S, VT2] = BidiagAlgorithmQR(B);
+    auto [U2, S_full, VT2] = BidiagAlgorithmQR(B);
 
     auto VT = VT2 * VT1;
     auto U = U1 * U2;
 
-    details::ToPositiveSingular(S, VT);
-    details::SortSingular(U, S, VT);
+    details::ToPositiveSingular(S_full, VT);
+    details::SortSingular(U, S_full, VT);
 
+    auto S = details::GetTruncSingular(S_full);
     return {std::move(U), std::move(S), std::move(VT)};
 }
 } // namespace matrix_lib::algorithms
