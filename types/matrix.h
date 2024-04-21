@@ -278,20 +278,31 @@ public:
         return res;
     }
 
-    static Matrix Diagonal(const Matrix &vec) {
-        return Diagonal(vec.View());
+    static Matrix Diagonal(const Matrix &vec, IndexType row = -1,
+                           IndexType col = -1) {
+        return Diagonal(vec.View(), row, col);
     }
 
-    static Matrix Diagonal(const MatrixView<T> &vec) {
-        return Diagonal(vec.ConstView());
+    static Matrix Diagonal(const MatrixView<T> &vec, IndexType row = -1,
+                           IndexType col = -1) {
+        return Diagonal(vec.ConstView(), row, col);
     }
 
-    static Matrix Diagonal(const ConstMatrixView<T> &vec) {
+    static Matrix Diagonal(const ConstMatrixView<T> &vec, IndexType row = -1,
+                           IndexType col = -1) {
         assert(vec.Rows() == 1 ||
                vec.Columns() == 1 &&
                    "Creating a diagonal matrix for vectors only.");
 
-        Matrix<T> res(std::max(vec.Rows(), vec.Columns()));
+        if (row == -1) {
+            row = std::max(vec.Rows(), vec.Columns());
+        }
+
+        if (col == -1) {
+            col = std::max(vec.Rows(), vec.Columns());
+        }
+
+        Matrix<T> res(row, col);
         vec.ForEach([&](const T &val, IndexType i, IndexType j) {
             auto idx = std::max(i, j);
             res(idx, idx) = val;
