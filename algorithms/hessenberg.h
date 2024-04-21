@@ -25,14 +25,13 @@ GetHessenbergForm(const M &matrix) {
     Matrix<T> Q = Matrix<T>::Identity(matrix.Rows());
     Matrix<T> H = matrix;
 
-    for (IndexType col = 0; col < std::min(matrix.Rows(), matrix.Columns()) - 2;
-         ++col) {
+    for (IndexType col = 0; col < matrix.Rows() - 2; ++col) {
         Matrix<T> vec = H.GetSubmatrix({col + 1, H.Rows()}, {col, col + 1});
         HouseholderReduction(vec);
 
         HouseholderLeftReflection(Q, vec, col + 1);
         HouseholderLeftReflection(H, vec, col + 1, col);
-        HouseholderRightReflection(H, vec.Conjugate(), col + 1, col);
+        HouseholderRightReflection(H, vec.Conjugate(), col + 1, 0);
     }
 
     Q.Conjugate();
