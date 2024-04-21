@@ -45,24 +45,6 @@ inline bool IsUnitary(const M &matrix) {
 }
 
 template <utils::MatrixType M>
-inline bool IsHermitian(const M &matrix) {
-    if (!IsSquare(matrix)) {
-        return false;
-    }
-
-    for (IndexType i = 1; i < matrix.Rows(); ++i) {
-        for (IndexType j = 0; j < i; ++j) {
-            if (!utils::IsEqualFloating(matrix(i, j),
-                                        std::conj(matrix(j, i)))) {
-                return false;
-            }
-        }
-    }
-
-    return true;
-}
-
-template <utils::MatrixType M>
 inline bool IsSymmetric(const M &matrix) {
     if (!IsSquare(matrix)) {
         return false;
@@ -74,6 +56,28 @@ inline bool IsSymmetric(const M &matrix) {
                 return false;
             }
         }
+    }
+
+    return true;
+}
+
+template <utils::MatrixType M>
+inline bool IsHermitian(const M &matrix) {
+    if (!IsSquare(matrix)) {
+        return false;
+    }
+
+    if constexpr (details::IsFloatComplexT<typename M::ElemType>::value) {
+        for (IndexType i = 0; i < matrix.Rows(); ++i) {
+            for (IndexType j = 0; j <= i; ++j) {
+                if (!utils::IsEqualFloating(matrix(i, j),
+                                            std::conj(matrix(j, i)))) {
+                    return false;
+                }
+            }
+        }
+    } else {
+        return IsSymmetric(matrix);
     }
 
     return true;
