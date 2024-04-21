@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <limits>
+#include <iostream>
 
 namespace matrix_lib::utils {
 namespace details {
@@ -19,7 +20,7 @@ struct TypeEpsilon<double> {
 
 template <>
 struct TypeEpsilon<long double> {
-    static constexpr double kValue = 1e-15;
+    static constexpr long double kValue = 1e-15;
 };
 
 template <typename T>
@@ -38,11 +39,11 @@ inline bool IsEqualFloating(T lhs, T rhs, T eps = T{-1}) {
     }
 
     if constexpr (details::IsFloatComplexT<T>::value) {
-        auto is_equal_real = std::abs(lhs.real() - rhs.real()) < eps.real();
-        auto is_equal_imag = std::abs(lhs.imag() - rhs.imag()) < eps.real();
+        auto is_equal_real = std::abs(std::abs(lhs.real()) - std::abs(rhs.real())) < eps.real();
+        auto is_equal_imag = std::abs(std::abs(lhs.imag()) - std::abs(rhs.imag())) < eps.real();
         return is_equal_real && is_equal_imag;
     } else {
-        return std::abs(lhs - rhs) < eps;
+        return std::abs(std::abs(lhs) - std::abs(rhs)) < eps;
     }
 }
 
