@@ -290,6 +290,10 @@ public:
 
     static Matrix Diagonal(const ConstMatrixView<T> &vec, IndexType row = -1,
                            IndexType col = -1) {
+        if (vec.Rows() == 0) {
+            return Matrix{};
+        }
+
         assert(vec.Rows() == 1 ||
                vec.Columns() == 1 &&
                    "Creating a diagonal matrix for vectors only.");
