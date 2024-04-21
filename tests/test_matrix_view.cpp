@@ -257,7 +257,10 @@ TEST(TEST_MATRIX_VIEW, Normalize) {
     auto col = matrix.GetColumn(0);
     col.Normalize();
 
-    auto res = Matrix<Type>({{0.5, 1., 1., 1.}, {0.5, 1., 1., 1.}, {0.5, 1., 1., 1.}, {0.5, 1., 1., 1.}});
+    auto res = Matrix<Type>({{0.5, 1., 1., 1.},
+                             {0.5, 1., 1., 1.},
+                             {0.5, 1., 1., 1.},
+                             {0.5, 1., 1., 1.}});
 
     EXPECT_TRUE(col.GetEuclideanNorm() == 1);
     EXPECT_TRUE(matrix == res);
@@ -281,85 +284,87 @@ std::pair<int32_t, int32_t> GetMinMaxSize(int32_t first, int32_t second) {
 }
 
 TEST(TEST_MATRIX_VIEW, Stress) {
-        using Type = std::complex<long double>;
-        using MatrixGenerator = RandomMatrixGenerator<Type>;
+    using Type = std::complex<long double>;
+    using MatrixGenerator = RandomMatrixGenerator<Type>;
 
-        const size_t it_count = 100u;
+    const size_t it_count = 100u;
 
-        for (int32_t seed = 1; seed < 10; ++seed) {
-            MatrixGenerator gen(seed);
+    for (int32_t seed = 1; seed < 10; ++seed) {
+        MatrixGenerator gen(seed);
 
-            for (size_t it = 0; it < it_count; ++it) {
-                auto [v_row, m_row] = GetMinMaxSize(gen.GetRandomMatrixSize() + 1, gen.GetRandomMatrixSize() + 1);
-                auto [v_col, m_col] = GetMinMaxSize(gen.GetRandomMatrixSize() + 1, gen.GetRandomMatrixSize() + 1);
+        for (size_t it = 0; it < it_count; ++it) {
+            auto [v_row, m_row] = GetMinMaxSize(gen.GetRandomMatrixSize() + 1,
+                                                gen.GetRandomMatrixSize() + 1);
+            auto [v_col, m_col] = GetMinMaxSize(gen.GetRandomMatrixSize() + 1,
+                                                gen.GetRandomMatrixSize() + 1);
 
-                if (v_row == m_row || v_col == m_col) {
-                    continue;
-                }
+            if (v_row == m_row || v_col == m_col) {
+                continue;
+            }
 
-                auto id = it % 4;
-                if (id == 0) {
-                    auto m1 = gen.GetRandomMatrix(m_row, m_col);
-                    auto m2 = gen.GetRandomMatrix(m_row, m_col);
+            auto id = it % 4;
+            if (id == 0) {
+                auto m1 = gen.GetRandomMatrix(m_row, m_col);
+                auto m2 = gen.GetRandomMatrix(m_row, m_col);
 
-                    auto v1 = m1.GetSubmatrix({0, v_row}, {0, v_col});
-                    auto v2 = m2.GetSubmatrix({0, v_row}, {0, v_col});
+                auto v1 = m1.GetSubmatrix({0, v_row}, {0, v_col});
+                auto v2 = m2.GetSubmatrix({0, v_row}, {0, v_col});
 
-                    auto m3 = v1 + v2;
-                    v1 += v2;
+                auto m3 = v1 + v2;
+                v1 += v2;
 
-                    auto v3 = m3.GetRow(0);
-                    auto v4 = v1.GetRow(0);
-                    v3 += v4;
-                } else if (id == 1) {
-                    auto m1 = gen.GetRandomMatrix(m_row, m_col);
-                    auto m2 = gen.GetRandomMatrix(m_row, m_col);
+                auto v3 = m3.GetRow(0);
+                auto v4 = v1.GetRow(0);
+                v3 += v4;
+            } else if (id == 1) {
+                auto m1 = gen.GetRandomMatrix(m_row, m_col);
+                auto m2 = gen.GetRandomMatrix(m_row, m_col);
 
-                    auto v1 = m1.GetSubmatrix({0, v_row}, {0, v_col});
-                    auto v2 = m2.GetSubmatrix({0, v_row}, {0, v_col});
+                auto v1 = m1.GetSubmatrix({0, v_row}, {0, v_col});
+                auto v2 = m2.GetSubmatrix({0, v_row}, {0, v_col});
 
-                    auto m3 = v1 - v2;
-                    v1 -= v2;
+                auto m3 = v1 - v2;
+                v1 -= v2;
 
-                    auto v3 = m3.GetRow(0);
-                    auto v4 = v1.GetRow(0);
-                    v3 -= v4;
-                } else if (id == 2) {
-                    auto size = std::max(m_row, m_col);
-                    auto scalar = gen.GetRandomTypeNumber();
+                auto v3 = m3.GetRow(0);
+                auto v4 = v1.GetRow(0);
+                v3 -= v4;
+            } else if (id == 2) {
+                auto size = std::max(m_row, m_col);
+                auto scalar = gen.GetRandomTypeNumber();
 
-                    auto m1 = gen.GetRandomMatrix(size, size);
-                    auto m2 = gen.GetRandomMatrix(size, size);
+                auto m1 = gen.GetRandomMatrix(size, size);
+                auto m2 = gen.GetRandomMatrix(size, size);
 
-                    auto v1 = m1.GetSubmatrix({0, v_row}, {0, v_col});
-                    auto v2 = m1.GetSubmatrix({0, v_col}, {0, v_row});
+                auto v1 = m1.GetSubmatrix({0, v_row}, {0, v_col});
+                auto v2 = m1.GetSubmatrix({0, v_col}, {0, v_row});
 
-                    auto m3 = v1 * v2;
-                    v2 /= scalar;
+                auto m3 = v1 * v2;
+                v2 /= scalar;
 
-                    auto m4 = gen.GetRandomMatrix(v_col, v_col);
-                    v1 *= m4;
-                    v1 *= scalar;
-                } else if (id == 3) {
-                    auto size = std::max(m_row, m_col);
-                    auto scalar = gen.GetRandomTypeNumber();
+                auto m4 = gen.GetRandomMatrix(v_col, v_col);
+                v1 *= m4;
+                v1 *= scalar;
+            } else if (id == 3) {
+                auto size = std::max(m_row, m_col);
+                auto scalar = gen.GetRandomTypeNumber();
 
-                    auto m1 = gen.GetRandomMatrix(size, size);
-                    auto m2 = gen.GetRandomMatrix(size, size);
+                auto m1 = gen.GetRandomMatrix(size, size);
+                auto m2 = gen.GetRandomMatrix(size, size);
 
-                    auto v1 = m1.GetSubmatrix({0, v_row}, {0, v_col});
-                    auto v2 = m1.GetSubmatrix({0, v_row}, {0, v_col});
-                    v1.Conjugate();
+                auto v1 = m1.GetSubmatrix({0, v_row}, {0, v_col});
+                auto v2 = m1.GetSubmatrix({0, v_row}, {0, v_col});
+                v1.Conjugate();
 
-                    auto m3 = v1 * v2;
-                    v2 /= scalar;
+                auto m3 = v1 * v2;
+                v2 /= scalar;
 
-                    auto m4 = gen.GetRandomMatrix(v_col, v_col);
-                    v1.Transpose();
-                    v1 *= m4;
-                    v1 *= scalar;
-                }
+                auto m4 = gen.GetRandomMatrix(v_col, v_col);
+                v1.Transpose();
+                v1 *= m4;
+                v1 *= scalar;
             }
         }
+    }
 }
 } // namespace
