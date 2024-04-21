@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../types/matrix.h"
+#include "../utils/is_float_complex.h"
 
 #include <random>
 
@@ -9,22 +10,25 @@ template <typename T>
 class RandomMatrixGenerator {
     using IntDistribution = std::uniform_int_distribution<int32_t>;
 
-    struct MatrixPair {
-        Matrix<T> left;
-        Matrix<T> right;
-    };
-
 public:
-    explicit RandomMatrixGenerator(int32_t seed, int32_t matrix_min_size = 0,
-                                   int32_t matrix_max_size = 100,
-                                   int32_t value_from = -100,
-                                   int32_t value_to = 100)
-        : rng_(seed), rd_number_(value_from, value_to),
-          rd_matrix_size_(matrix_min_size, matrix_max_size) {
+    explicit RandomMatrixGenerator(int32_t seed)
+        : rng_(seed), rd_number_(kNumberFrom, kNumberTo),
+          rd_matrix_size_(kMatrixMinSize, kMatrixMaxSize) {
     }
 
-    int32_t GetRandomValue() {
+    int32_t GetRandomInt() {
         return rd_number_(rng_);
+    }
+
+    T GetRandomTypeNumber() {
+        if constexpr (utils::details::IsFloatComplexT<T>::value) {
+            using F = T::value_type;
+            auto real = static_cast<F>(GetRandomInt());
+            auto imag = static_cast<F>(GetRandomInt());
+            return {real, imag};
+        }
+
+        return static_cast<T>(GetRandomInt());
     }
 
     int32_t GetRandomMatrixSize() {
@@ -33,24 +37,16 @@ public:
 
     Matrix<T> GetRandomMatrix(int32_t row, int32_t col) {
         Matrix<T> result(row, col);
-        result.ApplyForEach([&](T &val) { val = GetRandomValue(); });
+        result.ApplyForEach([&](T &val) { val = GetRandomTypeNumber(); });
         return result;
     }
 
-    MatrixPair GetSquareMatrices() {
-        auto size = GetRandomMatrixSize();
-        return {GetRandomMatrix(size, size), GetRandomMatrix(size, size)};
-    }
-
-    MatrixPair GetRectangleMatrices() {
-        auto col_row = GetRandomMatrixSize();
-        auto m1_row = GetRandomMatrixSize();
-        auto m2_col = GetRandomMatrixSize();
-        return {GetRandomMatrix(m1_row, col_row),
-                GetRandomMatrix(col_row, m2_col)};
-    }
-
 private:
+    static constexpr int32_t kMatrixMinSize = 0;
+    static constexpr int32_t kMatrixMaxSize = 100;
+    static constexpr int32_t kNumberFrom = -100;
+    static constexpr int32_t kNumberTo = 100;
+
     std::mt19937 rng_;
     IntDistribution rd_number_;
     IntDistribution rd_matrix_size_;
