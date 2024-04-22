@@ -7,7 +7,6 @@
 #include "givens.h"
 #include "qr_decomposition.h"
 #include "wilkinson.h"
-#include <iostream>
 
 namespace matrix_lib::algorithms {
 namespace details {
@@ -21,16 +20,15 @@ struct DiagBasisQR {
 
 template <utils::MatrixType M>
 inline details::DiagBasisQR<typename M::ElemType>
-BidiagAlgorithmQR(const M &B, IndexType it_cnt = 100);
+BidiagAlgorithmQR(const M &B, IndexType it_cnt = 10);
 
 namespace details {
 template <utils::MatrixType M>
 inline typename M::ElemType GetBidiagThreshold(const M &matrix) {
     using T = typename M::ElemType;
-    auto size = std::min(matrix.Rows(), matrix.Columns() - 1);
 
     long double threshold = 0;
-    for (IndexType i = 0; i < size; ++i) {
+    for (IndexType i = 0; i < matrix.Columns() - 1; ++i) {
         long double abs_sum =
             std::abs(matrix(i, i)) + std::abs(matrix(i, i + 1));
         threshold = std::max(threshold, abs_sum);
@@ -71,23 +69,17 @@ CancellationBidiagQR(M &D, M &U, IndexType idx) {
 template <utils::MutableMatrixType M>
 inline void StepBidiagQR(M &U, M &D, M &VT) {
     using T = typename M::ElemType;
+    T shift = GetBidiagWilkinsonShift(D);
 
-    auto size = std::min(D.Rows(), D.Columns());
-    T shift = T{0};
+    for (IndexType i = 0; i < D.Columns() - 1; ++i) {
+        auto f_elem = (i > 0) ? D(i - 1, i) : D(0, 0) * D(0, 0) - shift;
+        auto s_elem = (i > 0) ? D(i - 1, i + 1) : D(0, 1) * D(0, 0);
 
-    for (IndexType i = 0; i < size; ++i) {
-        if (i + 1 < D.Columns()) {
-            auto f_elem = (i > 0) ? D(i - 1, i) : D(0, 0) * D(0, 0) - shift;
-            auto s_elem = (i > 0) ? D(i - 1, i + 1) : D(0, 1) * D(0, 0);
+        GivensLeftRotation(VT, i, i + 1, f_elem, s_elem);
+        GivensRightRotation(D, i, i + 1, f_elem, s_elem);
 
-            GivensRightRotation(VT, i, i + 1, f_elem, s_elem);
-            GivensRightRotation(D, i, i + 1, f_elem, s_elem);
-        }
-
-        if (i + 1 < D.Rows()) {
-            GivensLeftRotation(U, i, i + 1, D(i, i), D(i + 1, i));
-            GivensLeftRotation(D, i, i + 1, D(i, i), D(i + 1, i));
-        }
+        GivensRightRotation(U, i, i + 1, D(i, i), D(i + 1, i));
+        GivensLeftRotation(D, i, i + 1, D(i, i), D(i + 1, i));
     }
 }
 } // namespace details
@@ -101,31 +93,39 @@ BidiagAlgorithmQR(const M &B, IndexType it_cnt) {
     Matrix<T> U = Matrix<T>::Identity(D.Rows());
     Matrix<T> VT = Matrix<T>::Identity(D.Columns());
 
-    if (D.Columns() == 1) {
+    if (D.Columns() <= 1) {
         return {std::move(U), std::move(D), std::move(VT)};
-    }
-
-    auto threshold = details::GetBidiagThreshold(D);
-    auto eps = utils::Eps<T> * threshold;
-
-    for (IndexType i = 0; i < std::min(D.Rows(), D.Columns() - 1); ++i) {
-        if (std::abs(D(i, i + 1)) < eps && std::abs(D(i, i)) >= eps) {
-            return details::SplitBidiagQR(D, i);
-        }
-
-        if (std::abs(D(i, i)) < eps) {
-            return details::CancellationBidiagQR(D, U, i);
-        }
     }
 
     it_cnt *= D.Columns();
     while (--it_cnt) {
+        auto threshold = details::GetBidiagThreshold(D);
+        auto eps = utils::Eps<T> * threshold;
+
+        if (utils::IsDiagonal(D, eps)) {
+            break;
+        }
+
+        for (IndexType i = 0; i < D.Columns() - 1; ++i) {
+            if (std::abs(D(i, i)) <= eps) {
+                auto [Uc, Sc, VTc] = details::CancellationBidiagQR(D, U, i);
+                Sc.RoundZeroes(eps);
+                return {std::move(Uc), std::move(Sc), std::move(VTc * VT)};
+            }
+        }
+
+        for (IndexType i = 0; i < std::min(D.Rows(), D.Columns() - 1); ++i) {
+            if (std::abs(D(i, i + 1)) <= eps) {
+                auto [U_split, S_split, VT_split] = details::SplitBidiagQR(D, i);
+                S_split.RoundZeroes();
+                return {std::move(U * U_split), std::move(S_split), std::move(VT_split * VT)};
+            }
+        }
+
         details::StepBidiagQR(U, D, VT);
         D.RoundZeroes(eps);
     }
 
-    U.Transpose();
-    VT.Transpose();
     return {std::move(U), std::move(D), std::move(VT)};
 }
 } // namespace matrix_lib::algorithms
