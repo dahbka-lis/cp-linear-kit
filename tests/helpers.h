@@ -54,7 +54,7 @@ public:
 
 private:
     static constexpr int32_t kMatrixMinSize = 0;
-    static constexpr int32_t kMatrixMaxSize = 100;
+    static constexpr int32_t kMatrixMaxSize = 50;
     static constexpr int32_t kNumberFrom = -100;
     static constexpr int32_t kNumberTo = 100;
 
