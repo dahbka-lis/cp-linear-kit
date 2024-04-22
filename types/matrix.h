@@ -195,7 +195,7 @@ public:
         return *this;
     }
 
-    Matrix &RoundZeroes(T eps = T{-1}) {
+    Matrix &RoundZeroes(T eps = T{0}) {
         View().RoundZeroes(eps);
         return *this;
     }

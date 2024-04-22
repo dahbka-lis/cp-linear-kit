@@ -160,13 +160,22 @@ public:
         return *this;
     }
 
-    MatrixView<T> &RoundZeroes(T eps = T{-1}) {
-        if (eps == T{-1}) {
-            eps = utils::Eps<T>;
-        }
+    MatrixView<T> &RoundZeroes(T eps = T{0}) {
+        ApplyForEach([&](T &el) {
+            if constexpr (utils::details::IsFloatComplexT<T>::value) {
+                using F = T::value_type;
 
-        ApplyForEach(
-            [&](T &el) { el = (utils::IsZeroFloating(el, eps)) ? T{0} : el; });
+                auto real = (utils::IsZeroFloating(el.real(), eps.real()))
+                                ? F{0}
+                                : el.real();
+                auto imag = (utils::IsZeroFloating(el.imag(), eps.real()))
+                                ? F{0}
+                                : el.imag();
+                el = T{real, imag};
+            } else {
+                el = (utils::IsZeroFloating(el, eps)) ? T{0} : el;
+            }
+        });
         return *this;
     }
 
