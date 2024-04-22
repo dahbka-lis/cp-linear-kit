@@ -116,9 +116,11 @@ BidiagAlgorithmQR(const M &B, IndexType it_cnt) {
 
         for (IndexType i = 0; i < std::min(D.Rows(), D.Columns() - 1); ++i) {
             if (std::abs(D(i, i + 1)) <= eps) {
-                auto [U_split, S_split, VT_split] = details::SplitBidiagQR(D, i);
+                auto [U_split, S_split, VT_split] =
+                    details::SplitBidiagQR(D, i);
                 S_split.RoundZeroes();
-                return {std::move(U * U_split), std::move(S_split), std::move(VT_split * VT)};
+                return {std::move(U * U_split), std::move(S_split),
+                        std::move(VT_split * VT)};
             }
         }
 
