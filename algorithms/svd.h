@@ -1,7 +1,7 @@
 #pragma once
 
 #include "bidiagonalization.h"
-#include "qr_algorithm.h"
+#include "qr_algorithm_bidiag.h"
 
 namespace matrix_lib::algorithms {
 namespace details {
@@ -17,7 +17,7 @@ inline void ToPositiveSingular(M &S, M &VT) {
     using T = typename M::ElemType;
 
     for (IndexType i = 0; i < std::min(S.Rows(), S.Columns()); ++i) {
-        if (!utils::IsZeroFloating(S(i, i)))
+        if (S(i, i) >= 0)
             continue;
 
         S(i, i) *= -1;
@@ -63,25 +63,6 @@ inline void SortSingular(M &U, M &S, M &VT) {
         }
     }
 }
-
-template <utils::MatrixType M>
-inline Matrix<typename M::ElemType> GetTruncSingular(const M &S_full) {
-    using T = typename M::ElemType;
-
-    IndexType zero_idx = 0;
-    for (zero_idx = 0; zero_idx < std::min(S_full.Rows(), S_full.Columns());
-         ++zero_idx) {
-        if (utils::IsZeroFloating(S_full(zero_idx, zero_idx)))
-            break;
-    }
-
-    Matrix<T> S(1, zero_idx);
-    for (IndexType i = 0; i < zero_idx; ++i) {
-        S(0, i) = S_full(i, i);
-    }
-
-    return S;
-}
 } // namespace details
 
 template <utils::MatrixType M>
@@ -93,6 +74,7 @@ inline details::SingularBasis<typename M::ElemType> SVD(const M &matrix) {
         auto [U, S, VT] = SVD(Matrix<typename M::ElemType>::Transposed(matrix));
         U.Transpose();
         VT.Transpose();
+        S.Transpose();
         return {std::move(VT), std::move(S), std::move(U)};
     }
 
@@ -104,8 +86,6 @@ inline details::SingularBasis<typename M::ElemType> SVD(const M &matrix) {
 
     details::ToPositiveSingular(S_full, VT);
     details::SortSingular(U, S_full, VT);
-
-    auto S = details::GetTruncSingular(S_full);
-    return {std::move(U), std::move(S), std::move(VT)};
+    return {std::move(U), std::move(S_full), std::move(VT)};
 }
 } // namespace matrix_lib::algorithms
