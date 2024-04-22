@@ -18,13 +18,11 @@ using matrix_lib::tests::RandomMatrixGenerator;
 template <MatrixType M, MatrixType F, MatrixType L, MatrixType K>
 void CheckSVD(const M &matrix, const F &U, const L &S, const K &VT) {
     using T = typename M::ElemType;
+    auto eps = 1e-10l;
 
-    auto coefficient = T(U.Rows() + VT.Columns()) * 100;
-    auto new_eps = std::max(coefficient * Eps<T>, T{1e-10});
-
-    EXPECT_TRUE(IsUnitary(U, new_eps));
-    EXPECT_TRUE(IsUnitary(VT, new_eps));
-    EXPECT_TRUE(AreEqualMatrices(matrix, U * S * VT, new_eps));
+    EXPECT_TRUE(IsUnitary(U, eps));
+    EXPECT_TRUE(IsUnitary(VT, eps));
+    EXPECT_TRUE(AreEqualMatrices(matrix, U * S * VT, eps));
 }
 
 RandomMatrixGenerator<long double> generator(91348);
@@ -98,7 +96,7 @@ TEST(TEST_SVD, SVDView) {
 }
 
 TEST(TEST_SVD, Stress) {
-    using Type = long double;
+    using Type = Complex<long double>;
     using MatrixGenerator = RandomMatrixGenerator<Type>;
     using Matrix = Matrix<Type>;
 
