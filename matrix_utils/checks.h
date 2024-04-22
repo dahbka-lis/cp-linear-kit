@@ -33,7 +33,8 @@ inline bool IsSquare(const M &matrix) {
 }
 
 template <utils::MatrixType M>
-inline bool IsUnitary(const M &matrix, typename M::ElemType eps = typename M::ElemType{0}) {
+inline bool IsUnitary(const M &matrix,
+                      typename M::ElemType eps = typename M::ElemType{0}) {
     using T = M::ElemType;
 
     if (!IsSquare(matrix)) {
@@ -51,7 +52,8 @@ inline bool IsUnitary(const M &matrix, typename M::ElemType eps = typename M::El
 }
 
 template <utils::MatrixType M>
-inline bool IsSymmetric(const M &matrix, typename M::ElemType eps = typename M::ElemType{0}) {
+inline bool IsSymmetric(const M &matrix,
+                        typename M::ElemType eps = typename M::ElemType{0}) {
     if (!IsSquare(matrix)) {
         return false;
     }
@@ -68,7 +70,8 @@ inline bool IsSymmetric(const M &matrix, typename M::ElemType eps = typename M::
 }
 
 template <utils::MatrixType M>
-inline bool IsHermitian(const M &matrix, typename M::ElemType eps = typename M::ElemType{0}) {
+inline bool IsHermitian(const M &matrix,
+                        typename M::ElemType eps = typename M::ElemType{0}) {
     if (!IsSquare(matrix)) {
         return false;
     }
@@ -90,7 +93,8 @@ inline bool IsHermitian(const M &matrix, typename M::ElemType eps = typename M::
 }
 
 template <utils::MatrixType M>
-inline bool IsNormal(const M &matrix, typename M::ElemType eps = typename M::ElemType{0}) {
+inline bool IsNormal(const M &matrix,
+                     typename M::ElemType eps = typename M::ElemType{0}) {
     using T = M::ElemType;
 
     auto m1 = matrix * Matrix<T>::Conjugated(matrix);
@@ -99,7 +103,9 @@ inline bool IsNormal(const M &matrix, typename M::ElemType eps = typename M::Ele
 }
 
 template <utils::MatrixType M>
-inline bool IsUpperTriangular(const M &matrix, typename M::ElemType eps = typename M::ElemType{0}) {
+inline bool
+IsUpperTriangular(const M &matrix,
+                  typename M::ElemType eps = typename M::ElemType{0}) {
     for (IndexType i = 1; i < matrix.Rows(); ++i) {
         for (IndexType j = 0; j < std::min(i, matrix.Columns()); ++j) {
             if (!utils::IsZeroFloating(matrix(i, j), eps)) {
@@ -112,7 +118,8 @@ inline bool IsUpperTriangular(const M &matrix, typename M::ElemType eps = typena
 }
 
 template <utils::MatrixType M>
-inline bool IsDiagonal(const M &matrix, typename M::ElemType eps = typename M::ElemType{0}) {
+inline bool IsDiagonal(const M &matrix,
+                       typename M::ElemType eps = typename M::ElemType{0}) {
     for (IndexType i = 0; i < matrix.Rows(); ++i) {
         for (IndexType j = 0; j < matrix.Columns(); ++j) {
             if (i != j && !utils::IsZeroFloating(matrix(i, j), eps)) {
@@ -125,10 +132,12 @@ inline bool IsDiagonal(const M &matrix, typename M::ElemType eps = typename M::E
 }
 
 template <utils::MatrixType M>
-inline bool IsBidiagonal(const M &matrix, typename M::ElemType eps = typename M::ElemType{0}) {
+inline bool IsBidiagonal(const M &matrix,
+                         typename M::ElemType eps = typename M::ElemType{0}) {
     for (IndexType i = 0; i < matrix.Rows(); ++i) {
         for (IndexType j = 0; j < matrix.Columns(); ++j) {
-            if (i != j && i + 1 != j && !utils::IsZeroFloating(matrix(i, j), eps)) {
+            if (i != j && i + 1 != j &&
+                !utils::IsZeroFloating(matrix(i, j), eps)) {
                 return false;
             }
         }
@@ -138,7 +147,8 @@ inline bool IsBidiagonal(const M &matrix, typename M::ElemType eps = typename M:
 }
 
 template <utils::MatrixType M>
-inline bool IsHessenberg(const M &matrix, typename M::ElemType eps = typename M::ElemType{0}) {
+inline bool IsHessenberg(const M &matrix,
+                         typename M::ElemType eps = typename M::ElemType{0}) {
     for (IndexType i = 2; i < matrix.Rows(); ++i) {
         for (IndexType j = 0; j < i - 1; ++j) {
             if (!utils::IsZeroFloating(matrix(i, j), eps)) {
