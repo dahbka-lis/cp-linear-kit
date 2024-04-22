@@ -26,6 +26,7 @@ inline void HouseholderLeftReflection(M &matrix, const V &vec,
     MatrixView<T> sub =
         matrix.GetSubmatrix({row, row + vec.Rows()}, {c_from, c_to});
     sub -= (T{2} * vec) * (Matrix<T>::Conjugated(vec) * sub);
+    sub.RoundZeroes();
 }
 
 template <utils::MutableMatrixType M, utils::MatrixType V>
@@ -41,5 +42,6 @@ inline void HouseholderRightReflection(M &matrix, const V &vec,
     MatrixView<T> sub =
         matrix.GetSubmatrix({r_from, r_to}, {col, col + vec.Columns()});
     sub -= (sub * Matrix<T>::Conjugated(vec)) * (T{2} * vec);
+    sub.RoundZeroes();
 }
 } // namespace matrix_lib::algorithms
