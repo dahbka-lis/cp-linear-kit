@@ -16,14 +16,14 @@ inline typename M::ElemType GetWilkinsonShift(const M &matrix,
 
     assert(end_idx >= 2 && end_idx <= matrix.Rows() && "Wrong end index.");
 
-    auto d =
+    auto delta =
         (matrix(end_idx - 2, end_idx - 2) - matrix(end_idx - 1, end_idx - 1)) /
         T{2};
-    auto tmp =
-        matrix(end_idx - 1, end_idx - 2) * matrix(end_idx - 1, end_idx - 2);
-    auto coefficient = d + utils::Sign(d) * std::sqrt(d * d + tmp);
-
-    return matrix(end_idx - 1, end_idx - 1) - tmp / coefficient;
+    auto b_square =
+        matrix(end_idx - 1, end_idx - 2) * matrix(end_idx - 2, end_idx - 1);
+    auto coefficient = std::abs(delta) + std::sqrt(delta * delta + b_square);
+    return matrix(end_idx - 1, end_idx - 1) -
+           utils::Sign(delta) * b_square / coefficient;
 }
 
 template <utils::MatrixType M>
@@ -35,7 +35,7 @@ inline typename M::ElemType GetBidiagWilkinsonShift(const M &S) {
     Matrix<T> S_gram =
         S.GetSubmatrix({sub_idx - 2, sub_idx}, {sub_idx - 2, sub_idx});
 
-    S_gram.Conjugate();
+    S_gram.Transpose();
     S_gram *= S.GetSubmatrix({sub_idx - 2, sub_idx}, {sub_idx - 2, sub_idx});
 
     if (sub_idx >= 3) {
