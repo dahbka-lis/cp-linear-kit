@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../matrix_utils/cast_matrix.h"
 #include "bidiagonalization.h"
 #include "qr_algorithm_bidiag.h"
 
@@ -66,26 +67,31 @@ inline void SortSingular(M &U, M &S, M &VT) {
 } // namespace details
 
 template <utils::MatrixType M>
-    requires utils::details::FloatingPoint<typename M::ElemType>
 inline details::SingularBasis<typename M::ElemType> SVD(const M &matrix) {
     using T = typename M::ElemType;
 
     if (matrix.Rows() < matrix.Columns()) {
-        auto [U, S, VT] = SVD(Matrix<typename M::ElemType>::Transposed(matrix));
-        U.Transpose();
-        VT.Transpose();
+        auto [U, S, VT] = SVD(Matrix<typename M::ElemType>::Conjugated(matrix));
+        U.Conjugate();
+        VT.Conjugate();
         S.Transpose();
         return {std::move(VT), std::move(S), std::move(U)};
     }
 
     auto [U1, B, VT1] = Bidiagonalize(matrix);
-    auto [U2, S_full, VT2] = BidiagAlgorithmQR(B);
+    auto B_real = utils::CastMatrix<long double>(B);
+    auto [U_real, S_real, VT_real] = BidiagAlgorithmQR(B_real);
+
+    details::ToPositiveSingular(S_real, VT_real);
+    details::SortSingular(U_real, S_real, VT_real);
+
+    auto S = utils::CastMatrix<T>(S_real);
+    auto U2 = utils::CastMatrix<T>(U_real);
+    auto VT2 = utils::CastMatrix<T>(VT_real);
 
     auto VT = VT2 * VT1;
     auto U = U1 * U2;
 
-    details::ToPositiveSingular(S_full, VT);
-    details::SortSingular(U, S_full, VT);
-    return {std::move(U), std::move(S_full), std::move(VT)};
+    return {std::move(U), std::move(S), std::move(VT)};
 }
 } // namespace matrix_lib::algorithms
