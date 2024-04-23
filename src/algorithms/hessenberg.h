@@ -19,7 +19,8 @@ inline Details::HessenbergBasis<typename M::ElemType>
 GetHessenbergForm(const M &matrix) {
     using T = typename M::ElemType;
 
-    assert(MatrixUtils::IsSquare(matrix) && "Hessenberg form for square matrices");
+    assert(MatrixUtils::IsSquare(matrix) &&
+           "Hessenberg form for square matrices");
 
     Matrix<T> Q = Matrix<T>::Identity(matrix.Rows());
     Matrix<T> H = matrix;

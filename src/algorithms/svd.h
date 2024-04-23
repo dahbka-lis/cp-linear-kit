@@ -1,8 +1,8 @@
 #pragma once
 
+#include "../matrix_utils/cast_matrix.h"
 #include "bidiagonalization.h"
 #include "qr_algorithm_bidiag.h"
-#include "../matrix_utils/cast_matrix.h"
 
 namespace LinearKit::Algorithm {
 namespace Details {

@@ -26,4 +26,4 @@ Matrix<typename M::ElemType> Join(const M &first, const M &second) {
 
     return result;
 }
-} // namespace LinearKit::Utils
+} // namespace LinearKit::MatrixUtils

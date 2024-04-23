@@ -28,4 +28,4 @@ Details::SplitPair<typename M::ElemType> Split(const M &matrix, IndexType row,
 
     return {first, second};
 }
-} // namespace LinearKit::Utils
+} // namespace LinearKit::MatrixUtils
