@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../algorithms/qr_algorithm.h"
-#include "../matrix_utils/checks.h"
+#include "../src/algorithms/qr_algorithm.h"
 #include "helpers.h"
 
 namespace {

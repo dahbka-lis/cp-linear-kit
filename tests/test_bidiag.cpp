@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "../algorithms/bidiagonalization.h"
-#include "../matrix_utils/checks.h"
+#include "../src/algorithms/bidiagonalization.h"
+#include "../src/matrix_utils/checks.h"
 #include "helpers.h"
 
 namespace {

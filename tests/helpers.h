@@ -1,7 +1,6 @@
 #pragma once
 
-#include "../types/matrix.h"
-#include "../utils/is_float_complex.h"
+#include "../src/types/matrix.h"
 
 #include <random>
 

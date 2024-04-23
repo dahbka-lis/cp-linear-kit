@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../algorithms/svd.h"
+#include "../src/algorithms/svd.h"
 #include "helpers.h"
 
 namespace {
