@@ -39,12 +39,12 @@ inline bool IsEqualFloating(T lhs, T rhs, T eps = T{0}) {
 
     if constexpr (details::IsFloatComplexT<T>::value) {
         auto is_equal_real =
-            std::abs(std::abs(lhs.real()) - std::abs(rhs.real())) < eps.real();
+            std::abs(lhs.real() - rhs.real()) < eps.real();
         auto is_equal_imag =
-            std::abs(std::abs(lhs.imag()) - std::abs(rhs.imag())) < eps.real();
+            std::abs(lhs.imag() - rhs.imag()) < eps.real();
         return is_equal_real && is_equal_imag;
     } else {
-        return std::abs(std::abs(lhs) - std::abs(rhs)) < eps;
+        return std::abs(lhs - rhs) < eps;
     }
 }
 

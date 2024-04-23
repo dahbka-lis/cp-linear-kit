@@ -80,7 +80,7 @@ inline bool IsHermitian(const M &matrix,
         for (IndexType i = 0; i < matrix.Rows(); ++i) {
             for (IndexType j = 0; j <= i; ++j) {
                 if (!utils::IsEqualFloating(matrix(i, j),
-                                            std::conj(matrix(j, i), eps))) {
+                                            std::conj(matrix(j, i)), eps)) {
                     return false;
                 }
             }
