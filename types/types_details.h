@@ -7,30 +7,30 @@
 #include <functional>
 #include <utility>
 
-namespace matrix_lib {
-template <utils::FloatOrComplex T>
+namespace LinearKit {
+template <Utils::FloatOrComplex T>
 class Matrix;
 
-template <utils::FloatOrComplex T>
+template <Utils::FloatOrComplex T>
 class MatrixView;
 
-template <utils::FloatOrComplex T>
+template <Utils::FloatOrComplex T>
 class ConstMatrixView;
 
-namespace details {
+namespace Details {
 struct Types {
     using IndexType = std::ptrdiff_t;
 
-    template <utils::FloatOrComplex T>
+    template <Utils::FloatOrComplex T>
     using Function = std::function<void(T &)>;
 
-    template <utils::FloatOrComplex T>
+    template <Utils::FloatOrComplex T>
     using FunctionIndexes = std::function<void(T &, IndexType, IndexType)>;
 
-    template <utils::FloatOrComplex T>
+    template <Utils::FloatOrComplex T>
     using ConstFunction = std::function<void(const T &)>;
 
-    template <utils::FloatOrComplex T>
+    template <Utils::FloatOrComplex T>
     using ConstFunctionIndexes =
         std::function<void(const T &, IndexType, IndexType)>;
 
@@ -44,5 +44,5 @@ struct Types {
         bool is_conjugated = false;
     };
 };
-} // namespace details
-} // namespace matrix_lib
+} // namespace Details
+} // namespace LinearKit

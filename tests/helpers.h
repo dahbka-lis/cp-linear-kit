@@ -5,7 +5,7 @@
 
 #include <random>
 
-namespace matrix_lib::tests {
+namespace LinearKit::Tests {
 template <typename T>
 class RandomMatrixGenerator {
     using IntDistribution = std::uniform_int_distribution<int32_t>;
@@ -21,7 +21,7 @@ public:
     }
 
     T GetRandomTypeNumber() {
-        if constexpr (utils::details::IsFloatComplexT<T>::value) {
+        if constexpr (Utils::Details::IsFloatComplexT<T>::value) {
             using F = T::value_type;
             auto real = static_cast<F>(GetRandomInt());
             auto imag = static_cast<F>(GetRandomInt());
@@ -62,4 +62,4 @@ private:
     IntDistribution rd_number_;
     IntDistribution rd_matrix_size_;
 };
-} // namespace matrix_lib::tests
+} // namespace LinearKit::Tests

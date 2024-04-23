@@ -3,8 +3,8 @@
 #include <complex>
 #include <type_traits>
 
-namespace matrix_lib::utils {
-namespace details {
+namespace LinearKit::Utils {
+namespace Details {
 template <typename T>
 concept FloatingPoint = std::is_floating_point_v<T>;
 
@@ -13,9 +13,9 @@ struct IsFloatComplexT : std::false_type {};
 
 template <FloatingPoint T>
 struct IsFloatComplexT<std::complex<T>> : std::true_type {};
-} // namespace details
+} // namespace Details
 
 template <typename T>
-concept FloatOrComplex = details::FloatingPoint<std::remove_cv_t<T>> ||
-                         details::IsFloatComplexT<std::remove_cv_t<T>>::value;
-} // namespace matrix_lib::utils
+concept FloatOrComplex = Details::FloatingPoint<std::remove_cv_t<T>> ||
+                         Details::IsFloatComplexT<std::remove_cv_t<T>>::value;
+} // namespace LinearKit::Utils

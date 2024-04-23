@@ -3,27 +3,26 @@
 #include "../matrix_utils/checks.h"
 #include "../matrix_utils/join.h"
 #include "../matrix_utils/split.h"
-#include "../utils/is_float_complex.h"
 #include "givens.h"
 #include "qr_decomposition.h"
 #include "wilkinson.h"
 
-namespace matrix_lib::algorithms {
-namespace details {
-template <utils::FloatOrComplex T>
+namespace LinearKit::Algorithm {
+namespace Details {
+template <Utils::FloatOrComplex T>
 struct DiagBasisQR {
     Matrix<T> U;
     Matrix<T> D;
     Matrix<T> VT;
 };
-} // namespace details
+} // namespace Details
 
-template <utils::MatrixType M>
-inline details::DiagBasisQR<typename M::ElemType>
+template <MatrixUtils::MatrixType M>
+inline Details::DiagBasisQR<typename M::ElemType>
 BidiagAlgorithmQR(const M &B, IndexType it_cnt = 10);
 
-namespace details {
-template <utils::MatrixType M>
+namespace Details {
+template <MatrixUtils::MatrixType M>
 inline typename M::ElemType GetBidiagThreshold(const M &matrix) {
     using T = typename M::ElemType;
 
@@ -37,36 +36,36 @@ inline typename M::ElemType GetBidiagThreshold(const M &matrix) {
     return threshold;
 }
 
-template <utils::MatrixType M>
-inline details::DiagBasisQR<typename M::ElemType> SplitBidiagQR(const M &D,
+template <MatrixUtils::MatrixType M>
+inline Details::DiagBasisQR<typename M::ElemType> SplitBidiagQR(const M &D,
                                                                 IndexType idx) {
-    auto [D1, D2] = utils::Split(D, idx, idx);
+    auto [D1, D2] = MatrixUtils::Split(D, idx, idx);
     auto [U1, S1, VT1] = BidiagAlgorithmQR(D1);
     auto [U2, S2, VT2] = BidiagAlgorithmQR(D2);
 
-    auto U = utils::Join(U1, U2);
-    auto S = utils::Join(S1, S2);
-    auto VT = utils::Join(VT1, VT2);
+    auto U = MatrixUtils::Join(U1, U2);
+    auto S = MatrixUtils::Join(S1, S2);
+    auto VT = MatrixUtils::Join(VT1, VT2);
 
     return {std::move(U), std::move(S), std::move(VT)};
 }
 
-template <utils::MutableMatrixType M>
-inline details::DiagBasisQR<typename M::ElemType>
+template <MatrixUtils::MutableMatrixType M>
+inline Details::DiagBasisQR<typename M::ElemType>
 CancellationBidiagQR(M &D, M &U, IndexType idx) {
     for (IndexType k = idx + 1; k < std::min(D.Columns(), D.Rows()); ++k) {
         auto remove = D(idx, k);
         auto next = D(k, k);
 
-        algorithms::GivensLeftRotation(D, k, idx, next, remove);
-        algorithms::GivensRightRotation(U, k, idx, next, remove);
+        Algorithm::GivensLeftRotation(D, k, idx, next, remove);
+        Algorithm::GivensRightRotation(U, k, idx, next, remove);
     }
 
     auto [Us, S, VT] = SplitBidiagQR(D, idx);
     return {std::move(U * Us), std::move(S), std::move(VT)};
 }
 
-template <utils::MutableMatrixType M>
+template <MatrixUtils::MutableMatrixType M>
 inline void StepBidiagQR(M &U, M &D, M &VT) {
     using T = typename M::ElemType;
     T shift = GetBidiagWilkinsonShift(D);
@@ -82,10 +81,10 @@ inline void StepBidiagQR(M &U, M &D, M &VT) {
         GivensLeftRotation(D, i, i + 1, D(i, i), D(i + 1, i));
     }
 }
-} // namespace details
+} // namespace Details
 
-template <utils::MatrixType M>
-inline details::DiagBasisQR<typename M::ElemType>
+template <MatrixUtils::MatrixType M>
+inline Details::DiagBasisQR<typename M::ElemType>
 BidiagAlgorithmQR(const M &B, IndexType it_cnt) {
     using T = typename M::ElemType;
 
@@ -99,16 +98,16 @@ BidiagAlgorithmQR(const M &B, IndexType it_cnt) {
 
     it_cnt *= D.Columns();
     while (--it_cnt) {
-        auto threshold = details::GetBidiagThreshold(D);
-        auto eps = utils::Eps<T> * threshold;
+        auto threshold = Details::GetBidiagThreshold(D);
+        auto eps = Utils::Eps<T> * threshold;
 
-        if (utils::IsDiagonal(D, eps)) {
+        if (MatrixUtils::IsDiagonal(D, eps)) {
             break;
         }
 
         for (IndexType i = 0; i < D.Columns() - 1; ++i) {
             if (std::abs(D(i, i)) <= eps) {
-                auto [Uc, Sc, VTc] = details::CancellationBidiagQR(D, U, i);
+                auto [Uc, Sc, VTc] = Details::CancellationBidiagQR(D, U, i);
                 Sc.RoundZeroes(eps);
                 return {std::move(Uc), std::move(Sc), std::move(VTc * VT)};
             }
@@ -117,17 +116,17 @@ BidiagAlgorithmQR(const M &B, IndexType it_cnt) {
         for (IndexType i = 0; i < std::min(D.Rows(), D.Columns() - 1); ++i) {
             if (std::abs(D(i, i + 1)) <= eps) {
                 auto [U_split, S_split, VT_split] =
-                    details::SplitBidiagQR(D, i);
+                    Details::SplitBidiagQR(D, i);
                 S_split.RoundZeroes();
                 return {std::move(U * U_split), std::move(S_split),
                         std::move(VT_split * VT)};
             }
         }
 
-        details::StepBidiagQR(U, D, VT);
+        Details::StepBidiagQR(U, D, VT);
     }
 
     D.RoundZeroes();
     return {std::move(U), std::move(D), std::move(VT)};
 }
-} // namespace matrix_lib::algorithms
+} // namespace LinearKit::Algorithm

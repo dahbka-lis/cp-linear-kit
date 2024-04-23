@@ -2,23 +2,22 @@
 
 #include "../matrix_utils/is_matrix_type.h"
 #include "householder.h"
-#include <iostream>
 
-namespace matrix_lib::algorithms {
-namespace details {
-template <utils::FloatOrComplex T = long double>
+namespace LinearKit::Algorithm {
+namespace Details {
+template <Utils::FloatOrComplex T = long double>
 struct BidiagonalBasis {
     Matrix<T> U;
     Matrix<T> B;
     Matrix<T> VT;
 };
 
-template <utils::MutableMatrixType F, utils::MutableMatrixType S>
+template <MatrixUtils::MutableMatrixType F, MatrixUtils::MutableMatrixType S>
 void RowToReal(F &B, S &U, IndexType idx) {
     using T = F::ElemType;
 
     auto norm = std::abs(B(idx, idx));
-    if (utils::IsZeroFloating(norm)) {
+    if (Utils::IsZeroFloating(norm)) {
         return;
     }
 
@@ -30,12 +29,12 @@ void RowToReal(F &B, S &U, IndexType idx) {
     U_row *= coeff;
 }
 
-template <utils::MutableMatrixType F, utils::MutableMatrixType S>
+template <MatrixUtils::MutableMatrixType F, MatrixUtils::MutableMatrixType S>
 void ColumnToReal(F &B, S &V, IndexType idx) {
     using T = F::ElemType;
 
     auto norm = std::abs(B(idx, idx + 1));
-    if (utils::IsZeroFloating(norm)) {
+    if (Utils::IsZeroFloating(norm)) {
         return;
     }
 
@@ -46,12 +45,12 @@ void ColumnToReal(F &B, S &V, IndexType idx) {
     B_row *= coeff;
     V_col *= coeff;
 }
-} // namespace details
+} // namespace Details
 
-using IndexType = matrix_lib::details::Types::IndexType;
+using IndexType = LinearKit::Details::Types::IndexType;
 
-template <utils::MatrixType M>
-inline details::BidiagonalBasis<typename M::ElemType>
+template <MatrixUtils::MatrixType M>
+inline Details::BidiagonalBasis<typename M::ElemType>
 Bidiagonalize(const M &matrix) {
     using T = typename M::ElemType;
 
@@ -67,8 +66,8 @@ Bidiagonalize(const M &matrix) {
         HouseholderLeftReflection(B, col_reduction, col, col);
         HouseholderLeftReflection(U, col_reduction, col);
 
-        if constexpr (utils::details::IsFloatComplexT<T>::value)
-            details::RowToReal(B, U, col);
+        if constexpr (Utils::Details::IsFloatComplexT<T>::value)
+            Details::RowToReal(B, U, col);
 
         if (col + 1 >= B.Columns())
             continue;
@@ -80,8 +79,8 @@ Bidiagonalize(const M &matrix) {
         HouseholderRightReflection(B, row_reduction, col + 1, col);
         HouseholderRightReflection(V, row_reduction, col + 1);
 
-        if constexpr (utils::details::IsFloatComplexT<T>::value)
-            details::ColumnToReal(B, V, col);
+        if constexpr (Utils::Details::IsFloatComplexT<T>::value)
+            Details::ColumnToReal(B, V, col);
     }
 
     U.Conjugate();
@@ -89,4 +88,4 @@ Bidiagonalize(const M &matrix) {
     B.RoundZeroes();
     return {std::move(U), std::move(B), std::move(V)};
 }
-} // namespace matrix_lib::algorithms
+} // namespace LinearKit::Algorithm

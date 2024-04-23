@@ -1,8 +1,6 @@
 #include <gtest/gtest.h>
 
 #include "../algorithms/svd.h"
-#include "../matrix_utils/checks.h"
-#include "../utils/is_float_complex.h"
 #include "helpers.h"
 
 namespace {
@@ -10,14 +8,14 @@ template <typename T = long double>
 using Complex = std::complex<T>;
 
 template <typename T = long double>
-using Matrix = matrix_lib::Matrix<T>;
-using IndexType = matrix_lib::details::Types::IndexType;
+using Matrix = LinearKit::Matrix<T>;
+using IndexType = LinearKit::Details::Types::IndexType;
 
-using namespace matrix_lib::algorithms;
-using namespace matrix_lib::utils;
-
-using matrix_lib::tests::RandomMatrixGenerator;
-using matrix_lib::utils::details::IsFloatComplexT;
+using namespace LinearKit::Algorithm;
+using namespace LinearKit::Utils;
+using namespace LinearKit::MatrixUtils;
+using LinearKit::Tests::RandomMatrixGenerator;
+using LinearKit::Utils::Details::IsFloatComplexT;
 
 template <MatrixType M>
 void CheckPositiveSingular(const M &S) {

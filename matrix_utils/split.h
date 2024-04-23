@@ -3,19 +3,19 @@
 #include "../types/types_details.h"
 #include "is_matrix_type.h"
 
-namespace matrix_lib::utils {
-namespace details {
-template <utils::FloatOrComplex T>
+namespace LinearKit::MatrixUtils {
+namespace Details {
+template <Utils::FloatOrComplex T>
 struct SplitPair {
     Matrix<T> first;
     Matrix<T> second;
 };
-} // namespace details
+} // namespace Details
 
-using IndexType = matrix_lib::details::Types::IndexType;
+using IndexType = LinearKit::Details::Types::IndexType;
 
-template <utils::MatrixType M>
-details::SplitPair<typename M::ElemType> Split(const M &matrix, IndexType row,
+template <MatrixType M>
+Details::SplitPair<typename M::ElemType> Split(const M &matrix, IndexType row,
                                                IndexType col) {
     using T = typename M::ElemType;
 
@@ -28,4 +28,4 @@ details::SplitPair<typename M::ElemType> Split(const M &matrix, IndexType row,
 
     return {first, second};
 }
-} // namespace matrix_lib::utils
+} // namespace LinearKit::Utils

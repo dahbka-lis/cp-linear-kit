@@ -9,16 +9,16 @@
 #include <ostream>
 #include <vector>
 
-namespace matrix_lib {
-template <utils::FloatOrComplex T = long double>
+namespace LinearKit {
+template <Utils::FloatOrComplex T = long double>
 class Matrix {
     using Data = std::vector<T>;
-    using IndexType = details::Types::IndexType;
-    using Segment = details::Types::Segment;
-    using Function = details::Types::Function<T>;
-    using FunctionIndexes = details::Types::FunctionIndexes<T>;
-    using ConstFunction = details::Types::ConstFunction<T>;
-    using ConstFunctionIndexes = details::Types::ConstFunctionIndexes<T>;
+    using IndexType = Details::Types::IndexType;
+    using Segment = Details::Types::Segment;
+    using Function = Details::Types::Function<T>;
+    using FunctionIndexes = Details::Types::FunctionIndexes<T>;
+    using ConstFunction = Details::Types::ConstFunction<T>;
+    using ConstFunctionIndexes = Details::Types::ConstFunctionIndexes<T>;
 
 public:
     using ElemType = T;
@@ -183,7 +183,7 @@ public:
     Matrix &Conjugate() {
         Transpose();
 
-        if constexpr (utils::details::IsFloatComplexT<T>::value) {
+        if constexpr (Utils::Details::IsFloatComplexT<T>::value) {
             ApplyForEach([](T &val) { val = std::conj(val); });
         }
 
@@ -363,9 +363,9 @@ private:
     Data buffer_;
 };
 
-using IndexType = details::Types::IndexType;
+using IndexType = Details::Types::IndexType;
 
-template <utils::MatrixType F, utils::MatrixType S>
+template <MatrixUtils::MatrixType F, MatrixUtils::MatrixType S>
 Matrix<typename F::ElemType> operator+(const F &lhs, const S &rhs) {
     using T = typename F::ElemType;
 
@@ -382,7 +382,7 @@ Matrix<typename F::ElemType> operator+(const F &lhs, const S &rhs) {
     return result;
 }
 
-template <utils::MutableMatrixType F, utils::MatrixType S>
+template <MatrixUtils::MutableMatrixType F, MatrixUtils::MatrixType S>
 F &operator+=(F &lhs, const S &rhs) {
     assert(lhs.Rows() == rhs.Rows() && lhs.Columns() == rhs.Columns() &&
            "Matrices must have the same size for sum.");
@@ -396,7 +396,7 @@ F &operator+=(F &lhs, const S &rhs) {
     return lhs;
 }
 
-template <utils::MatrixType F, utils::MatrixType S>
+template <MatrixUtils::MatrixType F, MatrixUtils::MatrixType S>
 Matrix<typename F::ElemType> operator-(const F &lhs, const S &rhs) {
     using T = typename F::ElemType;
 
@@ -413,7 +413,7 @@ Matrix<typename F::ElemType> operator-(const F &lhs, const S &rhs) {
     return result;
 }
 
-template <utils::MutableMatrixType F, utils::MatrixType S>
+template <MatrixUtils::MutableMatrixType F, MatrixUtils::MatrixType S>
 F &operator-=(F &lhs, const S &rhs) {
     assert(lhs.Rows() == rhs.Rows() && lhs.Columns() == rhs.Columns() &&
            "Matrices must have the same size for sum.");
@@ -427,7 +427,7 @@ F &operator-=(F &lhs, const S &rhs) {
     return lhs;
 }
 
-template <utils::MatrixType F, utils::MatrixType S>
+template <MatrixUtils::MatrixType F, MatrixUtils::MatrixType S>
 Matrix<typename F::ElemType> operator*(const F &lhs, const S &rhs) {
     using T = typename F::ElemType;
 
@@ -453,7 +453,7 @@ Matrix<typename F::ElemType> operator*(const F &lhs, const S &rhs) {
     return result;
 }
 
-template <utils::MutableMatrixType F, utils::MatrixType S>
+template <MatrixUtils::MutableMatrixType F, MatrixUtils::MatrixType S>
 F &operator*=(F &lhs, const S &rhs) {
     if (lhs.Rows() == 0 || rhs.Rows() == 0) {
         return lhs;
@@ -473,7 +473,7 @@ F &operator*=(F &lhs, const S &rhs) {
     return lhs;
 }
 
-template <utils::MatrixType F>
+template <MatrixUtils::MatrixType F>
 Matrix<typename F::ElemType> operator*(const F &lhs,
                                        typename F::ElemType scalar) {
     using T = typename F::ElemType;
@@ -489,13 +489,13 @@ Matrix<typename F::ElemType> operator*(const F &lhs,
     return result;
 }
 
-template <utils::MatrixType F>
+template <MatrixUtils::MatrixType F>
 Matrix<typename F::ElemType> operator*(typename F::ElemType scalar,
                                        const F &rhs) {
     return rhs * scalar;
 }
 
-template <utils::MutableMatrixType F>
+template <MatrixUtils::MutableMatrixType F>
 F &operator*=(F &lhs, typename F::ElemType scalar) {
     for (IndexType i = 0; i < lhs.Rows(); ++i) {
         for (IndexType j = 0; j < lhs.Columns(); ++j) {
@@ -507,7 +507,7 @@ F &operator*=(F &lhs, typename F::ElemType scalar) {
     return lhs;
 }
 
-template <utils::MatrixType F>
+template <MatrixUtils::MatrixType F>
 Matrix<typename F::ElemType> operator/(const F &lhs,
                                        typename F::ElemType scalar) {
     using T = typename F::ElemType;
@@ -523,13 +523,13 @@ Matrix<typename F::ElemType> operator/(const F &lhs,
     return result;
 }
 
-template <utils::MatrixType F>
+template <MatrixUtils::MatrixType F>
 Matrix<typename F::ElemType> operator/(typename F::ElemType scalar,
                                        const F &rhs) {
     return rhs / scalar;
 }
 
-template <utils::MutableMatrixType F>
+template <MatrixUtils::MutableMatrixType F>
 F &operator/=(F &lhs, typename F::ElemType scalar) {
     for (IndexType i = 0; i < lhs.Rows(); ++i) {
         for (IndexType j = 0; j < lhs.Columns(); ++j) {
@@ -541,7 +541,7 @@ F &operator/=(F &lhs, typename F::ElemType scalar) {
     return lhs;
 }
 
-template <utils::MatrixType F, utils::MatrixType S>
+template <MatrixUtils::MatrixType F, MatrixUtils::MatrixType S>
 bool operator==(const F &lhs, const S &rhs) {
     if (lhs.Rows() != rhs.Rows() || lhs.Columns() != rhs.Columns()) {
         return false;
@@ -558,8 +558,8 @@ bool operator==(const F &lhs, const S &rhs) {
     return true;
 }
 
-template <utils::MatrixType F, utils::MatrixType S>
+template <MatrixUtils::MatrixType F, MatrixUtils::MatrixType S>
 bool operator!=(const F &lhs, const S &rhs) {
     return !(lhs == rhs);
 }
-} // namespace matrix_lib
+} // namespace LinearKit

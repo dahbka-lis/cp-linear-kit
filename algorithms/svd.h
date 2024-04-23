@@ -1,19 +1,19 @@
 #pragma once
 
-#include "../matrix_utils/cast_matrix.h"
 #include "bidiagonalization.h"
 #include "qr_algorithm_bidiag.h"
+#include "../matrix_utils/cast_matrix.h"
 
-namespace matrix_lib::algorithms {
-namespace details {
-template <utils::FloatOrComplex T>
+namespace LinearKit::Algorithm {
+namespace Details {
+template <Utils::FloatOrComplex T>
 struct SingularBasis {
     Matrix<T> U;
     Matrix<T> S;
     Matrix<T> VT;
 };
 
-template <utils::MutableMatrixType M>
+template <MatrixUtils::MutableMatrixType M>
 inline void ToPositiveSingular(M &S, M &VT) {
     using T = typename M::ElemType;
 
@@ -28,7 +28,7 @@ inline void ToPositiveSingular(M &S, M &VT) {
     }
 }
 
-template <utils::MutableMatrixType M>
+template <MatrixUtils::MutableMatrixType M>
 inline void SwapColumns(M &matrix, IndexType first, IndexType second) {
     assert(first < matrix.Columns() && second < matrix.Columns() &&
            "Wrong column index.");
@@ -38,7 +38,7 @@ inline void SwapColumns(M &matrix, IndexType first, IndexType second) {
     }
 }
 
-template <utils::MutableMatrixType M>
+template <MatrixUtils::MutableMatrixType M>
 inline void SwapRows(M &matrix, IndexType first, IndexType second) {
     assert(first < matrix.Rows() && second < matrix.Rows() &&
            "Wrong row index.");
@@ -48,7 +48,7 @@ inline void SwapRows(M &matrix, IndexType first, IndexType second) {
     }
 }
 
-template <utils::MutableMatrixType M>
+template <MatrixUtils::MutableMatrixType M>
 inline void SortSingular(M &U, M &S, M &VT) {
     using T = typename M::ElemType;
     auto min_size = std::min(S.Rows(), S.Columns());
@@ -64,10 +64,10 @@ inline void SortSingular(M &U, M &S, M &VT) {
         }
     }
 }
-} // namespace details
+} // namespace Details
 
-template <utils::MatrixType M>
-inline details::SingularBasis<typename M::ElemType> SVD(const M &matrix) {
+template <MatrixUtils::MatrixType M>
+inline Details::SingularBasis<typename M::ElemType> SVD(const M &matrix) {
     using T = typename M::ElemType;
 
     if (matrix.Rows() < matrix.Columns()) {
@@ -79,19 +79,19 @@ inline details::SingularBasis<typename M::ElemType> SVD(const M &matrix) {
     }
 
     auto [U1, B, VT1] = Bidiagonalize(matrix);
-    auto B_real = utils::CastMatrix<long double>(B);
+    auto B_real = MatrixUtils::CastMatrix<long double>(B);
     auto [U_real, S_real, VT_real] = BidiagAlgorithmQR(B_real);
 
-    details::ToPositiveSingular(S_real, VT_real);
-    details::SortSingular(U_real, S_real, VT_real);
+    Details::ToPositiveSingular(S_real, VT_real);
+    Details::SortSingular(U_real, S_real, VT_real);
 
-    auto S = utils::CastMatrix<T>(S_real);
-    auto U2 = utils::CastMatrix<T>(U_real);
-    auto VT2 = utils::CastMatrix<T>(VT_real);
+    auto S = MatrixUtils::CastMatrix<T>(S_real);
+    auto U2 = MatrixUtils::CastMatrix<T>(U_real);
+    auto VT2 = MatrixUtils::CastMatrix<T>(VT_real);
 
     auto VT = VT2 * VT1;
     auto U = U1 * U2;
 
     return {std::move(U), std::move(S), std::move(VT)};
 }
-} // namespace matrix_lib::algorithms
+} // namespace LinearKit::Algorithm

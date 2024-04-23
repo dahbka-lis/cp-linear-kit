@@ -2,35 +2,33 @@
 
 #include "hessenberg.h"
 #include "qr_decomposition.h"
-#include "wilkinson.h"
-#include <iostream>
 
-namespace matrix_lib::algorithms {
-namespace details {
-template <utils::FloatOrComplex T = long double>
+namespace LinearKit::Algorithm {
+namespace Details {
+template <Utils::FloatOrComplex T = long double>
 struct SpectralPair {
     Matrix<T> D;
     Matrix<T> U;
 };
-} // namespace details
+} // namespace Details
 
-template <utils::MatrixType M>
-inline details::SpectralPair<typename M::ElemType>
+template <MatrixUtils::MatrixType M>
+inline Details::SpectralPair<typename M::ElemType>
 GetSpecDecomposition(const M &matrix,
                      typename M::ElemType shift = typename M::ElemType{0},
                      std::size_t it_cnt = 50) {
     using T = typename M::ElemType;
 
-    assert(utils::IsHermitian(matrix) &&
+    assert(MatrixUtils::IsHermitian(matrix) &&
            "Spectral decomposition for hermitian matrix.");
 
     auto [D, U] = GetHessenbergForm(matrix);
     for (IndexType i = 0; i < it_cnt * D.Rows(); ++i) {
-        if constexpr (utils::details::IsFloatComplexT<T>::value) {
-            if (utils::IsUpperTriangular(D))
+        if constexpr (Utils::Details::IsFloatComplexT<T>::value) {
+            if (MatrixUtils::IsUpperTriangular(D))
                 break;
         } else {
-            if (utils::IsDiagonal(D))
+            if (MatrixUtils::IsDiagonal(D))
                 break;
         }
 
@@ -43,4 +41,4 @@ GetSpecDecomposition(const M &matrix,
     D.RoundZeroes();
     return {std::move(D), std::move(U)};
 }
-} // namespace matrix_lib::algorithms
+} // namespace LinearKit::Algorithm

@@ -1,11 +1,10 @@
 #pragma once
 
 #include "../matrix_utils/is_matrix_type.h"
-#include "../types/types_details.h"
 #include "../utils/sign.h"
 
-namespace matrix_lib::algorithms {
-template <utils::MatrixType M>
+namespace LinearKit::Algorithm {
+template <MatrixUtils::MatrixType M>
 inline typename M::ElemType GetWilkinsonShift(const M &matrix,
                                               IndexType end_idx) {
     using T = typename M::ElemType;
@@ -23,10 +22,10 @@ inline typename M::ElemType GetWilkinsonShift(const M &matrix,
         matrix(end_idx - 1, end_idx - 2) * matrix(end_idx - 2, end_idx - 1);
     auto coefficient = std::abs(delta) + std::sqrt(delta * delta + b_square);
     return matrix(end_idx - 1, end_idx - 1) -
-           utils::Sign(delta) * b_square / coefficient;
+           Utils::Sign(delta) * b_square / coefficient;
 }
 
-template <utils::MatrixType M>
+template <MatrixUtils::MatrixType M>
 inline typename M::ElemType GetBidiagWilkinsonShift(const M &S) {
     using T = typename M::ElemType;
     assert(S.Columns() >= 2 && "Wrong columns count.");
@@ -45,4 +44,4 @@ inline typename M::ElemType GetBidiagWilkinsonShift(const M &S) {
 
     return GetWilkinsonShift(S_gram, 2);
 }
-} // namespace matrix_lib::algorithms
+} // namespace LinearKit::Algorithm

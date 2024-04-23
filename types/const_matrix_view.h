@@ -4,17 +4,17 @@
 #include "matrix_view.h"
 #include "types_details.h"
 
-namespace matrix_lib {
-template <utils::FloatOrComplex T = long double>
+namespace LinearKit {
+template <Utils::FloatOrComplex T = long double>
 class ConstMatrixView {
     friend class Matrix<T>;
     friend class MatrixView<T>;
 
-    using IndexType = details::Types::IndexType;
-    using Segment = details::Types::Segment;
-    using MatrixState = details::Types::MatrixState;
-    using ConstFunction = details::Types::ConstFunction<T>;
-    using ConstFunctionIndexes = details::Types::ConstFunctionIndexes<T>;
+    using IndexType = Details::Types::IndexType;
+    using Segment = Details::Types::Segment;
+    using MatrixState = Details::Types::MatrixState;
+    using ConstFunction = Details::Types::ConstFunction<T>;
+    using ConstFunctionIndexes = Details::Types::ConstFunctionIndexes<T>;
 
 public:
     using ElemType = T;
@@ -50,7 +50,7 @@ public:
     T operator()(IndexType row_idx, IndexType col_idx) const {
         assert(ptr_ != nullptr && "Matrix pointer is null.");
 
-        if constexpr (utils::details::IsFloatComplexT<T>::value) {
+        if constexpr (Utils::Details::IsFloatComplexT<T>::value) {
             if (state_.is_transposed && state_.is_conjugated) {
                 return std::conj(
                     (*ptr_)(column_.begin + col_idx, row_.begin + row_idx));
@@ -197,4 +197,4 @@ private:
     Segment column_;
     MatrixState state_;
 };
-} // namespace matrix_lib
+} // namespace LinearKit

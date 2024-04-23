@@ -4,16 +4,16 @@
 #include "matrix.h"
 #include "types_details.h"
 
-namespace matrix_lib {
-template <utils::FloatOrComplex T = long double>
+namespace LinearKit {
+template <Utils::FloatOrComplex T = long double>
 class MatrixView {
-    using IndexType = details::Types::IndexType;
-    using Segment = details::Types::Segment;
-    using MatrixState = details::Types::MatrixState;
-    using Function = details::Types::Function<T>;
-    using FunctionIndexes = details::Types::FunctionIndexes<T>;
-    using ConstFunction = details::Types::ConstFunction<T>;
-    using ConstFunctionIndexes = details::Types::ConstFunctionIndexes<T>;
+    using IndexType = Details::Types::IndexType;
+    using Segment = Details::Types::Segment;
+    using MatrixState = Details::Types::MatrixState;
+    using Function = Details::Types::Function<T>;
+    using FunctionIndexes = Details::Types::FunctionIndexes<T>;
+    using ConstFunction = Details::Types::ConstFunction<T>;
+    using ConstFunctionIndexes = Details::Types::ConstFunctionIndexes<T>;
 
 public:
     using ElemType = T;
@@ -59,7 +59,7 @@ public:
     T operator()(IndexType row_idx, IndexType col_idx) const {
         assert(ptr_ != nullptr && "Matrix pointer is null.");
 
-        if constexpr (utils::details::IsFloatComplexT<T>::value) {
+        if constexpr (Utils::Details::IsFloatComplexT<T>::value) {
             if (state_.is_transposed && state_.is_conjugated) {
                 return std::conj(
                     (*ptr_)(column_.begin + col_idx, row_.begin + row_idx));
@@ -150,7 +150,7 @@ public:
         assert(Rows() == 1 || Columns() == 1 && "Normalize only for vectors.");
 
         auto norm = GetEuclideanNorm();
-        if (!utils::IsZeroFloating(norm)) {
+        if (!Utils::IsZeroFloating(norm)) {
             (*this) /= norm;
         } else {
             ApplyForEach([](T &val) { val = T{0}; });
@@ -162,18 +162,18 @@ public:
 
     MatrixView<T> &RoundZeroes(T eps = T{0}) {
         ApplyForEach([&](T &el) {
-            if constexpr (utils::details::IsFloatComplexT<T>::value) {
+            if constexpr (Utils::Details::IsFloatComplexT<T>::value) {
                 using F = T::value_type;
 
-                auto real = (utils::IsZeroFloating(el.real(), eps.real()))
+                auto real = (Utils::IsZeroFloating(el.real(), eps.real()))
                                 ? F{0}
                                 : el.real();
-                auto imag = (utils::IsZeroFloating(el.imag(), eps.real()))
+                auto imag = (Utils::IsZeroFloating(el.imag(), eps.real()))
                                 ? F{0}
                                 : el.imag();
                 el = T{real, imag};
             } else {
-                el = (utils::IsZeroFloating(el, eps)) ? T{0} : el;
+                el = (Utils::IsZeroFloating(el, eps)) ? T{0} : el;
             }
         });
         return *this;
@@ -245,4 +245,4 @@ private:
     Segment column_;
     MatrixState state_;
 };
-} // namespace matrix_lib
+} // namespace LinearKit

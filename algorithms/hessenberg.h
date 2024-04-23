@@ -1,26 +1,25 @@
 #pragma once
 
 #include "../matrix_utils/checks.h"
-#include "../matrix_utils/is_matrix_type.h"
 #include "householder.h"
 
-namespace matrix_lib::algorithms {
-namespace details {
-template <utils::FloatOrComplex T = long double>
+namespace LinearKit::Algorithm {
+namespace Details {
+template <Utils::FloatOrComplex T = long double>
 struct HessenbergBasis {
     Matrix<T> H;
     Matrix<T> Q;
 };
-} // namespace details
+} // namespace Details
 
-using IndexType = matrix_lib::details::Types::IndexType;
+using IndexType = LinearKit::Details::Types::IndexType;
 
-template <utils::MatrixType M>
-inline details::HessenbergBasis<typename M::ElemType>
+template <MatrixUtils::MatrixType M>
+inline Details::HessenbergBasis<typename M::ElemType>
 GetHessenbergForm(const M &matrix) {
     using T = typename M::ElemType;
 
-    assert(utils::IsSquare(matrix) && "Hessenberg form for square matrices");
+    assert(MatrixUtils::IsSquare(matrix) && "Hessenberg form for square matrices");
 
     Matrix<T> Q = Matrix<T>::Identity(matrix.Rows());
     Matrix<T> H = matrix;
@@ -38,4 +37,4 @@ GetHessenbergForm(const M &matrix) {
     H.RoundZeroes();
     return {std::move(H), std::move(Q)};
 }
-} // namespace matrix_lib::algorithms
+} // namespace LinearKit::Algorithm

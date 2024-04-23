@@ -3,10 +3,10 @@
 #include "../types/types_details.h"
 #include "is_matrix_type.h"
 
-namespace matrix_lib::utils {
-using IndexType = matrix_lib::details::Types::IndexType;
+namespace LinearKit::MatrixUtils {
+using IndexType = LinearKit::Details::Types::IndexType;
 
-template <utils::MatrixType M>
+template <MatrixType M>
 Matrix<typename M::ElemType> Join(const M &first, const M &second) {
     using T = typename M::ElemType;
     Matrix<T> result(first.Rows() + second.Rows(),
@@ -26,4 +26,4 @@ Matrix<typename M::ElemType> Join(const M &first, const M &second) {
 
     return result;
 }
-} // namespace matrix_lib::utils
+} // namespace LinearKit::Utils

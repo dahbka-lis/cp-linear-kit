@@ -1,27 +1,25 @@
 #pragma once
 
 #include "../matrix_utils/checks.h"
-#include "../matrix_utils/is_matrix_type.h"
-#include "../types/types_details.h"
 #include "givens.h"
 #include "householder.h"
 
-namespace matrix_lib::algorithms {
-namespace details {
-template <utils::FloatOrComplex T = long double>
+namespace LinearKit::Algorithm {
+namespace Details {
+template <Utils::FloatOrComplex T = long double>
 struct PairQR {
     Matrix<T> Q;
     Matrix<T> R;
 };
-} // namespace details
+} // namespace Details
 
-using IndexType = matrix_lib::details::Types::IndexType;
+using IndexType = LinearKit::Details::Types::IndexType;
 
-template <utils::MatrixType M>
-inline details::PairQR<typename M::ElemType> HessenbergQR(const M &matrix) {
+template <MatrixUtils::MatrixType M>
+inline Details::PairQR<typename M::ElemType> HessenbergQR(const M &matrix) {
     using T = typename M::ElemType;
 
-    assert(utils::IsHessenberg(matrix) &&
+    assert(MatrixUtils::IsHessenberg(matrix) &&
            "Hessenberg QR for hessenberg form of matrix.");
 
     Matrix<T> Q = Matrix<T>::Identity(matrix.Rows());
@@ -40,11 +38,11 @@ inline details::PairQR<typename M::ElemType> HessenbergQR(const M &matrix) {
     return {std::move(Q), std::move(R)};
 }
 
-template <utils::MatrixType M>
-inline details::PairQR<typename M::ElemType> HouseholderQR(const M &matrix) {
+template <MatrixUtils::MatrixType M>
+inline Details::PairQR<typename M::ElemType> HouseholderQR(const M &matrix) {
     using T = typename M::ElemType;
 
-    if (utils::IsHessenberg(matrix)) {
+    if (MatrixUtils::IsHessenberg(matrix)) {
         return HessenbergQR(matrix);
     }
 
@@ -65,11 +63,11 @@ inline details::PairQR<typename M::ElemType> HouseholderQR(const M &matrix) {
     return {std::move(Q), std::move(R)};
 }
 
-template <utils::MatrixType M>
-inline details::PairQR<typename M::ElemType> GivensQR(const M &matrix) {
+template <MatrixUtils::MatrixType M>
+inline Details::PairQR<typename M::ElemType> GivensQR(const M &matrix) {
     using T = typename M::ElemType;
 
-    if (utils::IsHessenberg(matrix)) {
+    if (MatrixUtils::IsHessenberg(matrix)) {
         return HessenbergQR(matrix);
     }
 
@@ -91,4 +89,4 @@ inline details::PairQR<typename M::ElemType> GivensQR(const M &matrix) {
     R.RoundZeroes();
     return {std::move(Q), std::move(R)};
 }
-} // namespace matrix_lib::algorithms
+} // namespace LinearKit::Algorithm

@@ -7,10 +7,10 @@ template <typename T = long double>
 using Complex = std::complex<T>;
 
 template <typename T = long double>
-using Matrix = matrix_lib::Matrix<T>;
+using Matrix = LinearKit::Matrix<T>;
 
-using matrix_lib::tests::RandomMatrixGenerator;
-using matrix_lib::utils::IsEqualFloating;
+using LinearKit::Tests::RandomMatrixGenerator;
+using LinearKit::Utils::IsEqualFloating;
 
 TEST(TEST_MATRIX, BasicConstructors) {
     {

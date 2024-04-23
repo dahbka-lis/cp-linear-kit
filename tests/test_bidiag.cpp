@@ -9,11 +9,12 @@ template <typename T = long double>
 using Complex = std::complex<T>;
 
 template <typename T = long double>
-using Matrix = matrix_lib::Matrix<T>;
+using Matrix = LinearKit::Matrix<T>;
 
-using namespace matrix_lib::algorithms;
-using namespace matrix_lib::utils;
-using matrix_lib::tests::RandomMatrixGenerator;
+using namespace LinearKit::Algorithm;
+using namespace LinearKit::Utils;
+using namespace LinearKit::MatrixUtils;
+using LinearKit::Tests::RandomMatrixGenerator;
 
 template <MatrixType M, MatrixType F, MatrixType S, MatrixType K>
 void CheckBidiag(const M &matrix, const F &U, const S &B, const K &VT) {

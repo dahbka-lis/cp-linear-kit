@@ -1,19 +1,18 @@
 #pragma once
 
 #include "../matrix_utils/is_matrix_type.h"
-#include "../types/types_details.h"
 #include "../utils/sign.h"
 
-namespace matrix_lib::algorithms {
-using IndexType = matrix_lib::details::Types::IndexType;
+namespace LinearKit::Algorithm {
+using IndexType = LinearKit::Details::Types::IndexType;
 
-template <utils::MutableMatrixType M>
+template <MatrixUtils::MutableMatrixType M>
 inline void HouseholderReduction(M &vector) {
-    vector(0, 0) -= utils::Sign(vector(0, 0)) * vector.GetEuclideanNorm();
+    vector(0, 0) -= Utils::Sign(vector(0, 0)) * vector.GetEuclideanNorm();
     vector.Normalize();
 }
 
-template <utils::MutableMatrixType M, utils::MatrixType V>
+template <MatrixUtils::MutableMatrixType M, MatrixUtils::MatrixType V>
 inline void HouseholderLeftReflection(M &matrix, const V &vec,
                                       IndexType row = 0, IndexType c_from = 0,
                                       IndexType c_to = -1) {
@@ -28,7 +27,7 @@ inline void HouseholderLeftReflection(M &matrix, const V &vec,
     sub -= (T{2} * vec) * (Matrix<T>::Conjugated(vec) * sub);
 }
 
-template <utils::MutableMatrixType M, utils::MatrixType V>
+template <MatrixUtils::MutableMatrixType M, MatrixUtils::MatrixType V>
 inline void HouseholderRightReflection(M &matrix, const V &vec,
                                        IndexType col = 0, IndexType r_from = 0,
                                        IndexType r_to = -1) {
@@ -42,4 +41,4 @@ inline void HouseholderRightReflection(M &matrix, const V &vec,
         matrix.GetSubmatrix({r_from, r_to}, {col, col + vec.Columns()});
     sub -= (sub * Matrix<T>::Conjugated(vec)) * (T{2} * vec);
 }
-} // namespace matrix_lib::algorithms
+} // namespace LinearKit::Algorithm
