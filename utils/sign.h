@@ -8,7 +8,7 @@ template <utils::FloatOrComplex T = long double>
 inline T Sign(T value) {
     if constexpr (utils::details::IsFloatComplexT<T>::value) {
         if (utils::IsZeroFloating(value)) {
-            return T{0};
+            return T{1};
         }
         return value / std::sqrt(std::norm(value));
     } else {
