@@ -2,6 +2,7 @@
 
 #include "../matrix_utils/is_matrix_type.h"
 #include "householder.h"
+#include <iostream>
 
 namespace matrix_lib::algorithms {
 namespace details {
@@ -14,7 +15,14 @@ struct BidiagonalBasis {
 
 template <utils::MutableMatrixType F, utils::MutableMatrixType S>
 void RowToReal(F &B, S &U, IndexType idx) {
-    auto coeff = std::conj(B(idx, idx) / std::abs(B(idx, idx)));
+    using T = F::ElemType;
+
+    auto norm = std::abs(B(idx, idx));
+    if (utils::IsZeroFloating(norm)) {
+        return;
+    }
+
+    auto coeff = std::conj(B(idx, idx) / norm);
     auto B_row = B.GetRow(idx);
     auto U_row = U.GetRow(idx);
 
@@ -24,7 +32,14 @@ void RowToReal(F &B, S &U, IndexType idx) {
 
 template <utils::MutableMatrixType F, utils::MutableMatrixType S>
 void ColumnToReal(F &B, S &V, IndexType idx) {
-    auto coeff = std::conj(B(idx, idx + 1) / std::abs(B(idx, idx + 1)));
+    using T = F::ElemType;
+
+    auto norm = std::abs(B(idx, idx + 1));
+    if (utils::IsZeroFloating(norm)) {
+        return;
+    }
+
+    auto coeff = std::conj(B(idx, idx + 1) / norm);
     auto B_row = B.GetColumn(idx + 1);
     auto V_col = V.GetColumn(idx + 1);
 
