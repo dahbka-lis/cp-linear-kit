@@ -85,7 +85,10 @@ inline Details::SingularBasis<typename M::ElemType> SVD(const M &matrix) {
     Details::ToPositiveSingular(S_real, VT_real);
     Details::SortSingular(U_real, S_real, VT_real);
 
-    auto S = MatrixUtils::CastMatrix<T>(S_real);
+    auto S_d = S_real.GetDiag();
+    S_d.Transpose();
+
+    auto S = MatrixUtils::CastMatrix<T>(S_d);
     auto U2 = MatrixUtils::CastMatrix<T>(U_real);
     auto VT2 = MatrixUtils::CastMatrix<T>(VT_real);
 

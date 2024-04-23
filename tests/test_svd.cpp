@@ -21,13 +21,13 @@ template <MatrixType M>
 void CheckPositiveSingular(const M &S) {
     using T = typename M::ElemType;
 
-    for (IndexType i = 0; i < std::min(S.Rows(), S.Columns()); ++i) {
+    for (IndexType i = 0; i < S.Columns(); ++i) {
         long double sing_value;
 
         if constexpr (IsFloatComplexT<T>::value) {
-            sing_value = static_cast<long double>(S(i, i).real());
+            sing_value = static_cast<long double>(S(0, i).real());
         } else {
-            sing_value = static_cast<long double>(S(i, i));
+            sing_value = static_cast<long double>(S(0, i));
         }
 
         EXPECT_TRUE(sing_value >= 0.l);
@@ -36,13 +36,15 @@ void CheckPositiveSingular(const M &S) {
 
 template <MatrixType M, MatrixType F, MatrixType L, MatrixType K>
 void CheckSVD(const M &matrix, const F &U, const L &S, const K &VT) {
+    using T = M::ElemType;
     auto eps = 1e-10l;
 
     CheckPositiveSingular(S);
-    EXPECT_TRUE(IsDiagonal(S, eps));
     EXPECT_TRUE(IsUnitary(U, eps));
     EXPECT_TRUE(IsUnitary(VT, eps));
-    EXPECT_TRUE(AreEqualMatrices(matrix, U * S * VT, eps));
+
+    auto S_full = Matrix<T>::Diagonal(S, U.Columns(), VT.Rows());
+    EXPECT_TRUE(AreEqualMatrices(matrix, U * S_full * VT, eps));
 }
 
 RandomMatrixGenerator<long double> generator(91348);
