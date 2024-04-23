@@ -44,8 +44,6 @@ inline void GivensLeftRotation(M &matrix, IndexType f_row, IndexType s_row,
 
         matrix(s_row, i) = cos * cp_to + sin * cp_from;
     }
-
-    matrix.RoundZeroes();
 }
 
 template <utils::MutableMatrixType M>
@@ -68,7 +66,5 @@ inline void GivensRightRotation(M &matrix, IndexType f_col, IndexType s_col,
 
         matrix(i, s_col) = cos * cp_to + sin * cp_from;
     }
-
-    matrix.RoundZeroes();
 }
 } // namespace matrix_lib::algorithms

@@ -125,9 +125,9 @@ BidiagAlgorithmQR(const M &B, IndexType it_cnt) {
         }
 
         details::StepBidiagQR(U, D, VT);
-        D.RoundZeroes(eps);
     }
 
+    D.RoundZeroes();
     return {std::move(U), std::move(D), std::move(VT)};
 }
 } // namespace matrix_lib::algorithms
