@@ -2,6 +2,7 @@
 
 #include "../algorithms/svd.h"
 #include "../matrix_utils/checks.h"
+#include "../utils/is_float_complex.h"
 #include "helpers.h"
 
 namespace {
@@ -10,16 +11,37 @@ using Complex = std::complex<T>;
 
 template <typename T = long double>
 using Matrix = matrix_lib::Matrix<T>;
+using IndexType = matrix_lib::details::Types::IndexType;
 
 using namespace matrix_lib::algorithms;
 using namespace matrix_lib::utils;
+
 using matrix_lib::tests::RandomMatrixGenerator;
+using matrix_lib::utils::details::IsFloatComplexT;
+
+template <MatrixType M>
+void CheckPositiveSingular(const M &S) {
+    using T = typename M::ElemType;
+
+    for (IndexType i = 0; i < std::min(S.Rows(), S.Columns()); ++i) {
+        long double sing_value;
+
+        if constexpr (IsFloatComplexT<T>::value) {
+            sing_value = static_cast<long double>(S(i, i).real());
+        } else {
+            sing_value = static_cast<long double>(S(i, i));
+        }
+
+        EXPECT_TRUE(sing_value >= 0.l);
+    }
+}
 
 template <MatrixType M, MatrixType F, MatrixType L, MatrixType K>
 void CheckSVD(const M &matrix, const F &U, const L &S, const K &VT) {
-    using T = typename M::ElemType;
     auto eps = 1e-10l;
 
+    CheckPositiveSingular(S);
+    EXPECT_TRUE(IsDiagonal(S, eps));
     EXPECT_TRUE(IsUnitary(U, eps));
     EXPECT_TRUE(IsUnitary(VT, eps));
     EXPECT_TRUE(AreEqualMatrices(matrix, U * S * VT, eps));
