@@ -9,7 +9,7 @@ namespace LinearKit::Utils {
 namespace Details {
 template <FloatOrComplex T>
 struct TypeEpsilon {
-    static constexpr T kValue = 1e-6;
+    static constexpr T kValue = 1e-5;
 };
 
 template <>

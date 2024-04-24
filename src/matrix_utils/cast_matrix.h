@@ -11,9 +11,9 @@ Matrix<T> CastMatrix(const M &matrix) {
     Matrix<T> result(matrix.Rows(), matrix.Columns());
     result.ApplyForEach([&](T &val, auto i, auto j) {
         if constexpr (Utils::Details::IsFloatComplexT<F>::value) {
-            val = T{matrix(i, j).real()};
+            val = T(matrix(i, j).real());
         } else {
-            val = T{matrix(i, j)};
+            val = T(matrix(i, j));
         }
     });
 
