@@ -19,8 +19,8 @@ GetSpecDecomposition(const M &matrix,
                      std::size_t it_cnt = 50) {
     using T = typename M::ElemType;
 
-    assert(MatrixUtils::IsHermitian(matrix) &&
-           "Spectral decomposition for hermitian matrix.");
+    assert(MatrixUtils::IsSymmetric(matrix) &&
+           "Spectral decomposition for symmetric matrices.");
 
     auto [D, U] = GetHessenbergForm(matrix);
     for (IndexType i = 0; i < it_cnt * D.Rows(); ++i) {

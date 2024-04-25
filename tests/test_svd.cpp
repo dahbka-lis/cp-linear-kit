@@ -106,6 +106,17 @@ TEST(TEST_SVD, SVDRectangle) {
     }
 }
 
+TEST(TEST_SVD, SVDComplex) {
+    using Matrix = Matrix<Complex<long double>>;
+
+    Matrix matrix = {{{1, 0}, {2, 2}, {3, 3}},
+                     {{2, 2}, {5, 0}, {6, 6}},
+                     {{3, 3}, {6, 6}, {9, 0}}};
+
+    auto [U, S, VT] = SVD(matrix);
+    CheckSVD(matrix, U, S, VT);
+}
+
 TEST(TEST_SVD, SVDView) {
     using Matrix = Matrix<long double>;
 
