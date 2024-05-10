@@ -74,7 +74,6 @@ inline Details::SingularBasis<typename M::ElemType> SVD(const M &matrix) {
         auto [U, S, VT] = SVD(Matrix<typename M::ElemType>::Conjugated(matrix));
         U.Conjugate();
         VT.Conjugate();
-        S.Transpose();
         return {std::move(VT), std::move(S), std::move(U)};
     }
 
