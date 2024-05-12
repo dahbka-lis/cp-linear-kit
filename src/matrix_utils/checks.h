@@ -17,7 +17,7 @@ AreEqualMatrices(const F &first, const S &second,
 
     for (IndexType i = 0; i < first.Rows(); ++i) {
         for (IndexType j = 0; j < first.Columns(); ++j) {
-            if (!Utils::IsEqualFloating(first(i, j), second(i, j), eps)) {
+            if (!Utils::AreEqualFloating(first(i, j), second(i, j), eps)) {
                 return false;
             }
         }
@@ -42,7 +42,7 @@ inline bool IsUnitary(const M &matrix,
 
     for (IndexType i = 0; i < matrix.Rows(); ++i) {
         auto column = matrix.GetColumn(i);
-        if (!Utils::IsEqualFloating(column.GetEuclideanNorm(), T{1}, eps)) {
+        if (!Utils::AreEqualFloating(column.GetEuclideanNorm(), T{1}, eps)) {
             return false;
         }
     }
@@ -59,7 +59,7 @@ inline bool IsSymmetric(const M &matrix,
 
     for (IndexType i = 1; i < matrix.Rows(); ++i) {
         for (IndexType j = 0; j < i; ++j) {
-            if (!Utils::IsEqualFloating(matrix(i, j), matrix(j, i), eps)) {
+            if (!Utils::AreEqualFloating(matrix(i, j), matrix(j, i), eps)) {
                 return false;
             }
         }
@@ -80,8 +80,8 @@ inline bool IsHermitian(const M &matrix,
     if constexpr (Utils::Details::IsFloatComplexT<T>::value) {
         for (IndexType i = 0; i < matrix.Rows(); ++i) {
             for (IndexType j = 0; j <= i; ++j) {
-                if (!Utils::IsEqualFloating(matrix(i, j),
-                                            std::conj(matrix(j, i)), eps)) {
+                if (!Utils::AreEqualFloating(matrix(i, j),
+                                             std::conj(matrix(j, i)), eps)) {
                     return false;
                 }
             }

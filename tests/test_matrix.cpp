@@ -10,7 +10,7 @@ template <typename T = long double>
 using Matrix = LinearKit::Matrix<T>;
 
 using LinearKit::Tests::RandomMatrixGenerator;
-using LinearKit::Utils::IsEqualFloating;
+using LinearKit::Utils::AreEqualFloating;
 
 TEST(TEST_MATRIX, BasicConstructors) {
     {
@@ -218,19 +218,19 @@ TEST(TEST_MATRIX, ApplyToEach) {
 
 TEST(TEST_MATRIX, Normalize) {
     Matrix<double> vector = {{3}, {4}};
-    EXPECT_TRUE(IsEqualFloating(vector.GetEuclideanNorm(), 5.0));
+    EXPECT_TRUE(AreEqualFloating(vector.GetEuclideanNorm(), 5.0));
 
     vector.Normalize();
 
     auto scalar_prod = Matrix<double>::Transposed(vector) * vector;
-    EXPECT_TRUE(IsEqualFloating(scalar_prod(0, 0), 1.0));
+    EXPECT_TRUE(AreEqualFloating(scalar_prod(0, 0), 1.0));
 
     Matrix<float> other = {{1}, {2}, {3}};
     auto norm_other = Matrix<float>::Normalized(other);
 
-    EXPECT_FALSE(IsEqualFloating(other.GetEuclideanNorm(),
-                                 norm_other.GetEuclideanNorm()));
-    EXPECT_TRUE(IsEqualFloating(norm_other.GetEuclideanNorm(), 1.0f));
+    EXPECT_FALSE(AreEqualFloating(other.GetEuclideanNorm(),
+                                  norm_other.GetEuclideanNorm()));
+    EXPECT_TRUE(AreEqualFloating(norm_other.GetEuclideanNorm(), 1.0f));
 }
 
 TEST(TEST_MATRIX, DiagonalMatrix) {

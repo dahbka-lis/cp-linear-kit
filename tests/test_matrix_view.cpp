@@ -13,7 +13,7 @@ template <typename T = long double>
 using MatrixView = LinearKit::MatrixView<T>;
 
 using LinearKit::Tests::RandomMatrixGenerator;
-using LinearKit::Utils::IsEqualFloating;
+using LinearKit::Utils::AreEqualFloating;
 
 TEST(TEST_MATRIX_VIEW, Create) {
     using Type = long double;

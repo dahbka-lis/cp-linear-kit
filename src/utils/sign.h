@@ -1,6 +1,6 @@
 #pragma once
 
-#include "is_equal_floating.h"
+#include "are_equal_floating.h"
 #include "is_float_complex.h"
 
 namespace LinearKit::Utils {
