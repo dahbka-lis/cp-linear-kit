@@ -14,7 +14,7 @@ using Matrix = LinearKit::Matrix<T>;
 using namespace LinearKit::Algorithm;
 using namespace LinearKit::Utils;
 using namespace LinearKit::MatrixUtils;
-using LinearKit::Tests::RandomMatrixGenerator;
+using LinearKit::Tests::RandomGenerator;
 
 template <MatrixType M, MatrixType F, MatrixType S, MatrixType K>
 void CheckBidiag(const M &matrix, const F &U, const S &B, const K &VT) {
@@ -82,7 +82,7 @@ TEST(TEST_BIDIAG, BidiagView) {
 
 TEST(TEST_BIDIAG, Stress) {
     using Type = Complex<long double>;
-    using MatrixGenerator = RandomMatrixGenerator<Type>;
+    using MatrixGenerator = RandomGenerator<Type>;
     using Matrix = Matrix<Type>;
 
     const size_t it_count = 10u;
@@ -91,10 +91,10 @@ TEST(TEST_BIDIAG, Stress) {
         MatrixGenerator gen(seed);
 
         for (size_t it = 0; it < it_count; ++it) {
-            int32_t rows = gen.GetRandomMatrixSize();
-            int32_t columns = gen.GetRandomMatrixSize();
+            int32_t rows = gen.GetMatrixSize();
+            int32_t columns = gen.GetMatrixSize();
 
-            auto matrix = gen.GetRandomMatrix(rows, columns);
+            auto matrix = gen.GetMatrix(rows, columns);
             auto [U, B, VT] = Bidiagonalize(matrix);
             CheckBidiag(matrix, U, B, VT);
         }

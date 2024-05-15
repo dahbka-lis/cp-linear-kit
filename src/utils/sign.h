@@ -5,7 +5,7 @@
 
 namespace LinearKit::Utils {
 template <Utils::FloatOrComplex T = long double>
-inline T Sign(T value) {
+T Sign(T value) {
     if constexpr (Utils::Details::IsFloatComplexT<T>::value) {
         if (Utils::IsZeroFloating(value)) {
             return T{1};

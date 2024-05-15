@@ -21,7 +21,7 @@ class Matrix {
     using ConstFunctionIndexes = Details::Types::ConstFunctionIndexes<T>;
 
 public:
-    using ElemType = T;
+    using ElemType = std::remove_cv_t<T>;
 
     Matrix() = default;
 
@@ -214,7 +214,8 @@ public:
     static ConstMatrixView<T> Transposed(const ConstMatrixView<T> &rhs) {
         ConstMatrixView<T> res = ConstMatrixView<T>(
             *rhs.ptr_, rhs.column_, rhs.row_,
-            {!rhs.state_.is_transposed, rhs.state_.is_conjugated});
+            {Details::Types::SwitchState(rhs.state_.is_transposed),
+             rhs.state_.is_conjugated});
         return res;
     }
 
@@ -242,7 +243,8 @@ public:
     static ConstMatrixView<T> Conjugated(const ConstMatrixView<T> &rhs) {
         ConstMatrixView<T> res = ConstMatrixView<T>(
             *rhs.ptr_, rhs.column_, rhs.row_,
-            {!rhs.state_.is_transposed, !rhs.state_.is_conjugated});
+            {Details::Types::SwitchState(rhs.state_.is_transposed),
+             Details::Types::SwitchState(rhs.state_.is_conjugated)});
         return res;
     }
 

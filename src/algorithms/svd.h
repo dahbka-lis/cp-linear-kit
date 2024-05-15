@@ -14,7 +14,7 @@ struct SingularBasis {
 };
 
 template <MatrixUtils::MutableMatrixType M>
-inline void ToPositiveSingular(M &S, M &VT) {
+void ToPositiveSingular(M &S, M &VT) {
     using T = typename M::ElemType;
 
     for (IndexType i = 0; i < std::min(S.Rows(), S.Columns()); ++i) {
@@ -29,7 +29,7 @@ inline void ToPositiveSingular(M &S, M &VT) {
 }
 
 template <MatrixUtils::MutableMatrixType M>
-inline void SwapColumns(M &matrix, IndexType first, IndexType second) {
+void SwapColumns(M &matrix, IndexType first, IndexType second) {
     assert(first < matrix.Columns() && second < matrix.Columns() &&
            "Wrong column index.");
 
@@ -39,7 +39,7 @@ inline void SwapColumns(M &matrix, IndexType first, IndexType second) {
 }
 
 template <MatrixUtils::MutableMatrixType M>
-inline void SwapRows(M &matrix, IndexType first, IndexType second) {
+void SwapRows(M &matrix, IndexType first, IndexType second) {
     assert(first < matrix.Rows() && second < matrix.Rows() &&
            "Wrong row index.");
 
@@ -49,7 +49,7 @@ inline void SwapRows(M &matrix, IndexType first, IndexType second) {
 }
 
 template <MatrixUtils::MutableMatrixType M>
-inline void SortSingular(M &U, M &S, M &VT) {
+void SortSingular(M &U, M &S, M &VT) {
     using T = typename M::ElemType;
     auto min_size = std::min(S.Rows(), S.Columns());
 
@@ -67,7 +67,7 @@ inline void SortSingular(M &U, M &S, M &VT) {
 } // namespace Details
 
 template <MatrixUtils::MatrixType M>
-inline Details::SingularBasis<typename M::ElemType> SVD(const M &matrix) {
+Details::SingularBasis<typename M::ElemType> SVD(const M &matrix) {
     using T = typename M::ElemType;
 
     if (matrix.Rows() < matrix.Columns()) {

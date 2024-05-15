@@ -18,12 +18,12 @@ struct DiagBasisQR {
 } // namespace Details
 
 template <MatrixUtils::MatrixType M>
-inline Details::DiagBasisQR<typename M::ElemType>
+Details::DiagBasisQR<typename M::ElemType>
 BidiagAlgorithmQR(const M &B, IndexType it_cnt = 10);
 
 namespace Details {
 template <MatrixUtils::MatrixType M>
-inline typename M::ElemType GetBidiagThreshold(const M &matrix) {
+typename M::ElemType GetBidiagThreshold(const M &matrix) {
     using T = typename M::ElemType;
 
     long double threshold = 0;
@@ -37,8 +37,8 @@ inline typename M::ElemType GetBidiagThreshold(const M &matrix) {
 }
 
 template <MatrixUtils::MatrixType M>
-inline Details::DiagBasisQR<typename M::ElemType> SplitBidiagQR(const M &D,
-                                                                IndexType idx) {
+Details::DiagBasisQR<typename M::ElemType> SplitBidiagQR(const M &D,
+                                                         IndexType idx) {
     auto [D1, D2] = MatrixUtils::Split(D, idx, idx);
     auto [U1, S1, VT1] = BidiagAlgorithmQR(D1);
     auto [U2, S2, VT2] = BidiagAlgorithmQR(D2);
@@ -51,8 +51,8 @@ inline Details::DiagBasisQR<typename M::ElemType> SplitBidiagQR(const M &D,
 }
 
 template <MatrixUtils::MutableMatrixType M>
-inline Details::DiagBasisQR<typename M::ElemType>
-CancellationBidiagQR(M &D, M &U, IndexType idx) {
+Details::DiagBasisQR<typename M::ElemType> CancellationBidiagQR(M &D, M &U,
+                                                                IndexType idx) {
     for (IndexType k = idx + 1; k < std::min(D.Columns(), D.Rows()); ++k) {
         auto remove = D(idx, k);
         auto next = D(k, k);
@@ -66,7 +66,7 @@ CancellationBidiagQR(M &D, M &U, IndexType idx) {
 }
 
 template <MatrixUtils::MutableMatrixType M>
-inline void StepBidiagQR(M &U, M &D, M &VT) {
+void StepBidiagQR(M &U, M &D, M &VT) {
     using T = typename M::ElemType;
     T shift = GetBidiagWilkinsonShift(D);
 
@@ -84,8 +84,8 @@ inline void StepBidiagQR(M &U, M &D, M &VT) {
 } // namespace Details
 
 template <MatrixUtils::MatrixType M>
-inline Details::DiagBasisQR<typename M::ElemType>
-BidiagAlgorithmQR(const M &B, IndexType it_cnt) {
+Details::DiagBasisQR<typename M::ElemType> BidiagAlgorithmQR(const M &B,
+                                                             IndexType it_cnt) {
     using T = typename M::ElemType;
 
     Matrix<T> D = B;

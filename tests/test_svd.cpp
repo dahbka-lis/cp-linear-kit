@@ -14,7 +14,7 @@ using IndexType = LinearKit::Details::Types::IndexType;
 using namespace LinearKit::Algorithm;
 using namespace LinearKit::Utils;
 using namespace LinearKit::MatrixUtils;
-using LinearKit::Tests::RandomMatrixGenerator;
+using LinearKit::Tests::RandomGenerator;
 using LinearKit::Utils::Details::IsFloatComplexT;
 
 template <MatrixType M>
@@ -47,7 +47,7 @@ void CheckSVD(const M &matrix, const F &U, const L &S, const K &VT) {
     EXPECT_TRUE(AreEqualMatrices(matrix, U * S_full * VT, eps));
 }
 
-RandomMatrixGenerator<long double> generator(91348);
+RandomGenerator<long double> generator(91348);
 
 TEST(TEST_SVD, SVDClear) {
     using Matrix = Matrix<long double>;
@@ -70,7 +70,7 @@ TEST(TEST_SVD, SVDSquare) {
     }
     {
         for (int32_t i = 1; i <= 10; ++i) {
-            auto matrix = generator.GetRandomMatrix(i, i);
+            auto matrix = generator.GetMatrix(i, i);
             auto [U, S, VT] = SVD(matrix);
             CheckSVD(matrix, U, S, VT);
         }
@@ -98,7 +98,7 @@ TEST(TEST_SVD, SVDRectangle) {
                 if (i == j)
                     continue;
 
-                auto matrix = generator.GetRandomMatrix(i, j);
+                auto matrix = generator.GetMatrix(i, j);
                 auto [U, S, VT] = SVD(matrix);
                 CheckSVD(matrix, U, S, VT);
             }
@@ -130,7 +130,7 @@ TEST(TEST_SVD, SVDView) {
 
 TEST(TEST_SVD, Stress) {
     using Type = Complex<long double>;
-    using MatrixGenerator = RandomMatrixGenerator<Type>;
+    using MatrixGenerator = RandomGenerator<Type>;
     using Matrix = Matrix<Type>;
 
     const size_t it_count = 10u;
@@ -139,10 +139,10 @@ TEST(TEST_SVD, Stress) {
         MatrixGenerator gen(seed);
 
         for (size_t it = 0; it < it_count; ++it) {
-            int32_t first_size = gen.GetRandomMatrixSize();
-            int32_t second_size = gen.GetRandomMatrixSize();
+            int32_t first_size = gen.GetMatrixSize();
+            int32_t second_size = gen.GetMatrixSize();
 
-            auto matrix = gen.GetRandomMatrix(first_size, second_size);
+            auto matrix = gen.GetMatrix(first_size, second_size);
             auto [U, S, VT] = SVD(matrix);
             CheckSVD(matrix, U, S, VT);
         }

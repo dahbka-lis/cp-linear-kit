@@ -13,7 +13,7 @@ struct SpectralPair {
 } // namespace Details
 
 template <MatrixUtils::MatrixType M>
-inline Details::SpectralPair<typename M::ElemType>
+Details::SpectralPair<typename M::ElemType>
 GetSpecDecomposition(const M &matrix,
                      typename M::ElemType shift = typename M::ElemType{0},
                      std::size_t it_cnt = 50) {

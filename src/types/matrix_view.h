@@ -9,6 +9,8 @@ template <Utils::FloatOrComplex T = long double>
 class MatrixView {
     using IndexType = Details::Types::IndexType;
     using Segment = Details::Types::Segment;
+    using TransposeState = Details::Types::TransposeState;
+    using ConjugateState = Details::Types::ConjugateState;
     using MatrixState = Details::Types::MatrixState;
     using Function = Details::Types::Function<T>;
     using FunctionIndexes = Details::Types::FunctionIndexes<T>;
@@ -16,16 +18,22 @@ class MatrixView {
     using ConstFunctionIndexes = Details::Types::ConstFunctionIndexes<T>;
 
 public:
-    using ElemType = T;
+    using ElemType = std::remove_cv_t<T>;
 
     explicit MatrixView(Matrix<T> &matrix, Segment row = {-1, -1},
                         Segment col = {-1, -1},
-                        MatrixState state = {false, false})
-        : ptr_(&matrix), state_(state) {
-        row_ = ConstMatrixView<T>::MakeSegment(
-            row, (state_.is_transposed) ? matrix.Columns() : matrix.Rows());
-        column_ = ConstMatrixView<T>::MakeSegment(
-            col, (state_.is_transposed) ? matrix.Rows() : matrix.Columns());
+                        MatrixState state = {TransposeState::Normal,
+                                             ConjugateState::Normal})
+        : ptr_(&matrix),
+          row_(ConstMatrixView<T>::MakeSegment(
+              row, (state.is_transposed == TransposeState::Transposed)
+                       ? matrix.Columns()
+                       : matrix.Rows())),
+          column_(ConstMatrixView<T>::MakeSegment(
+              col, (state.is_transposed == TransposeState::Transposed)
+                       ? matrix.Rows()
+                       : matrix.Columns())),
+          state_(state) {
     }
 
     MatrixView(const MatrixView &rhs) = default;
@@ -49,7 +57,7 @@ public:
     T &operator()(IndexType row_idx, IndexType col_idx) {
         assert(ptr_ != nullptr && "Matrix pointer is null.");
 
-        if (state_.is_transposed) {
+        if (state_.is_transposed == TransposeState::Transposed) {
             return (*ptr_)(column_.begin + col_idx, row_.begin + row_idx);
         }
 
@@ -60,12 +68,13 @@ public:
         assert(ptr_ != nullptr && "Matrix pointer is null.");
 
         if constexpr (Utils::Details::IsFloatComplexT<T>::value) {
-            if (state_.is_transposed && state_.is_conjugated) {
+            if (state_.is_transposed == TransposeState::Transposed &&
+                state_.is_conjugated == ConjugateState::Conjugated) {
                 return std::conj(
                     (*ptr_)(column_.begin + col_idx, row_.begin + row_idx));
-            } else if (state_.is_transposed) {
+            } else if (state_.is_transposed == TransposeState::Transposed) {
                 return (*ptr_)(column_.begin + col_idx, row_.begin + row_idx);
-            } else if (state_.is_conjugated) {
+            } else if (state_.is_conjugated == ConjugateState::Conjugated) {
                 return std::conj(
                     (*ptr_)(row_.begin + row_idx, column_.begin + col_idx));
             }
@@ -73,7 +82,7 @@ public:
             return (*ptr_)(row_.begin + row_idx, column_.begin + col_idx);
         }
 
-        if (state_.is_transposed) {
+        if (state_.is_transposed == TransposeState::Transposed) {
             return (*ptr_)(column_.begin + col_idx, row_.begin + row_idx);
         }
 
@@ -82,13 +91,17 @@ public:
 
     [[nodiscard]] IndexType Rows() const {
         assert(ptr_ != nullptr && "Matrix pointer is null.");
-        auto min = (state_.is_transposed) ? ptr_->Columns() : ptr_->Rows();
+        auto min = (state_.is_transposed == TransposeState::Transposed)
+                       ? ptr_->Columns()
+                       : ptr_->Rows();
         return std::min(row_.end - row_.begin, min);
     }
 
     [[nodiscard]] IndexType Columns() const {
         assert(ptr_ != nullptr && "Matrix pointer is null.");
-        auto min = (state_.is_transposed) ? ptr_->Rows() : ptr_->Columns();
+        auto min = (state_.is_transposed == TransposeState::Transposed)
+                       ? ptr_->Rows()
+                       : ptr_->Columns();
         return std::min(column_.end - column_.begin, min);
     }
 
@@ -135,14 +148,16 @@ public:
     }
 
     MatrixView &Transpose() {
-        state_.is_transposed = !state_.is_transposed;
+        state_.is_transposed =
+            Details::Types::SwitchState(state_.is_transposed);
         std::swap(row_, column_);
         return *this;
     }
 
     MatrixView &Conjugate() {
         Transpose();
-        state_.is_conjugated = !state_.is_conjugated;
+        state_.is_conjugated =
+            Details::Types::SwitchState(state_.is_conjugated);
         return *this;
     }
 

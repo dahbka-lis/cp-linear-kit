@@ -32,7 +32,7 @@ template <FloatOrComplex T>
 static constexpr auto Eps = Details::TypeEpsilon<T>::kValue;
 
 template <FloatOrComplex T = long double>
-inline bool AreEqualFloating(T lhs, T rhs, T eps = T{0}) {
+bool AreEqualFloating(T lhs, T rhs, T eps = T{0}) {
     if (eps == T{0}) {
         eps = Eps<T>;
     }
@@ -47,7 +47,7 @@ inline bool AreEqualFloating(T lhs, T rhs, T eps = T{0}) {
 }
 
 template <FloatOrComplex T = long double>
-inline bool IsZeroFloating(T lhs, T eps = T{0}) {
+bool IsZeroFloating(T lhs, T eps = T{0}) {
     return AreEqualFloating<T>(lhs, T{0}, eps);
 }
 } // namespace LinearKit::Utils

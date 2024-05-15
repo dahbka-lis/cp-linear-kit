@@ -50,8 +50,7 @@ void ColumnToReal(F &B, S &V, IndexType idx) {
 using IndexType = LinearKit::Details::Types::IndexType;
 
 template <MatrixUtils::MatrixType M>
-inline Details::BidiagonalBasis<typename M::ElemType>
-Bidiagonalize(const M &matrix) {
+Details::BidiagonalBasis<typename M::ElemType> Bidiagonalize(const M &matrix) {
     using T = typename M::ElemType;
 
     Matrix<T> B = matrix;

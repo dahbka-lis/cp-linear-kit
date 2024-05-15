@@ -13,7 +13,7 @@ using Matrix = LinearKit::Matrix<T>;
 using namespace LinearKit::Algorithm;
 using namespace LinearKit::Utils;
 using namespace LinearKit::MatrixUtils;
-using LinearKit::Tests::RandomMatrixGenerator;
+using LinearKit::Tests::RandomGenerator;
 
 template <MatrixType M, MatrixType F, MatrixType S>
 void CheckQR(const M &matrix, const F &Q, const S &R) {
@@ -186,7 +186,7 @@ TEST(TEST_QR_DECOMPOSITION, HessenbergView) {
 
 TEST(TEST_QR_DECOMPOSITION, Stress) {
     using Type = Complex<long double>;
-    using MatrixGenerator = RandomMatrixGenerator<Type>;
+    using MatrixGenerator = RandomGenerator<Type>;
     using Matrix = Matrix<Type>;
 
     const size_t it_count = 10u;
@@ -195,10 +195,10 @@ TEST(TEST_QR_DECOMPOSITION, Stress) {
         MatrixGenerator gen(seed);
 
         for (size_t it = 0; it < it_count; ++it) {
-            int32_t rows = gen.GetRandomMatrixSize();
-            int32_t columns = gen.GetRandomMatrixSize();
+            int32_t rows = gen.GetMatrixSize();
+            int32_t columns = gen.GetMatrixSize();
 
-            auto matrix = gen.GetRandomMatrix(rows, columns);
+            auto matrix = gen.GetMatrix(rows, columns);
 
             auto id = it % 2;
             if (id == 0 || rows >= 70) {

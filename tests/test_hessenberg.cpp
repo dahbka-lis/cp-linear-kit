@@ -14,7 +14,7 @@ using Matrix = LinearKit::Matrix<T>;
 using namespace LinearKit::Algorithm;
 using namespace LinearKit::Utils;
 using namespace LinearKit::MatrixUtils;
-using LinearKit::Tests::RandomMatrixGenerator;
+using LinearKit::Tests::RandomGenerator;
 
 template <MatrixType M, MatrixType F, MatrixType S>
 void CheckHessenberg(const M &matrix, const F &U, const S &H) {
@@ -68,7 +68,7 @@ TEST(TEST_HESSENBERG, HessenbergView) {
 
 TEST(TEST_HESSENBERG, Stress) {
     using Type = Complex<long double>;
-    using MatrixGenerator = RandomMatrixGenerator<Type>;
+    using MatrixGenerator = RandomGenerator<Type>;
     using Matrix = Matrix<Type>;
 
     const size_t it_count = 10u;
@@ -77,9 +77,9 @@ TEST(TEST_HESSENBERG, Stress) {
         MatrixGenerator gen(seed);
 
         for (size_t it = 0; it < it_count; ++it) {
-            int32_t size = gen.GetRandomMatrixSize();
+            int32_t size = gen.GetMatrixSize();
 
-            auto matrix = gen.GetRandomMatrix(size, size);
+            auto matrix = gen.GetMatrix(size, size);
             auto [H, U] = GetHessenbergForm(matrix);
             CheckHessenberg(matrix, U, H);
         }

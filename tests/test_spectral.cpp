@@ -13,7 +13,7 @@ using Matrix = LinearKit::Matrix<T>;
 using namespace LinearKit::Algorithm;
 using namespace LinearKit::Utils;
 using namespace LinearKit::MatrixUtils;
-using LinearKit::Tests::RandomMatrixGenerator;
+using LinearKit::Tests::RandomGenerator;
 
 template <MatrixType M, MatrixType F, MatrixType S>
 void CheckSpectral(const M &matrix, const F &D, const S &Q) {
@@ -67,7 +67,7 @@ TEST(TEST_SPECTRAL, SpectralView) {
 
 TEST(TEST_SPECTRAL, Stress) {
     using Type = long double;
-    using MatrixGenerator = RandomMatrixGenerator<Type>;
+    using MatrixGenerator = RandomGenerator<Type>;
     using Matrix = Matrix<Type>;
 
     const size_t it_count = 1u;
@@ -76,8 +76,8 @@ TEST(TEST_SPECTRAL, Stress) {
         MatrixGenerator gen(seed);
 
         for (size_t it = 0; it < it_count; ++it) {
-            int32_t size = gen.GetRandomMatrixSize();
-            auto matrix = gen.GetRandomSymmetricMatrix(size);
+            int32_t size = gen.GetMatrixSize();
+            auto matrix = gen.GetSymmetricMatrix(size);
             auto [D, Q] = GetSpecDecomposition(matrix);
             CheckSpectral(matrix, D, Q);
         }

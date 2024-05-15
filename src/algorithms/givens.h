@@ -11,7 +11,7 @@ struct GivensPair {
 };
 
 template <Utils::FloatOrComplex T = long double>
-inline GivensPair<T> GetGivensCoefficients(T first_elem, T second_elem) {
+GivensPair<T> GetGivensCoefficients(T first_elem, T second_elem) {
     auto sqrt_abs = std::sqrt(std::norm(first_elem) + std::norm(second_elem));
 
     if (Utils::IsZeroFloating(sqrt_abs)) {
@@ -25,9 +25,9 @@ inline GivensPair<T> GetGivensCoefficients(T first_elem, T second_elem) {
 using IndexType = LinearKit::Details::Types::IndexType;
 
 template <MatrixUtils::MutableMatrixType M>
-inline void GivensLeftRotation(M &matrix, IndexType f_row, IndexType s_row,
-                               typename M::ElemType first,
-                               typename M::ElemType second) {
+void GivensLeftRotation(M &matrix, IndexType f_row, IndexType s_row,
+                        typename M::ElemType first,
+                        typename M::ElemType second) {
     using T = typename M::ElemType;
     auto [cos, sin] = Details::GetGivensCoefficients(first, second);
 
@@ -47,9 +47,9 @@ inline void GivensLeftRotation(M &matrix, IndexType f_row, IndexType s_row,
 }
 
 template <MatrixUtils::MutableMatrixType M>
-inline void GivensRightRotation(M &matrix, IndexType f_col, IndexType s_col,
-                                typename M::ElemType first,
-                                typename M::ElemType second) {
+void GivensRightRotation(M &matrix, IndexType f_col, IndexType s_col,
+                         typename M::ElemType first,
+                         typename M::ElemType second) {
     using T = typename M::ElemType;
     auto [cos, sin] = Details::GetGivensCoefficients(first, second);
 

@@ -5,8 +5,7 @@
 
 namespace LinearKit::Algorithm {
 template <MatrixUtils::MatrixType M>
-inline typename M::ElemType GetWilkinsonShift(const M &matrix,
-                                              IndexType end_idx) {
+typename M::ElemType GetWilkinsonShift(const M &matrix, IndexType end_idx) {
     using T = typename M::ElemType;
 
     if (matrix.Rows() == 0) {
@@ -26,7 +25,7 @@ inline typename M::ElemType GetWilkinsonShift(const M &matrix,
 }
 
 template <MatrixUtils::MatrixType M>
-inline typename M::ElemType GetBidiagWilkinsonShift(const M &S) {
+typename M::ElemType GetBidiagWilkinsonShift(const M &S) {
     using T = typename M::ElemType;
     assert(S.Columns() >= 2 && "Wrong columns count.");
 

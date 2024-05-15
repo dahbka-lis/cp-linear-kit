@@ -16,7 +16,7 @@ struct PairQR {
 using IndexType = LinearKit::Details::Types::IndexType;
 
 template <MatrixUtils::MatrixType M>
-inline Details::PairQR<typename M::ElemType> HessenbergQR(const M &matrix) {
+Details::PairQR<typename M::ElemType> HessenbergQR(const M &matrix) {
     using T = typename M::ElemType;
 
     assert(MatrixUtils::IsHessenberg(matrix) &&
@@ -39,7 +39,7 @@ inline Details::PairQR<typename M::ElemType> HessenbergQR(const M &matrix) {
 }
 
 template <MatrixUtils::MatrixType M>
-inline Details::PairQR<typename M::ElemType> HouseholderQR(const M &matrix) {
+Details::PairQR<typename M::ElemType> HouseholderQR(const M &matrix) {
     using T = typename M::ElemType;
 
     if (MatrixUtils::IsHessenberg(matrix)) {
@@ -64,7 +64,7 @@ inline Details::PairQR<typename M::ElemType> HouseholderQR(const M &matrix) {
 }
 
 template <MatrixUtils::MatrixType M>
-inline Details::PairQR<typename M::ElemType> GivensQR(const M &matrix) {
+Details::PairQR<typename M::ElemType> GivensQR(const M &matrix) {
     using T = typename M::ElemType;
 
     if (MatrixUtils::IsHessenberg(matrix)) {

@@ -7,15 +7,14 @@ namespace LinearKit::Algorithm {
 using IndexType = LinearKit::Details::Types::IndexType;
 
 template <MatrixUtils::MutableMatrixType M>
-inline void HouseholderReduction(M &vector) {
+void HouseholderReduction(M &vector) {
     vector(0, 0) -= Utils::Sign(vector(0, 0)) * vector.GetEuclideanNorm();
     vector.Normalize();
 }
 
 template <MatrixUtils::MutableMatrixType M, MatrixUtils::MatrixType V>
-inline void HouseholderLeftReflection(M &matrix, const V &vec,
-                                      IndexType row = 0, IndexType c_from = 0,
-                                      IndexType c_to = -1) {
+void HouseholderLeftReflection(M &matrix, const V &vec, IndexType row = 0,
+                               IndexType c_from = 0, IndexType c_to = -1) {
     using T = typename M::ElemType;
 
     if (c_to == -1) {
@@ -28,9 +27,8 @@ inline void HouseholderLeftReflection(M &matrix, const V &vec,
 }
 
 template <MatrixUtils::MutableMatrixType M, MatrixUtils::MatrixType V>
-inline void HouseholderRightReflection(M &matrix, const V &vec,
-                                       IndexType col = 0, IndexType r_from = 0,
-                                       IndexType r_to = -1) {
+void HouseholderRightReflection(M &matrix, const V &vec, IndexType col = 0,
+                                IndexType r_from = 0, IndexType r_to = -1) {
     using T = typename M::ElemType;
 
     if (r_to == -1) {

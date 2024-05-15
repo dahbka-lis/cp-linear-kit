@@ -7,15 +7,15 @@
 namespace {
 using namespace LinearKit::Algorithm;
 using Type = std::complex<long double>;
-using LinearKit::Tests::RandomMatrixGenerator;
+using LinearKit::Tests::RandomGenerator;
 
-RandomMatrixGenerator<Type> gen(12345);
+RandomGenerator<Type> gen(12345);
 
 int64_t GetMeanTime(int32_t size, int32_t iterations) {
     int64_t total_ms = 0;
 
     for (auto i = 0; i < iterations; ++i) {
-        auto matrix = gen.GetRandomMatrix(size, size);
+        auto matrix = gen.GetMatrix(size, size);
 
         auto start = std::chrono::high_resolution_clock::now();
         auto [Q, R] = HouseholderQR(matrix);

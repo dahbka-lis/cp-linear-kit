@@ -12,7 +12,7 @@ using Matrix = LinearKit::Matrix<T>;
 template <typename T = long double>
 using MatrixView = LinearKit::MatrixView<T>;
 
-using LinearKit::Tests::RandomMatrixGenerator;
+using LinearKit::Tests::RandomGenerator;
 using LinearKit::Utils::AreEqualFloating;
 
 TEST(TEST_MATRIX_VIEW, Create) {
@@ -285,7 +285,7 @@ std::pair<int32_t, int32_t> GetMinMaxSize(int32_t first, int32_t second) {
 
 TEST(TEST_MATRIX_VIEW, Stress) {
     using Type = Complex<long double>;
-    using MatrixGenerator = RandomMatrixGenerator<Type>;
+    using MatrixGenerator = RandomGenerator<Type>;
 
     const size_t it_count = 100u;
 
@@ -293,10 +293,10 @@ TEST(TEST_MATRIX_VIEW, Stress) {
         MatrixGenerator gen(seed);
 
         for (size_t it = 0; it < it_count; ++it) {
-            auto [v_row, m_row] = GetMinMaxSize(gen.GetRandomMatrixSize() + 1,
-                                                gen.GetRandomMatrixSize() + 1);
-            auto [v_col, m_col] = GetMinMaxSize(gen.GetRandomMatrixSize() + 1,
-                                                gen.GetRandomMatrixSize() + 1);
+            auto [v_row, m_row] =
+                GetMinMaxSize(gen.GetMatrixSize() + 1, gen.GetMatrixSize() + 1);
+            auto [v_col, m_col] =
+                GetMinMaxSize(gen.GetMatrixSize() + 1, gen.GetMatrixSize() + 1);
 
             if (v_row == m_row || v_col == m_col) {
                 continue;
@@ -304,8 +304,8 @@ TEST(TEST_MATRIX_VIEW, Stress) {
 
             auto id = it % 4;
             if (id == 0) {
-                auto m1 = gen.GetRandomMatrix(m_row, m_col);
-                auto m2 = gen.GetRandomMatrix(m_row, m_col);
+                auto m1 = gen.GetMatrix(m_row, m_col);
+                auto m2 = gen.GetMatrix(m_row, m_col);
 
                 auto v1 = m1.GetSubmatrix({0, v_row}, {0, v_col});
                 auto v2 = m2.GetSubmatrix({0, v_row}, {0, v_col});
@@ -317,8 +317,8 @@ TEST(TEST_MATRIX_VIEW, Stress) {
                 auto v4 = v1.GetRow(0);
                 v3 += v4;
             } else if (id == 1) {
-                auto m1 = gen.GetRandomMatrix(m_row, m_col);
-                auto m2 = gen.GetRandomMatrix(m_row, m_col);
+                auto m1 = gen.GetMatrix(m_row, m_col);
+                auto m2 = gen.GetMatrix(m_row, m_col);
 
                 auto v1 = m1.GetSubmatrix({0, v_row}, {0, v_col});
                 auto v2 = m2.GetSubmatrix({0, v_row}, {0, v_col});
@@ -333,8 +333,8 @@ TEST(TEST_MATRIX_VIEW, Stress) {
                 auto size = std::max(m_row, m_col);
                 auto scalar = gen.GetRandomTypeNumber();
 
-                auto m1 = gen.GetRandomMatrix(size, size);
-                auto m2 = gen.GetRandomMatrix(size, size);
+                auto m1 = gen.GetMatrix(size, size);
+                auto m2 = gen.GetMatrix(size, size);
 
                 auto v1 = m1.GetSubmatrix({0, v_row}, {0, v_col});
                 auto v2 = m1.GetSubmatrix({0, v_col}, {0, v_row});
@@ -342,15 +342,15 @@ TEST(TEST_MATRIX_VIEW, Stress) {
                 auto m3 = v1 * v2;
                 v2 /= scalar;
 
-                auto m4 = gen.GetRandomMatrix(v_col, v_col);
+                auto m4 = gen.GetMatrix(v_col, v_col);
                 v1 *= m4;
                 v1 *= scalar;
             } else if (id == 3) {
                 auto size = std::max(m_row, m_col);
                 auto scalar = gen.GetRandomTypeNumber();
 
-                auto m1 = gen.GetRandomMatrix(size, size);
-                auto m2 = gen.GetRandomMatrix(size, size);
+                auto m1 = gen.GetMatrix(size, size);
+                auto m2 = gen.GetMatrix(size, size);
 
                 auto v1 = m1.GetSubmatrix({0, v_row}, {0, v_col});
                 auto v2 = m1.GetSubmatrix({0, v_row}, {0, v_col});
@@ -359,7 +359,7 @@ TEST(TEST_MATRIX_VIEW, Stress) {
                 auto m3 = v1 * v2;
                 v2 /= scalar;
 
-                auto m4 = gen.GetRandomMatrix(v_col, v_col);
+                auto m4 = gen.GetMatrix(v_col, v_col);
                 v1.Transpose();
                 v1 *= m4;
                 v1 *= scalar;

@@ -39,10 +39,24 @@ struct Types {
         IndexType end = 1;
     };
 
+    enum class TransposeState { Normal, Transposed };
+
+    enum class ConjugateState { Normal, Conjugated };
+
     struct MatrixState {
-        bool is_transposed = false;
-        bool is_conjugated = false;
+        TransposeState is_transposed = TransposeState::Normal;
+        ConjugateState is_conjugated = ConjugateState::Normal;
     };
+
+    static TransposeState SwitchState(TransposeState state) {
+        return state == TransposeState::Normal ? TransposeState::Transposed
+                                               : TransposeState::Normal;
+    }
+
+    static ConjugateState SwitchState(ConjugateState state) {
+        return state == ConjugateState::Normal ? ConjugateState::Conjugated
+                                               : ConjugateState::Normal;
+    }
 };
 } // namespace Details
 } // namespace LinearKit

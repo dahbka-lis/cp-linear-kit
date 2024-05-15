@@ -15,7 +15,7 @@ struct HessenbergBasis {
 using IndexType = LinearKit::Details::Types::IndexType;
 
 template <MatrixUtils::MatrixType M>
-inline Details::HessenbergBasis<typename M::ElemType>
+Details::HessenbergBasis<typename M::ElemType>
 GetHessenbergForm(const M &matrix) {
     using T = typename M::ElemType;
 

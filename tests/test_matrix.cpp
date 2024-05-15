@@ -9,7 +9,7 @@ using Complex = std::complex<T>;
 template <typename T = long double>
 using Matrix = LinearKit::Matrix<T>;
 
-using LinearKit::Tests::RandomMatrixGenerator;
+using LinearKit::Tests::RandomGenerator;
 using LinearKit::Utils::AreEqualFloating;
 
 TEST(TEST_MATRIX, BasicConstructors) {
@@ -251,7 +251,7 @@ TEST(TEST_MATRIX, DiagonalMatrix) {
 
 TEST(TEST_MATRIX, Stress) {
     using Type = Complex<long double>;
-    using MatrixGenerator = RandomMatrixGenerator<Type>;
+    using MatrixGenerator = RandomGenerator<Type>;
     using Matrix = Matrix<Type>;
 
     const size_t it_count = 100u;
@@ -260,35 +260,35 @@ TEST(TEST_MATRIX, Stress) {
         MatrixGenerator gen(seed);
 
         for (size_t it = 0; it < it_count; ++it) {
-            int32_t first_size = gen.GetRandomMatrixSize();
-            int32_t second_size = gen.GetRandomMatrixSize();
+            int32_t first_size = gen.GetMatrixSize();
+            int32_t second_size = gen.GetMatrixSize();
             auto id = it % 4;
 
             if (id == 0) {
-                auto m1 = gen.GetRandomMatrix(first_size, first_size);
-                auto m2 = gen.GetRandomMatrix(first_size, first_size);
+                auto m1 = gen.GetMatrix(first_size, first_size);
+                auto m2 = gen.GetMatrix(first_size, first_size);
 
                 m1 += m2;
                 m2 = m1 + m2;
             } else if (id == 1) {
-                auto m1 = gen.GetRandomMatrix(first_size, first_size);
-                auto m2 = gen.GetRandomMatrix(first_size, first_size);
+                auto m1 = gen.GetMatrix(first_size, first_size);
+                auto m2 = gen.GetMatrix(first_size, first_size);
 
                 m1 -= m2;
                 m2 = m1 - m2;
             } else if (id == 2) {
-                int32_t third_size = gen.GetRandomMatrixSize();
+                int32_t third_size = gen.GetMatrixSize();
                 auto scalar = gen.GetRandomTypeNumber();
 
-                auto m1 = gen.GetRandomMatrix(first_size, second_size);
-                auto m2 = gen.GetRandomMatrix(second_size, third_size);
+                auto m1 = gen.GetMatrix(first_size, second_size);
+                auto m2 = gen.GetMatrix(second_size, third_size);
 
                 auto m3 = m1 * m2;
                 m2 = m2 * Matrix::Transposed(m2) / scalar;
                 m1 *= m2;
                 m2 *= scalar;
             } else {
-                auto m = gen.GetRandomMatrix(first_size, second_size);
+                auto m = gen.GetMatrix(first_size, second_size);
                 m.Transpose();
                 m.Conjugate();
             }
